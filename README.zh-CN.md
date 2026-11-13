@@ -1,8 +1,4 @@
 <p align="center">
-  <img src="assets/logo.png" alt="s3dx" width="220"/>
-</p>
-
-<p align="center">
   <img src="assets/title.png" alt="svg 3dx" width="320"/>
 </p>
 
