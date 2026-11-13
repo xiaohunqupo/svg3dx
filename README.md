@@ -35,10 +35,8 @@ svg3dx/
 │   └── svg3dx-spec-draft-0.1.md
 ├── samples/                # Example .svg files
 │   └── draft-0.1-example.svg
-├── licenses/               # Full license texts
-│   ├── MIT.txt
-│   └── MulanPSL-2.0.txt
-├── LICENSE                 # Dual-license notice
+├── LICENSE-MIT             # MIT (choose either)
+├── LICENSE-MulanPSL-2.0    # 木兰宽松许可证第2版
 ├── README.md
 └── README.zh-CN.md
 ```
@@ -71,6 +69,5 @@ Copyright (c) 2026 danny许
 
 Dual-licensed under **MIT** and **木兰宽松许可证第2版 (MulanPSL-2.0)**. You may choose either license.
 
-- [LICENSE](LICENSE) — dual-license notice
-- [licenses/MIT.txt](licenses/MIT.txt)
-- [licenses/MulanPSL-2.0.txt](licenses/MulanPSL-2.0.txt)
+- [LICENSE-MIT](LICENSE-MIT)
+- [LICENSE-MulanPSL-2.0](LICENSE-MulanPSL-2.0)
