@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.1">
+
+  <!-- 参数：类规则 -->
+  <style>
+    .tanks    { --D: 200; --H: 100; --R: 50; }
+    .windows  { --H: 100; --W: 20;  --L: 200; }
+    .door     { --H: 100; --W: 50;  --T: 20; }
+    .example  { --H: 100; --W: 50; --T: 20; --R: 20; --D1: 20; --A: 90; }
+  </style>
+
+  <defs>
+    <!-- 窗组：三维图元组，标准 SVG 下整组被跳过 -->
+    <g id="group-windows1" class="windows"
+       transform="matrix(1,0,0, 0,1,0, 0,0,1, 100,200,300)">
+      <s3dx:box Length="40"  Width="20" Height="400"
+                LengthVec="1 0 0" WidthVec="0 1 0"/>
+      <s3dx:box Length="120" Width="20" Height="40"
+                LengthVec="1 0 0" WidthVec="0 1 0"
+                transform="matrix(1,0,0, 0,1,0, 0,0,1, 40,0,0)"/>
+      <s3dx:box Length="120" Width="20" Height="40"
+                LengthVec="1 0 0" WidthVec="0 1 0"
+                transform="matrix(1,0,0, 0,1,0, 0,0,1, 40,0,360)"/>
+      <s3dx:box Length="40"  Width="20" Height="400"
+                LengthVec="1 0 0" WidthVec="0 1 0"
+                transform="matrix(1,0,0, 0,1,0, 0,0,1, 160,0,0)"/>
+    </g>
+
+    <!-- 罐组：参数覆盖 + 布尔减 + 条件组 -->
+    <g id="group-tanks1" class="tanks"
+       transform="matrix(1,0,0, 0,1,0, 0,0,1, 100,200,300)">
+      <s3dx:cylinder Diameter="60" BottomCenterPt="0 0 0" TopCenterPt="0 0 100">
+        <s3dx:exp Diameter="[D]-10"/>
+      </s3dx:cylinder>
+      <s3dx:cylinder Diameter="55" BottomCenterPt="0 0 0" TopCenterPt="0 0 500"
+                     transform="matrix(1,0,0, 0,1,0, 0,0,1, 0,0,100)">
+        <s3dx:exp Diameter="[D]"/>
+      </s3dx:cylinder>
+
+      <!-- 布尔减：从大球中减去小球 -->
+      <s3dx:bool-subtract>
+        <s3dx:sphere Radius="60" Center="100 200 300">
+          <s3dx:exp Radius="[R]"/>
+        </s3dx:sphere>
+        <s3dx:sphere Radius="20" Center="100 200 300">
+          <s3dx:exp Radius="[R]/3"/>
+        </s3dx:sphere>
+      </s3dx:bool-subtract>
+
+      <!-- 条件组：R=50 时显示大球 -->
+      <g if="[R] = 50">
+        <s3dx:sphere Radius="60" Center="100 200 300">
+          <s3dx:exp Radius="[R]"/>
+        </s3dx:sphere>
+      </g>
+      <!-- 条件组：R 小于 50 时显示小球 -->
+      <g if="[R] &lt; 50">
+        <s3dx:sphere Radius="30" Center="100 200 300">
+          <s3dx:exp Radius="[R]/2"/>
+        </s3dx:sphere>
+      </g>
+    </g>
+
+    <!-- 循环：沿四个点阵列展开窗组 -->
+    <g id="group-window-array">
+      <s3dx:loop-points points="0 1000 0  1000 1000 0  1000 0 0  0 0 0">
+        <s3dx:use href="#group-windows1"
+                  transform="matrix(1,0,0, 0,1,0, 0,0,1, [loop.value])"/>
+      </s3dx:loop-points>
+    </g>
+
+    <!-- 数值范围循环：生成一排柱子 -->
+    <g id="group-pillars">
+      <s3dx:loop-range start="0" end="4" step="1">
+        <s3dx:box Length="20" Width="20" Height="200"
+                  LengthVec="1 0 0" WidthVec="0 1 0"
+                  transform="matrix(1,0,0, 0,1,0, 0,0,1, [loop.value * 50], 0, 0)"/>
+      </s3dx:loop-range>
+    </g>
+
+    <!-- 示例组：多种图元 -->
+    <g id="group-3" class="example">
+      <s3dx:sphere Radius="60" Center="0 0 0">
+        <s3dx:exp Radius="[R]"/>
+      </s3dx:sphere>
+      <s3dx:torus Diameter1="60" Diameter2="60" Angle="60"
+                  TorusCenterPt="0 0 0" Normal="0 0 1">
+        <s3dx:exp Diameter1="[D1]" Angle="[A]"/>
+      </s3dx:torus>
+      <s3dx:box Length="60" Width="60" Height="60"
+                LengthVec="1 0 0" WidthVec="0 1 0">
+        <s3dx:exp Length="[W]" Width="[W]" Height="[H]"/>
+      </s3dx:box>
+      <s3dx:cone BottomDiameter="60" TopDiameter="30"
+                 BottomCenterPt="0 0 0" TopCenterPt="0 0 80">
+        <s3dx:exp BottomDiameter="[D1]"/>
+      </s3dx:cone>
+      <s3dx:polylinestretch
+          StretchFace="0 100 0 100 100 0 100 0 0 0 0 0"
+          Length="60" Dir="0 0 1"/>
+      <s3dx:triangles point="0 100 0 100 100 0 100 0 0 0 0 0"
+                      Normal="0 0 1 0 0 1 0 0 1 0 0 1"
+                      index="1 2 3 1 3 4"/>
+    </g>
+  </defs>
+
+  <!-- 三维显示模型 -->
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <s3dx:use href="#group-windows1"/>
+    <s3dx:use href="#group-tanks1"/>
+    <s3dx:use href="#group-window-array"/>
+    <s3dx:use href="#group-pillars"/>
+    <s3dx:use href="#group-3"
+              transform="matrix(1,0,0, 0,1,0, 0,0,1, 300,0,0)"/>
+  </s3dx:model>
+
+  <s3dx:model id="wireframe-view" mode="wireframe">
+    <s3dx:use href="#group-tanks1"/>
+    <s3dx:use href="#group-3"/>
+  </s3dx:model>
+
+  <!-- 二维覆盖层：标准 SVG 内容，在标准渲染器下仍可见 -->
+  <g id="annotations">
+    <text x="20" y="580" font-size="14">svg3dx draft 0.1 — 二维标注层</text>
+  </g>
+</svg>
