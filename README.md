@@ -16,7 +16,7 @@ Existing parametric CAD formats (Revit families, Glodon component editors, vendo
 
 ## Core design
 
-- **SVG-compatible by construction.** 3D elements live in a custom namespace (`urn:s3dx:draft:0.1`). Standard SVG renderers ignore them and continue to render any 2D content. A single `svg3d="true"` switch on the root enables 3D semantics.
+- **SVG-compatible by construction.** 3D elements live in a custom namespace (`urn:s3dx:draft:0.1`). Standard SVG renderers ignore them and continue to render any 2D content. The extension attribute `svg3d="true"` on the root enables 3D semantics. 3D transforms use `s3dx:transform`, leaving SVG's `transform` alone.
 - **Parameters via CSS custom properties.** Declare as `--name`, reference as `var(--name)`, and use `calc(...)` for scalar math (e.g. `calc(var(--D) - 10)`). Loop injects `--loop-index` / `--loop-value`. External parameters override everything without mutating the DOM. Attribute names use lowerCamelCase (`length`, `lengthVec`).
 - **Logic through structure, not syntax.** Conditions attach to `<g>` (`if` / `ifnot`). Loops are dedicated elements (`s3dx:loop-points`, `s3dx:loop-range`). Boolean operations are elements (`s3dx:bool-union` / `subtract` / `intersect`) with closed, order-based scoping.
 - **Kernel-agnostic.** The format describes geometry operations; evaluation is delegated to a backend (Open CASCADE, Manifold, etc.). The spec does not prescribe numerical precision.
@@ -34,7 +34,7 @@ svg3dx/
 ├── docs/                   # Format specification
 │   └── svg3dx-spec-draft-0.1.md
 ├── samples/                # Example .svg files
-│   └── draft-0.1-example.svg
+│   └── draft-0.1-example.svg3dx
 ├── LICENSE-MIT             # MIT (choose either)
 ├── LICENSE-MulanPSL-2.0    # 木兰宽松许可证第2版
 ├── README.md
@@ -44,7 +44,7 @@ svg3dx/
 ## Documentation
 
 - Format specification (draft 0.1): [`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
-- Sample file: [`samples/draft-0.1-example.svg`](samples/draft-0.1-example.svg)
+- Sample file: [`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
 
 ## Goals
 

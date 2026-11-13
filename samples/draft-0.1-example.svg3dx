@@ -5,7 +5,7 @@
      xmlns="http://www.w3.org/2000/svg"
      xmlns:s3dx="urn:s3dx:draft:0.1">
 
-  <!-- 参数：声明 --名；引用 var(--名)；标量运算 calc(...) -->
+  <!-- 参数：声明自定义属性名；引用 var()；标量运算 calc() -->
   <style>
     .tanks    { --D: 200; --H: 100; --R: 50; }
     .windows  { --H: 100; --W: 20;  --L: 200; }
@@ -14,30 +14,30 @@
   </style>
 
   <defs>
-    <!-- 窗组：三维图元组，标准 SVG 下整组被跳过 -->
+    <!-- 窗组：三维图元组；三维变换用 s3dx:transform，不占 SVG transform -->
     <g id="group-windows1" class="windows"
-       transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)">
+       s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)">
       <s3dx:box length="40"  width="20" height="400"
                 lengthVec="1 0 0" widthVec="0 1 0"/>
       <s3dx:box length="120" width="20" height="40"
                 lengthVec="1 0 0" widthVec="0 1 0"
-                transform="matrix(1 0 0 0 1 0 0 0 1 40 0 0)"/>
+                s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 40 0 0)"/>
       <s3dx:box length="120" width="20" height="40"
                 lengthVec="1 0 0" widthVec="0 1 0"
-                transform="matrix(1 0 0 0 1 0 0 0 1 40 0 360)"/>
+                s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 40 0 360)"/>
       <s3dx:box length="40"  width="20" height="400"
                 lengthVec="1 0 0" widthVec="0 1 0"
-                transform="matrix(1 0 0 0 1 0 0 0 1 160 0 0)"/>
+                s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 160 0 0)"/>
     </g>
 
     <!-- 罐组：参数覆盖 + 布尔减 + 条件组 -->
     <g id="group-tanks1" class="tanks"
-       transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)">
+       s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)">
       <s3dx:cylinder diameter="60" bottomCenterPt="0 0 0" topCenterPt="0 0 100">
         <s3dx:exp diameter="calc(var(--D) - 10)"/>
       </s3dx:cylinder>
       <s3dx:cylinder diameter="55" bottomCenterPt="0 0 0" topCenterPt="0 0 500"
-                     transform="matrix(1 0 0 0 1 0 0 0 1 0 0 100)">
+                     s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 0 100)">
         <s3dx:exp diameter="var(--D)"/>
       </s3dx:cylinder>
 
@@ -65,11 +65,11 @@
       </g>
     </g>
 
-    <!-- 循环：沿四个点阵列展开窗组（--loop-value 为向量，多 token 展开） -->
+    <!-- 循环：沿四个点阵列展开窗组（loop-value 为向量，多 token 展开） -->
     <g id="group-window-array">
       <s3dx:loop-points points="0 1000 0  1000 1000 0  1000 0 0  0 0 0">
         <s3dx:use href="#group-windows1"
-                  transform="matrix(1 0 0 0 1 0 0 0 1 var(--loop-value))"/>
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 var(--loop-value))"/>
       </s3dx:loop-points>
     </g>
 
@@ -78,7 +78,7 @@
       <s3dx:loop-range start="0" end="4" step="1">
         <s3dx:box length="20" width="20" height="200"
                   lengthVec="1 0 0" widthVec="0 1 0"
-                  transform="matrix(1 0 0 0 1 0 0 0 1 calc(var(--loop-value) * 50) 0 0)"/>
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 calc(var(--loop-value) * 50) 0 0)"/>
       </s3dx:loop-range>
     </g>
 
@@ -116,7 +116,7 @@
     <s3dx:use href="#group-window-array"/>
     <s3dx:use href="#group-pillars"/>
     <s3dx:use href="#group-3"
-              transform="matrix(1 0 0 0 1 0 0 0 1 300 0 0)"/>
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 300 0 0)"/>
   </s3dx:model>
 
   <s3dx:model id="wireframe-view" mode="wireframe">

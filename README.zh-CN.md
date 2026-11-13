@@ -16,7 +16,7 @@
 
 ## 核心设计
 
-- **天生兼容 SVG。** 三维元素位于自定义命名空间（`urn:s3dx:draft:0.1`）。标准 SVG 渲染器会忽略它们，并继续渲染二维内容。根元素上的 `svg3d="true"` 开关启用三维语义。
+- **天生兼容 SVG。** 三维元素位于自定义命名空间（`urn:s3dx:draft:0.1`）。标准 SVG 渲染器会忽略它们，并继续渲染二维内容。根元素上的扩展属性 `svg3d="true"` 开关启用三维语义。三维变换写在 `s3dx:transform` 上，不占用 SVG 的 `transform`。
 - **用 CSS 自定义属性承载参数。** 声明写 `--name`，引用写 `var(--name)`，标量运算用 `calc(...)`（如 `calc(var(--D) - 10)`）。循环注入 `--loop-index` / `--loop-value`。外部传参优先级最高，且不修改 DOM。图元属性名采用 lowerCamelCase（如 `length`、`lengthVec`）。
 - **用结构表达逻辑，而非塞进语法。** 条件挂在 `<g>` 上（`if` / `ifnot`）；循环是独立元素（`s3dx:loop-points`、`s3dx:loop-range`）；布尔运算是元素（`s3dx:bool-union` / `subtract` / `intersect`），作用域封闭、按文档顺序求值。
 - **与几何内核解耦。** 格式只描述几何操作；求值交给后端（Open CASCADE、Manifold 等）。规范不规定数值精度。
@@ -34,7 +34,7 @@ svg3dx/
 ├── docs/                   # 格式规范
 │   └── svg3dx-spec-draft-0.1.md
 ├── samples/                # 示例 .svg
-│   └── draft-0.1-example.svg
+│   └── draft-0.1-example.svg3dx
 ├── LICENSE-MIT             # MIT（任选其一）
 ├── LICENSE-MulanPSL-2.0    # 木兰宽松许可证第2版
 ├── README.md
@@ -44,7 +44,7 @@ svg3dx/
 ## 文档
 
 - 格式规范（草案 0.1）：[`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
-- 示例文件：[`samples/draft-0.1-example.svg`](samples/draft-0.1-example.svg)
+- 示例文件：[`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
 
 ## 目标
 

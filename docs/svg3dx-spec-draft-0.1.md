@@ -13,16 +13,17 @@
 
 ### 1.1 根元素与开关
 
-- 根元素为 SVG `<svg>`，可包含属性 `svg3d`。
+- 根元素为 SVG `<svg>`，可包含本格式定义的扩展属性 `svg3d`（无命名空间前缀，挂在 SVG 根上）。
 - `svg3d="true"` 启用三维语义；缺省或 `svg3d="false"` 时，所有 `s3dx:*` 元素及其子树按 SVG 未知命名空间元素处理：保留在 DOM 中，不参与求值，不渲染，不影响二维内容。
 - `svg3d` 是总开关，优先级高于命名空间：`false` 时即使命名空间正确也忽略。
-- 属性名保持 `svg3d`，不随项目名改为 `svg3dx`。语义是“本 SVG 是否包含三维内容”，与项目名解耦。
+- 属性名保持 `svg3d`，不随项目名改为 `svg3dx`。语义是“本 SVG 是否包含三维内容”，与项目名解耦。标准 SVG 用户代理会忽略未知属性，不影响二维渲染。
 
 ### 1.2 命名空间
 
 - 三维元素使用命名空间 `urn:s3dx:draft:0.1`，推荐前缀 `s3dx`。
 - 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`cutcylinder`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`mesh`、`triangles`，以及兼容别名 `polylinestretch`）；子元 `<s3dx:profile>`、`<s3dx:path>`；以及 `<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`。
-- **属性**保持无前缀：`href`、`transform`、`mode`、`if`、`ifnot`、`points`、`start`、`end`、`step`、`active`、`svg3d`；图元几何属性亦无无前缀，且为 lowerCamelCase（见 3.2）。
+- **无前缀属性**（null 命名空间）：图元几何属性（lowerCamelCase，见 3.2）、以及 `href`、`mode`、`if`、`ifnot`、`points`、`start`、`end`、`step`、`active`、`svg3d` 等。
+- **带命名空间的属性**：三维变换使用 `s3dx:transform`（见 3.4），**不**占用 SVG 标准的 `transform` 表现属性，以免与二维 6 数 `matrix` 冲突。
 - 标准 SVG 解析器对未知命名空间元素的处理：包含在 DOM 中，不渲染，不进一步处理。本格式依赖此行为实现二维兼容。
 
 ### 1.3 二维兼容
@@ -41,7 +42,7 @@
 2. 元素内联 `style` 属性：`style="--参数名: 值;"`
 3. 根元素或任意祖先元素的内联 `style` 或类规则（按 DOM 继承）。
 
-**简化子集边界**：只支持类选择器和内联自定义属性。不支持元素选择器、ID 选择器、后代选择器、伪类、`!important`、媒体查询、`@` 规则。超出子集的选择器或声明被忽略，不报错。
+**参数查找**：须识别类选择器，以及内联 `style` 上的自定义属性。`:root` 与 CSS 一致，等价于在文档根声明（自定义属性会继承到后代），不是本格式另造的语义；实现可识别，也可仅认根元素内联 `style`。文档仍可使用完整 CSS 做二维样式。
 
 ### 2.2 引用语法
 
@@ -61,7 +62,7 @@
 2. 自身 `<s3dx:exp>` 的父图元属性
 3. 最近祖先 `<g>` 的类规则
 4. 更远祖先的类规则或内联 `style`
-5. 根元素内联 `style` 或 `:root` 规则
+5. 根元素内联 `style`（若实现支持 `:root`，与此项同级，均为文档根作用域）
 6. 默认值
 
 嵌套 `s3dx:loop-*` 时，内层迭代变量遮蔽外层。
@@ -99,19 +100,20 @@
 - XML 属性中含 `<`、`&` 须转义为 `&lt;`、`&amp;`。
 - `calc()` 内建议按 CSS 习惯在 `+` / `-` 两侧留空格（如 `calc(var(--D) - 10)`）。
 - 求值失败（语法错误、未定义参数、类型不匹配）→ 跳过出错元素子树 + 警告。
-- `var(--*)` / `calc(...)` 由 **svg3dx 求值器**解析，不依赖浏览器对 SVG 表现属性做 CSS 替换。
 
 ### 2.7 与 CSS / SVG 的对齐说明
 
+- **`var()` / `calc()` 本身是 CSS 标准**，在支持 CSS 的 SVG 用户代理中，用于 **CSS 属性**（`<style>`、元素 `style="..."`）时按 CSS 级联与计算。
+- 本格式另外规定：在 **svg3dx 求值的属性值**中（如 `<s3dx:exp>`、`if`、`s3dx:transform` 等）也可书写 `var(--*)` / `calc(...)`，由 **svg3dx 求值器**按与 CSS 相同的表面语法解析。这不要求浏览器对**非 CSS 的 XML 属性**做变量替换。
+- 因此：二维样式走 CSS；三维参数/表达式走 svg3dx 求值器——语法对齐，宿主分工不同。
 - 自定义属性名须为合法 CSS `<dashed-ident>`（如 `--D`、`--loop-value`）；**不得**使用 `--loop.value` 这类含 `.` 的名字。
 - 一个 `var(--*)` 的值可以是多个空格分隔的 token（CSS 允许多 token 替换）；本格式用此表达向量嵌入（见 2.8）。
-- 标准 SVG/CSS 的 `matrix()` 为 6 参数、`matrix3d()` 为 16 参数；本格式三维上下文的 12 数 `matrix(...)` 为 **svg3dx 扩展**，由本格式求值，不要求浏览器原生支持。
 
 ### 2.8 向量在属性值中的展开
 
 - 向量类型变量（如 `var(--loop-value)` 在 `loop-points` 中为三维点）嵌入属性值时，按空格展开为三个数字（对齐 CSS `var()` 多 token 替换）。
-- 例：`transform="matrix(1 0 0 0 1 0 0 0 1 var(--loop-value))"` 在 `--loop-value: 100 200 300` 时等价于 `matrix(1 0 0 0 1 0 0 0 1 100 200 300)`。
-- 三维 `matrix(...)` **规范写法用空格分隔**（见 3.4），以便向量直接嵌入。
+- 例：`s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 var(--loop-value))"` 在 `--loop-value: 100 200 300` 时等价于 `matrix(1 0 0 0 1 0 0 0 1 100 200 300)`。
+- 三维矩阵 **规范写法用空格分隔**（见 3.4），以便向量直接嵌入。
 - 如需单独访问分量，使用独立自定义属性：`var(--loop-value-x)`、`var(--loop-value-y)`、`var(--loop-value-z)`（由循环展开时注入，见第 6 节）。
 - 对分量做运算时用 `calc`，例如 `calc(var(--loop-value-x) * 50)`。
 - `points` 属性中的向量序列按同样规则展开。
@@ -125,12 +127,12 @@
   - `<s3dx:profile>`（拉伸 / 旋转 / 放样 / 扫掠的截面轮廓，见 3.2.3）
   - `<s3dx:path>`（扫掠 / 圆管路径，见 3.2.3）
 - 图元属性表以本节与附录维护；属性表增补不改变文档格式语法。未在表中列出的属性，实现应忽略并警告。
-- 局部坐标 → 父级变换 → 世界坐标的累积规则：图元属性定义的局部几何，先应用图元自身 `transform`，再应用父级 `<g>`/`<s3dx:use>` 的变换。
+- 局部坐标 → 父级变换 → 世界坐标的累积规则：图元属性定义的局部几何，先应用图元自身 `s3dx:transform`，再应用父级 `<g>` / `<s3dx:use>` 上的 `s3dx:transform`。
 - **分层原则**：核心层只收各厂商都能映射的通用体元与网格；行业专用形体（风管配件、封头等）不进核心，见附录 10.3（可用 `loft` / `revolve` / 布尔组合表达）。
 
 ### 3.2 图元属性表（草案 0.1 · 修订）
 
-属性名与 [`samples/draft-0.1-example.svg`](../samples/draft-0.1-example.svg) 对齐；几何语义对齐 AutoCAD 实体图元、Open CASCADE 构造算子（`MakePrism` / `MakeRevol` / `ThruSections`）、以及 glTF / OpenGL 风格的索引网格。
+属性名与 [`samples/draft-0.1-example.svg3dx`](../samples/draft-0.1-example.svg3dx) 对齐；几何语义对齐 AutoCAD 实体图元、Open CASCADE 构造算子（`MakePrism` / `MakeRevol` / `ThruSections`）、以及 glTF / OpenGL 风格的索引网格。
 
 **属性命名**：图元属性名采用 SVG 常见的 **lowerCamelCase**（全小写开头，如 `length`、`lengthVec`、`bottomCenterPt`）。元素名保持小写加连字符风格（`loop-points`、`bool-union`）。XML 属性名大小写敏感；实现不得把 `Length` 当作 `length` 的别名。
 
@@ -152,11 +154,11 @@
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `transform` | 12 数矩阵 | 单位变换 | 见 3.4；先于父级变换应用 |
+| `s3dx:transform` | 12 数矩阵 | 单位变换 | 见 3.4；先于父级变换应用；**不是** SVG 的 `transform` |
 
 **局部坐标系通则**：
 
-- 图元属性在局部坐标中定义几何；再应用自身 `transform`，再累积父级 `<g>` / `<s3dx:use>` 变换。
+- 图元属性在局部坐标中定义几何；再应用自身 `s3dx:transform`，再累积父级 `<g>` / `<s3dx:use>` 上的 `s3dx:transform`。
 - 对带 `lengthVec` / `widthVec` 的图元：高度方向为 `normalize(lengthVec × widthVec)`（右手系）。未给出时默认 `lengthVec="1 0 0"`、`widthVec="0 1 0"`，高度沿 `+Z`。
 - 对带底/顶中心的回转体：轴线为 `topCenterPt − bottomCenterPt`；长度为其模长。两端中心重合视为错误。
 - 角度未给出时，闭合回转体按整圈 `360` 处理。
@@ -485,18 +487,21 @@
 - 布尔运算操作数可以是 `mesh`（若内核支持网格布尔）；不支持时跳过 + 警告。
 - 非法索引或属性长度不一致 → 跳过该图元 + 警告。
 
-### 3.4 三维变换
+### 3.4 三维变换（`s3dx:transform`）
 
-- 三维上下文中 `transform` 使用 12 数矩阵：
+- 三维变换写在命名空间属性 **`s3dx:transform`** 上，**不**使用 SVG 标准属性 `transform`。这样二维 6 数 `transform` 与三维 12 数矩阵互不抢占同一属性名。
+- 值语法为 12 数矩阵：
 
   `matrix(a b c  d e f  g h i  tx ty tz)`
 
   前 9 个为 3×3 线性变换，后 3 个为平移。
 - **数的分隔**：规范写法为**空格分隔**（可含换行），与本格式点列 / 向量（如 `lengthVec="1 0 0"`）及 SVG 数字列表习惯一致，也便于 `var(--loop-value)` 这类向量直接嵌入平移分量。实现可将逗号视为与空格等价的可选分隔符（对齐 SVG `comma-wsp`），但文档与示例应写空格形式。
-- 单位矩阵平移示例：`matrix(1 0 0 0 1 0 0 0 1 100 200 300)`。
-- 适用范围：`s3dx:*` 元素、`<s3dx:model>` 内元素、`<s3dx:use>`、`<s3dx:loop-*>`、`<s3dx:bool-*>`。
-- 二维 SVG 元素的 `transform` 仍按 SVG 标准 6 数解析（SVG 自身允许空格或逗号）。按元素是否属于三维上下文判定变换维度。
-- 累积顺序：组内变换 → 实例化变换 → 父级变换。
+- 单位矩阵平移示例：`s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)"`。
+- 值中允许 `var(--*)` / `calc(...)`（由 svg3dx 求值器解析）。
+- 适用范围：三维相关的 SVG 宿主元素（如 `<g>`）以及 `s3dx:*` 元素（含 `<s3dx:use>`、`<s3dx:model>`、循环/布尔容器上的图元等）。
+- 标准 SVG 属性 `transform`（无前缀）始终按 **SVG / CSS 二维**语义解释（通常为 6 数 `matrix` 等），**不**承载本格式的 12 数三维矩阵。
+- 标准 SVG/CSS 的 `matrix()` 为 6 参数、`matrix3d()` 为 16 参数；本格式 `s3dx:transform` 上的 12 数 `matrix(...)` 为 **svg3dx 扩展**，由本格式求值，不要求浏览器原生支持。
+- 累积顺序：组内 `s3dx:transform` → 实例化 `s3dx:transform` → 父级 `s3dx:transform`。
 
 ## 4. 组合与布尔
 
@@ -568,7 +573,7 @@
 
 ### 7.1 `<s3dx:model>`
 
-- 属性：`id`（必选）、`mode`（必选）、`transform`（可选，12 数三维矩阵）、`active`（可选，布尔）。
+- 属性：`id`（必选）、`mode`（必选）、`s3dx:transform`（可选，12 数三维矩阵）、`active`（可选，布尔）。
 - `mode` 取值：`solid`（着色实体）、`wireframe`（线框）、`hidden-line`（隐藏线）。【待定】是否需要 `points` 等。
 - 子元素：一个或多个 `<s3dx:use>`，按文档顺序指定显示内容。
 - 不设 `visible` 属性；显示范围完全由子 `<s3dx:use>` 决定。
@@ -587,11 +592,11 @@
 
 ## 8. `<s3dx:use>`
 
-- 属性：`href`（必选，引用 `<g id="...">`）、`transform`（可选，12 数三维矩阵）。
-- 不设 `x`/`y`；三维平移用 `transform` 的 `tx/ty/tz`。
+- 属性：`href`（必选，引用 `<g id="...">`）、`s3dx:transform`（可选，12 数三维矩阵）。
+- 不设 `x`/`y`；三维平移用 `s3dx:transform` 的 `tx/ty/tz`。
 - 仅用于三维上下文；标准 `<use>` 仅用于二维内容，两者不得混用。
 - `<s3dx:use>` 引用纯二维 `<g>`（只含二维元素）时：跳过 + 警告。
-- 变换累积：被引用组自身 `transform` → `<s3dx:use>` 的 `transform` → 父级变换。
+- 变换累积：被引用组自身 `s3dx:transform` → `<s3dx:use>` 的 `s3dx:transform` → 父级 `s3dx:transform`。
 
 ## 9. 求值模型
 
@@ -641,7 +646,7 @@
 
 ### 10.2 示例
 
-完整示例见 [samples/draft-0.1-example.svg](../samples/draft-0.1-example.svg)，涵盖参数类规则、布尔运算、条件组、`loop-points` / `loop-range`、多模型切换与二维标注层。
+完整示例见 [samples/draft-0.1-example.svg3dx](../samples/draft-0.1-example.svg3dx)，涵盖参数类规则、布尔运算、条件组、`loop-points` / `loop-range`、多模型切换与二维标注层。
 
 ### 10.3 领域扩展（非核心，不要求实现）
 
