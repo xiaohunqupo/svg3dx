@@ -17,7 +17,7 @@
 ## 核心设计
 
 - **天生兼容 SVG。** 三维元素位于自定义命名空间（`urn:s3dx:draft:0.1`）。标准 SVG 渲染器会忽略它们，并继续渲染二维内容。根元素上的 `svg3d="true"` 开关启用三维语义。
-- **用 CSS 自定义属性承载参数。** 仅支持简化 CSS 子集（类选择器 + 内联自定义属性）。表达式以 `[name]` 或 `var(--name)` 引用参数；外部传参优先级最高，且不修改 DOM。
+- **用 CSS 自定义属性承载参数。** 声明写 `--name`，引用写 `var(--name)`，标量运算用 `calc(...)`（如 `calc(var(--D) - 10)`）。循环注入 `--loop-index` / `--loop-value`。外部传参优先级最高，且不修改 DOM。图元属性名采用 lowerCamelCase（如 `length`、`lengthVec`）。
 - **用结构表达逻辑，而非塞进语法。** 条件挂在 `<g>` 上（`if` / `ifnot`）；循环是独立元素（`s3dx:loop-points`、`s3dx:loop-range`）；布尔运算是元素（`s3dx:bool-union` / `subtract` / `intersect`），作用域封闭、按文档顺序求值。
 - **与几何内核解耦。** 格式只描述几何操作；求值交给后端（Open CASCADE、Manifold 等）。规范不规定数值精度。
 - **配置显示，不定义相机。** `<s3dx:model>` 声明渲染模式（`solid` / `wireframe` / `hidden-line`）以及要显示的几何；视点与投影留给宿主。

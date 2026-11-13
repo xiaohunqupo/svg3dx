@@ -5,7 +5,7 @@
      xmlns="http://www.w3.org/2000/svg"
      xmlns:s3dx="urn:s3dx:draft:0.1">
 
-  <!-- 参数：类规则 -->
+  <!-- 参数：声明 --名；引用 var(--名)；标量运算 calc(...) -->
   <style>
     .tanks    { --D: 200; --H: 100; --R: 50; }
     .windows  { --H: 100; --W: 20;  --L: 200; }
@@ -16,94 +16,95 @@
   <defs>
     <!-- 窗组：三维图元组，标准 SVG 下整组被跳过 -->
     <g id="group-windows1" class="windows"
-       transform="matrix(1,0,0, 0,1,0, 0,0,1, 100,200,300)">
-      <s3dx:box Length="40"  Width="20" Height="400"
-                LengthVec="1 0 0" WidthVec="0 1 0"/>
-      <s3dx:box Length="120" Width="20" Height="40"
-                LengthVec="1 0 0" WidthVec="0 1 0"
-                transform="matrix(1,0,0, 0,1,0, 0,0,1, 40,0,0)"/>
-      <s3dx:box Length="120" Width="20" Height="40"
-                LengthVec="1 0 0" WidthVec="0 1 0"
-                transform="matrix(1,0,0, 0,1,0, 0,0,1, 40,0,360)"/>
-      <s3dx:box Length="40"  Width="20" Height="400"
-                LengthVec="1 0 0" WidthVec="0 1 0"
-                transform="matrix(1,0,0, 0,1,0, 0,0,1, 160,0,0)"/>
+       transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)">
+      <s3dx:box length="40"  width="20" height="400"
+                lengthVec="1 0 0" widthVec="0 1 0"/>
+      <s3dx:box length="120" width="20" height="40"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                transform="matrix(1 0 0 0 1 0 0 0 1 40 0 0)"/>
+      <s3dx:box length="120" width="20" height="40"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                transform="matrix(1 0 0 0 1 0 0 0 1 40 0 360)"/>
+      <s3dx:box length="40"  width="20" height="400"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                transform="matrix(1 0 0 0 1 0 0 0 1 160 0 0)"/>
     </g>
 
     <!-- 罐组：参数覆盖 + 布尔减 + 条件组 -->
     <g id="group-tanks1" class="tanks"
-       transform="matrix(1,0,0, 0,1,0, 0,0,1, 100,200,300)">
-      <s3dx:cylinder Diameter="60" BottomCenterPt="0 0 0" TopCenterPt="0 0 100">
-        <s3dx:exp Diameter="[D]-10"/>
+       transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)">
+      <s3dx:cylinder diameter="60" bottomCenterPt="0 0 0" topCenterPt="0 0 100">
+        <s3dx:exp diameter="calc(var(--D) - 10)"/>
       </s3dx:cylinder>
-      <s3dx:cylinder Diameter="55" BottomCenterPt="0 0 0" TopCenterPt="0 0 500"
-                     transform="matrix(1,0,0, 0,1,0, 0,0,1, 0,0,100)">
-        <s3dx:exp Diameter="[D]"/>
+      <s3dx:cylinder diameter="55" bottomCenterPt="0 0 0" topCenterPt="0 0 500"
+                     transform="matrix(1 0 0 0 1 0 0 0 1 0 0 100)">
+        <s3dx:exp diameter="var(--D)"/>
       </s3dx:cylinder>
 
       <!-- 布尔减：从大球中减去小球 -->
       <s3dx:bool-subtract>
-        <s3dx:sphere Radius="60" Center="100 200 300">
-          <s3dx:exp Radius="[R]"/>
+        <s3dx:sphere radius="60" center="100 200 300">
+          <s3dx:exp radius="var(--R)"/>
         </s3dx:sphere>
-        <s3dx:sphere Radius="20" Center="100 200 300">
-          <s3dx:exp Radius="[R]/3"/>
+        <s3dx:sphere radius="20" center="100 200 300">
+          <s3dx:exp radius="calc(var(--R) / 3)"/>
         </s3dx:sphere>
       </s3dx:bool-subtract>
 
       <!-- 条件组：R=50 时显示大球 -->
-      <g if="[R] = 50">
-        <s3dx:sphere Radius="60" Center="100 200 300">
-          <s3dx:exp Radius="[R]"/>
+      <g if="var(--R) = 50">
+        <s3dx:sphere radius="60" center="100 200 300">
+          <s3dx:exp radius="var(--R)"/>
         </s3dx:sphere>
       </g>
       <!-- 条件组：R 小于 50 时显示小球 -->
-      <g if="[R] &lt; 50">
-        <s3dx:sphere Radius="30" Center="100 200 300">
-          <s3dx:exp Radius="[R]/2"/>
+      <g if="var(--R) &lt; 50">
+        <s3dx:sphere radius="30" center="100 200 300">
+          <s3dx:exp radius="calc(var(--R) / 2)"/>
         </s3dx:sphere>
       </g>
     </g>
 
-    <!-- 循环：沿四个点阵列展开窗组 -->
+    <!-- 循环：沿四个点阵列展开窗组（--loop-value 为向量，多 token 展开） -->
     <g id="group-window-array">
       <s3dx:loop-points points="0 1000 0  1000 1000 0  1000 0 0  0 0 0">
         <s3dx:use href="#group-windows1"
-                  transform="matrix(1,0,0, 0,1,0, 0,0,1, [loop.value])"/>
+                  transform="matrix(1 0 0 0 1 0 0 0 1 var(--loop-value))"/>
       </s3dx:loop-points>
     </g>
 
-    <!-- 数值范围循环：生成一排柱子 -->
+    <!-- 数值范围循环：生成一排柱子（标量用 calc） -->
     <g id="group-pillars">
       <s3dx:loop-range start="0" end="4" step="1">
-        <s3dx:box Length="20" Width="20" Height="200"
-                  LengthVec="1 0 0" WidthVec="0 1 0"
-                  transform="matrix(1,0,0, 0,1,0, 0,0,1, [loop.value * 50], 0, 0)"/>
+        <s3dx:box length="20" width="20" height="200"
+                  lengthVec="1 0 0" widthVec="0 1 0"
+                  transform="matrix(1 0 0 0 1 0 0 0 1 calc(var(--loop-value) * 50) 0 0)"/>
       </s3dx:loop-range>
     </g>
 
     <!-- 示例组：多种图元 -->
     <g id="group-3" class="example">
-      <s3dx:sphere Radius="60" Center="0 0 0">
-        <s3dx:exp Radius="[R]"/>
+      <s3dx:sphere radius="60" center="0 0 0">
+        <s3dx:exp radius="var(--R)"/>
       </s3dx:sphere>
-      <s3dx:torus Diameter1="60" Diameter2="60" Angle="60"
-                  TorusCenterPt="0 0 0" Normal="0 0 1">
-        <s3dx:exp Diameter1="[D1]" Angle="[A]"/>
+      <s3dx:torus diameter1="60" diameter2="60" angle="60"
+                  torusCenterPt="0 0 0" normal="0 0 1">
+        <s3dx:exp diameter1="var(--D1)" angle="var(--A)"/>
       </s3dx:torus>
-      <s3dx:box Length="60" Width="60" Height="60"
-                LengthVec="1 0 0" WidthVec="0 1 0">
-        <s3dx:exp Length="[W]" Width="[W]" Height="[H]"/>
+      <s3dx:box length="60" width="60" height="60"
+                lengthVec="1 0 0" widthVec="0 1 0">
+        <s3dx:exp length="var(--W)" width="var(--W)" height="var(--H)"/>
       </s3dx:box>
-      <s3dx:cone BottomDiameter="60" TopDiameter="30"
-                 BottomCenterPt="0 0 0" TopCenterPt="0 0 80">
-        <s3dx:exp BottomDiameter="[D1]"/>
+      <s3dx:cone bottomDiameter="60" topDiameter="30"
+                 bottomCenterPt="0 0 0" topCenterPt="0 0 80">
+        <s3dx:exp bottomDiameter="var(--D1)"/>
       </s3dx:cone>
-      <s3dx:polylinestretch
-          StretchFace="0 100 0 100 100 0 100 0 0 0 0 0"
-          Length="60" Dir="0 0 1"/>
+      <s3dx:extrude length="60" dir="0 0 1">
+        <s3dx:profile type="polygon"
+                      points="0 100 0  100 100 0  100 0 0  0 0 0"/>
+      </s3dx:extrude>
       <s3dx:triangles point="0 100 0 100 100 0 100 0 0 0 0 0"
-                      Normal="0 0 1 0 0 1 0 0 1 0 0 1"
+                      normal="0 0 1 0 0 1 0 0 1 0 0 1"
                       index="1 2 3 1 3 4"/>
     </g>
   </defs>
@@ -115,7 +116,7 @@
     <s3dx:use href="#group-window-array"/>
     <s3dx:use href="#group-pillars"/>
     <s3dx:use href="#group-3"
-              transform="matrix(1,0,0, 0,1,0, 0,0,1, 300,0,0)"/>
+              transform="matrix(1 0 0 0 1 0 0 0 1 300 0 0)"/>
   </s3dx:model>
 
   <s3dx:model id="wireframe-view" mode="wireframe">
