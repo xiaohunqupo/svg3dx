@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.1">
+
+  <!-- mode=1 显示大盒；否则显示小盒（互斥用 if + if-not） -->
+  <style>
+    :root { --mode: 1; --large: 120; --small: 40; }
+  </style>
+
+  <defs>
+    <g id="main">
+      <s3dx:if test="var(--mode) = 1">
+        <s3dx:box length="var(--large)" width="var(--large)" height="var(--large)"
+                  lengthVec="1 0 0" widthVec="0 1 0"/>
+      </s3dx:if>
+      <s3dx:if-not test="var(--mode) = 1">
+        <s3dx:box length="var(--small)" width="var(--small)" height="var(--small)"
+                  lengthVec="1 0 0" widthVec="0 1 0"/>
+      </s3dx:if-not>
+    </g>
+  </defs>
+
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <s3dx:use href="#main"/>
+  </s3dx:model>
+</svg>

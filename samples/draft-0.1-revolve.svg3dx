@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.1">
+
+  <style>
+    :root { --angle: 360; }
+  </style>
+
+  <defs>
+    <g id="main">
+      <s3dx:revolve axisOrigin="0 0 0" axisDir="0 0 1" angle="var(--angle)">
+        <s3dx:profile type="polygon"
+                      points="40 0 0  80 0 0  80 0 60  40 0 40"/>
+      </s3dx:revolve>
+    </g>
+  </defs>
+
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <s3dx:use href="#main"/>
+  </s3dx:model>
+</svg>

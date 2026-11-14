@@ -5,12 +5,13 @@
      xmlns="http://www.w3.org/2000/svg"
      xmlns:s3dx="urn:s3dx:draft:0.1">
 
-  <!-- 参数：声明自定义属性名；引用 var()；标量运算 calc() -->
+  <!-- 参数：:root 直接字面量为外部可调入口；类规则为内部量；引用 var()；标量运算 calc() -->
   <style>
-    .tanks    { --D: 200; --H: 100; --R: 50; }
-    .windows  { --H: 100; --W: 20;  --L: 200; }
-    .door     { --H: 100; --W: 50;  --T: 20; }
-    .example  { --H: 100; --W: 50; --T: 20; --R: 20; --D1: 20; --A: 90; }
+    :root     { --H: 100; }
+    .tanks    { --D: 200; --R: 50; }
+    .windows  { --W: 20;  --L: 200; }
+    .door     { --W: 50;  --T: 20; }
+    .example  { --W: 50; --T: 20; --R: 20; --D1: 20; --A: 90; }
   </style>
 
   <defs>
@@ -30,7 +31,7 @@
                 s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 160 0 0)"/>
     </g>
 
-    <!-- 罐组：参数覆盖 + 布尔减 + 条件组 -->
+    <!-- 罐组：参数覆盖 + 布尔减 + 条件 -->
     <g id="group-tanks1" class="tanks"
        s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)">
       <s3dx:cylinder diameter="60" bottomCenterPt="0 0 0" topCenterPt="0 0 100">
@@ -51,18 +52,18 @@
         </s3dx:sphere>
       </s3dx:bool-subtract>
 
-      <!-- 条件组：R=50 时显示大球 -->
-      <g if="var(--R) = 50">
+      <!-- 条件：R=50 时显示大球 -->
+      <s3dx:if test="var(--R) = 50">
         <s3dx:sphere radius="60" center="100 200 300">
           <s3dx:exp radius="var(--R)"/>
         </s3dx:sphere>
-      </g>
-      <!-- 条件组：R 小于 50 时显示小球 -->
-      <g if="var(--R) &lt; 50">
+      </s3dx:if>
+      <!-- 条件：R 小于 50 时显示小球 -->
+      <s3dx:if test="var(--R) &lt; 50">
         <s3dx:sphere radius="30" center="100 200 300">
           <s3dx:exp radius="calc(var(--R) / 2)"/>
         </s3dx:sphere>
-      </g>
+      </s3dx:if>
     </g>
 
     <!-- 循环：沿四个点阵列展开窗组（loop-value 为向量，多 token 展开） -->

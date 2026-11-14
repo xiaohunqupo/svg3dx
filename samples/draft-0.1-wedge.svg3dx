@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.1">
+
+  <style>
+    :root { --length: 120; --width: 60; --height: 80; --topLength: 0; }
+  </style>
+
+  <defs>
+    <g id="main">
+      <s3dx:wedge length="var(--length)" width="var(--width)" height="var(--height)"
+                  topLength="var(--topLength)"
+                  lengthVec="1 0 0" widthVec="0 1 0"/>
+    </g>
+  </defs>
+
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <s3dx:use href="#main"/>
+  </s3dx:model>
+</svg>

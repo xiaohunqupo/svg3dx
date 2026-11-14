@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.1">
+
+  <style>
+    :root { --diameter: 80; --height: 100; --angle: 270; }
+  </style>
+
+  <defs>
+    <g id="main">
+      <s3dx:cutcylinder diameter="var(--diameter)" angle="var(--angle)"
+                        bottomCenterPt="0 0 0"
+                        topCenterPt="0 0 var(--height)"/>
+    </g>
+  </defs>
+
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <s3dx:use href="#main"/>
+  </s3dx:model>
+</svg>
