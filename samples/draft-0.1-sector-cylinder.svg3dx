@@ -6,12 +6,12 @@
      xmlns:s3dx="urn:s3dx:draft:0.1">
 
   <style>
-    :root { --diameter: 80; --height: 100; --angle: 270; }
+    :root { --diameter: 100; --height: 25; --angle: 270; }
   </style>
 
   <defs>
     <g id="main">
-      <s3dx:cutcylinder diameter="var(--diameter)" angle="var(--angle)"
+      <s3dx:sector-cylinder diameter="var(--diameter)" angle="var(--angle)"
                         bottomCenterPt="0 0 0"
                         topCenterPt="0 0 var(--height)"/>
     </g>

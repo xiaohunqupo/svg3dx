@@ -21,7 +21,7 @@
 ### 1.2 命名空间
 
 - 三维元素使用命名空间 `urn:s3dx:draft:0.1`，推荐前缀 `s3dx`。
-- 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`cutcylinder`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`mesh`、`triangles`，以及兼容别名 `polylinestretch`）；子元 `<s3dx:profile>`、`<s3dx:path>`；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`。
+- 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`mesh`、`triangles`，以及兼容别名 `polylinestretch`→`extrude`、`cutcylinder`→`sector-cylinder`）；子元 `<s3dx:profile>`、`<s3dx:path>`；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`。
 - **无前缀属性**（null 命名空间）：图元几何属性（lowerCamelCase，见 3.2）、以及 `href`、`mode`、`test`、`points`、`start`、`end`、`step`、`active`、`svg3d` 等。
 - **带命名空间的属性**：三维变换使用 `s3dx:transform`（见 3.4），**不**占用 SVG 标准的 `transform` 表现属性，以免与二维 6 数 `matrix` 冲突。
 - 标准 SVG 解析器对未知命名空间元素的处理：包含在 DOM 中，不渲染，不进一步处理。本格式依赖此行为实现二维兼容。
@@ -144,7 +144,7 @@
 
 属性名与 [`samples/draft-0.1-example.svg3dx`](../samples/draft-0.1-example.svg3dx) 对齐；几何语义对齐 AutoCAD 实体图元、Open CASCADE 构造算子（`MakePrism` / `MakeRevol` / `ThruSections`）、以及 glTF / OpenGL 风格的索引网格。
 
-**属性命名**：图元属性名采用 SVG 常见的 **lowerCamelCase**（全小写开头，如 `length`、`lengthVec`、`bottomCenterPt`）。元素名保持小写加连字符风格（`if-not`、`loop-points`、`bool-union`）。XML 属性名大小写敏感；实现不得把 `Length` 当作 `length` 的别名。
+**属性命名**：图元属性名采用 SVG 常见的 **lowerCamelCase**（全小写开头，如 `length`、`lengthVec`、`bottomCenterPt`）。元素名保持小写；多词时用连字符（如 `sector-cylinder`、`if-not`、`loop-points`、`bool-union`）。XML 属性名大小写敏感；实现不得把 `Length` 当作 `length` 的别名。
 
 #### 3.2.1 类型与通用约定
 
@@ -200,7 +200,7 @@
 | `bottomCenterPt` | 是 | 点 | — | 底面圆心 |
 | `topCenterPt` | 是 | 点 | — | 顶面圆心 |
 
-端面垂直于轴线。扇形柱面见 `cutcylinder`。
+端面垂直于轴线。扇形柱面见 `sector-cylinder`。
 
 ##### `s3dx:sphere`（球体）
 
@@ -259,9 +259,9 @@
 | `height` | 是 | 数字 | — | 挤出高度 |
 | `normal` | 否 | 向量 | 由底面三点按右手系推定 | 挤出方向 |
 
-##### `s3dx:cutcylinder`（扇形柱）
+##### `s3dx:sector-cylinder`（扇形柱）
 
-对齐 OCC `MakeCylinder(r, h, angle)`。
+对齐 OCC `MakeCylinder(r, h, angle)`。多词元素名用连字符，避免 `cutcylinder` 被误读为布尔裁剪。兼容别名：`cutcylinder`（读入时等同本元素；写出应使用 `sector-cylinder`）。
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
@@ -472,7 +472,7 @@
 | `wedge` | length, width, height | lengthVec, widthVec, topLength |
 | `pyramid` | length, width, height | lengthVec, widthVec, topLength, topWidth |
 | `prism` | points, height | normal |
-| `cutcylinder` | diameter, bottomCenterPt, topCenterPt | angle |
+| `sector-cylinder` | diameter, bottomCenterPt, topCenterPt | angle |
 | `extrude` | dir, length | 恰好 1 × `<s3dx:profile>`；旧名 `polylinestretch` |
 | `revolve` | axisOrigin, axisDir | angle；恰好 1 × `<s3dx:profile>` |
 | `loft` | — | solid, ruled；≥2 × `<s3dx:profile>` |
