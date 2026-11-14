@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.1">
+
+  <!-- 同心正方体 + 球体，三种布尔；沿 X 分开摆放 -->
+  <style>
+    :root { --size: 100; --radius: 65; }
+  </style>
+
+  <defs>
+    <!-- 局部原点在正方体中心：角点平移 -size/2 -->
+    <g id="cube">
+      <s3dx:box length="var(--size)" width="var(--size)" height="var(--size)"
+                lengthVec="1 0 0" widthVec="0 1 0"/>
+    </g>
+    <g id="ball">
+      <s3dx:sphere radius="var(--radius)" center="0 0 0"/>
+    </g>
+
+    <g id="union">
+      <s3dx:bool-union
+          s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -180 0 0)">
+        <s3dx:use href="#cube"/>
+        <s3dx:use href="#ball"/>
+      </s3dx:bool-union>
+    </g>
+    <g id="subtract">
+      <s3dx:bool-subtract
+          s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 0 0)">
+        <s3dx:use href="#cube"/>
+        <s3dx:use href="#ball"/>
+      </s3dx:bool-subtract>
+    </g>
+    <g id="intersect">
+      <s3dx:bool-intersect
+          s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 180 0 0)">
+        <s3dx:use href="#cube"/>
+        <s3dx:use href="#ball"/>
+      </s3dx:bool-intersect>
+    </g>
+  </defs>
+
+    <s3dx:model id="bool-union" mode="solid" active="true">
+      <s3dx:use href="#union"/>
+    </s3dx:model>
+    <s3dx:model id="bool-subtract" mode="solid" active="true">
+      <s3dx:use href="#subtract"/>
+    </s3dx:model>
+    <s3dx:model id="bool-intersect" mode="solid" active="true">
+      <s3dx:use href="#intersect"/>
+    </s3dx:model>
+</svg>
