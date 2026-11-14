@@ -26,8 +26,8 @@
 ## 核心设计
 
 - **天生兼容 SVG。** 三维元素位于自定义命名空间（`urn:s3dx:draft:0.1`）。标准 SVG 渲染器会忽略它们，并继续渲染二维内容。根元素上的扩展属性 `svg3d="true"` 开关启用三维语义。三维变换写在 `s3dx:transform` 上，不占用 SVG 的 `transform`。
-- **用 CSS 自定义属性承载参数。** 声明写 `--name`，引用写 `var(--name)`，标量运算用 `calc(...)`（如 `calc(var(--D) - 10)`）。循环注入 `--loop-index` / `--loop-value`。外部传参优先级最高，且不修改 DOM。图元属性名采用 lowerCamelCase（如 `length`、`lengthVec`）。
-- **用结构表达逻辑，而非塞进语法。** 条件挂在 `<g>` 上（`if` / `ifnot`）；循环是独立元素（`s3dx:loop-points`、`s3dx:loop-range`）；布尔运算是元素（`s3dx:bool-union` / `subtract` / `intersect`），作用域封闭、按文档顺序求值。
+- **用 CSS 自定义属性承载参数。** 声明写 `--name`，引用写 `var(--name)`，标量运算用 `calc(...)`（如 `calc(var(--D) - 10)`）。文档级默认用 `:root { --H: 100; }`，类规则可覆盖。循环注入 `--loop-index` / `--loop-value`。**外部传参只能覆盖 `:root` 中的直接字面量**（不含 `var`/`calc`），类规则与派生量不可被外部改写。图元属性名采用 lowerCamelCase（如 `length`、`lengthVec`）。
+- **用结构表达逻辑，而非塞进语法。** 条件是独立元素（`s3dx:if` / `s3dx:if-not`，属性 `test`）；循环是独立元素（`s3dx:loop-points`、`s3dx:loop-range`）；布尔运算是元素（`s3dx:bool-union` / `subtract` / `intersect`），作用域封闭、按文档顺序求值。`<g>` 只做分组、命名与参数作用域。
 - **与几何内核解耦。** 格式只描述几何操作；求值交给后端（Open CASCADE、Manifold 等）。规范不规定数值精度。
 - **配置显示，不定义相机。** `<s3dx:model>` 声明渲染模式（`solid` / `wireframe` / `hidden-line`）以及要显示的几何；视点与投影留给宿主。
 

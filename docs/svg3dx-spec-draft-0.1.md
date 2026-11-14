@@ -21,8 +21,8 @@
 ### 1.2 命名空间
 
 - 三维元素使用命名空间 `urn:s3dx:draft:0.1`，推荐前缀 `s3dx`。
-- 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`cutcylinder`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`mesh`、`triangles`，以及兼容别名 `polylinestretch`）；子元 `<s3dx:profile>`、`<s3dx:path>`；以及 `<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`。
-- **无前缀属性**（null 命名空间）：图元几何属性（lowerCamelCase，见 3.2）、以及 `href`、`mode`、`if`、`ifnot`、`points`、`start`、`end`、`step`、`active`、`svg3d` 等。
+- 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`cutcylinder`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`mesh`、`triangles`，以及兼容别名 `polylinestretch`）；子元 `<s3dx:profile>`、`<s3dx:path>`；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`。
+- **无前缀属性**（null 命名空间）：图元几何属性（lowerCamelCase，见 3.2）、以及 `href`、`mode`、`test`、`points`、`start`、`end`、`step`、`active`、`svg3d` 等。
 - **带命名空间的属性**：三维变换使用 `s3dx:transform`（见 3.4），**不**占用 SVG 标准的 `transform` 表现属性，以免与二维 6 数 `matrix` 冲突。
 - 标准 SVG 解析器对未知命名空间元素的处理：包含在 DOM 中，不渲染，不进一步处理。本格式依赖此行为实现二维兼容。
 
@@ -36,13 +36,13 @@
 
 ### 2.1 声明位置
 
-参数以 CSS 自定义属性形式声明，支持三处，优先级从低到高：
+参数以 CSS 自定义属性形式声明，支持以下位置（查找时最近声明者优先，见 2.3）：
 
-1. `<style>` 块内的类规则：`.类名 { --参数名: 值; }`
-2. 元素内联 `style` 属性：`style="--参数名: 值;"`
-3. 根元素或任意祖先元素的内联 `style` 或类规则（按 DOM 继承）。
+1. `<style>` 块内的 `:root` 规则：`:root { --参数名: 值; }`（文档级默认，继承到全部后代）
+2. `<style>` 块内的类规则：`.类名 { --参数名: 值; }`
+3. 元素内联 `style` 属性：`style="--参数名: 值;"`（含根 `<svg>` 内联）
 
-**参数查找**：须识别类选择器，以及内联 `style` 上的自定义属性。`:root` 与 CSS 一致，等价于在文档根声明（自定义属性会继承到后代），不是本格式另造的语义；实现可识别，也可仅认根元素内联 `style`。文档仍可使用完整 CSS 做二维样式。
+**参数查找**：须识别 `:root`、类选择器，以及内联 `style` 上的自定义属性。`:root` 与 CSS 一致，等价于在文档根声明；根元素内联 `style` 与 `:root` 同属文档根作用域，内联优先。文档仍可使用完整 CSS 做二维样式（实现可忽略未列出的选择器）。
 
 ### 2.2 引用语法
 
@@ -60,9 +60,9 @@
 
 1. 外部传入参数（最高优先级）
 2. 自身 `<s3dx:exp>` 的父图元属性
-3. 最近祖先 `<g>` 的类规则
+3. 最近祖先 `<g>` 的类规则或内联 `style`
 4. 更远祖先的类规则或内联 `style`
-5. 根元素内联 `style`（若实现支持 `:root`，与此项同级，均为文档根作用域）
+5. 文档根作用域：根元素内联 `style`，其次 `:root` 规则
 6. 默认值
 
 嵌套 `s3dx:loop-*` 时，内层迭代变量遮蔽外层。
@@ -84,6 +84,16 @@
 - 外部参数键名对应自定义属性名：可传 `D` 或 `--D`（实现应归一化，去掉可选的前导 `--` 再查找）。
 - 外部参数值按 2.4 同规则解析类型。
 
+**白名单（强制）**：外部**仅允许**覆盖在 `<style>` 的 `:root` 规则中**直接字面量**声明的自定义属性。
+
+- 允许：`:root { --H: 100; --Label: tank; }`，外部可传 `H` / `Label`。
+- 不允许覆盖：
+  - 仅出现在类规则中的参数（如 `.tanks { --R: 50; }`）
+  - `:root` 中含 `var(` / `calc(` 的派生声明（如 `--D: calc(var(--H) - 20)`）
+  - 根元素或其他元素内联 `style` 上的自定义属性（公开可调参数应写在 `:root`）
+- 实现遇到白名单外的外部键：必须**不应用**该键，并产生警告；不得静默当作任意 DOM 参数覆盖。
+- 目的：把宿主可调入口收敛为文档显式公开的直接量，避免外部传参改写内部派生量或局部参数导致模型行为失控。
+
 ### 2.6 表达式与 `calc()`
 
 分层约定（尽量贴近 CSS，比较/逻辑由本格式补齐）：
@@ -92,10 +102,10 @@
 |---|---|---|
 | 引用 | `var(--名字)` | 取自定义属性 / 循环注入变量 |
 | 标量算术 | `calc(...)` | `+ - * /` 与括号，语法对齐 CSS Values `calc()` |
-| 比较 / 逻辑 | 本格式表达式 | `=` `<` `>` `<=` `>=` `<>`，以及 `and` `or` `not`（用于 `if` / `ifnot` 等） |
+| 比较 / 逻辑 | 本格式表达式 | `=` `<` `>` `<=` `>=` `<>`，以及 `and` `or` `not`（用于 `s3dx:if` / `s3dx:if-not` 的 `test` 等） |
 
 - 数值属性与 `<s3dx:exp>` 中：字面量、`var(--*)`、或 `calc(...)`。
-- 条件属性中：比较两侧可为字面量、`var(--*)` 或 `calc(...)`，例如 `if="var(--R) = 50"`、`if="calc(var(--R) / 2) &lt; 20"`。
+- 条件 `test` 中：比较两侧可为字面量、`var(--*)` 或 `calc(...)`，例如 `test="var(--R) = 50"`、`test="calc(var(--R) / 2) &lt; 20"`。
 - `=` 表示相等比较，不存在赋值。
 - XML 属性中含 `<`、`&` 须转义为 `&lt;`、`&amp;`。
 - `calc()` 内建议按 CSS 习惯在 `+` / `-` 两侧留空格（如 `calc(var(--D) - 10)`）。
@@ -104,7 +114,7 @@
 ### 2.7 与 CSS / SVG 的对齐说明
 
 - **`var()` / `calc()` 本身是 CSS 标准**，在支持 CSS 的 SVG 用户代理中，用于 **CSS 属性**（`<style>`、元素 `style="..."`）时按 CSS 级联与计算。
-- 本格式另外规定：在 **svg3dx 求值的属性值**中（如 `<s3dx:exp>`、`if`、`s3dx:transform` 等）也可书写 `var(--*)` / `calc(...)`，由 **svg3dx 求值器**按与 CSS 相同的表面语法解析。这不要求浏览器对**非 CSS 的 XML 属性**做变量替换。
+- 本格式另外规定：在 **svg3dx 求值的属性值**中（如 `<s3dx:exp>`、`test`、`s3dx:transform` 等）也可书写 `var(--*)` / `calc(...)`，由 **svg3dx 求值器**按与 CSS 相同的表面语法解析。这不要求浏览器对**非 CSS 的 XML 属性**做变量替换。
 - 因此：二维样式走 CSS；三维参数/表达式走 svg3dx 求值器——语法对齐，宿主分工不同。
 - 自定义属性名须为合法 CSS `<dashed-ident>`（如 `--D`、`--loop-value`）；**不得**使用 `--loop.value` 这类含 `.` 的名字。
 - 一个 `var(--*)` 的值可以是多个空格分隔的 token（CSS 允许多 token 替换）；本格式用此表达向量嵌入（见 2.8）。
@@ -134,7 +144,7 @@
 
 属性名与 [`samples/draft-0.1-example.svg3dx`](../samples/draft-0.1-example.svg3dx) 对齐；几何语义对齐 AutoCAD 实体图元、Open CASCADE 构造算子（`MakePrism` / `MakeRevol` / `ThruSections`）、以及 glTF / OpenGL 风格的索引网格。
 
-**属性命名**：图元属性名采用 SVG 常见的 **lowerCamelCase**（全小写开头，如 `length`、`lengthVec`、`bottomCenterPt`）。元素名保持小写加连字符风格（`loop-points`、`bool-union`）。XML 属性名大小写敏感；实现不得把 `Length` 当作 `length` 的别名。
+**属性命名**：图元属性名采用 SVG 常见的 **lowerCamelCase**（全小写开头，如 `length`、`lengthVec`、`bottomCenterPt`）。元素名保持小写加连字符风格（`if-not`、`loop-points`、`bool-union`）。XML 属性名大小写敏感；实现不得把 `Length` 当作 `length` 的别名。
 
 #### 3.2.1 类型与通用约定
 
@@ -507,8 +517,8 @@
 
 ### 4.1 `<g>` 的角色
 
-- `<g>` 承担分组、参数作用域、条件属性（`if`/`ifnot`）。不承载布尔运算。
-- 不带 `bool` 的 `<g>`：只做分组和参数作用域，子元素按文档顺序正常累积（等同并集），不改变几何累积语义。
+- `<g>` 承担分组、命名（`id`）、参数作用域（`class` / `style`）与 `s3dx:transform`。不承载条件判断，不承载布尔运算。
+- 子元素按文档顺序正常累积（等同并集），不改变几何累积语义。
 
 ### 4.2 布尔元素
 
@@ -523,26 +533,30 @@
 
 ## 5. 条件逻辑
 
-### 5.1 挂载点
+### 5.1 元素
 
-- `if` / `ifnot` 只能挂在 `<g>` 上。不能挂在三维图元、`<s3dx:use>`、`<s3dx:loop-*>`、`<s3dx:bool-*>` 上。
+条件是独立的控制流元素，与布尔、循环同属结构表达：
 
-### 5.2 语义
+- `<s3dx:if test="条件">`：条件为真时子树参与求值，为假时整个子树跳过。
+- `<s3dx:if-not test="条件">`：条件为假时子树参与，为真时跳过。
 
-- `if="条件"`：条件为真时该组参与求值，为假时整个子树跳过。
-- `ifnot="条件"`：条件为假时参与，为真时跳过。
-- 条件值支持表达式（见 2.6）。
-- 同一 `<g>` 上同时出现 `if` 和 `ifnot`：【待定】建议禁止，或规定为“与”。
-- 条件求值失败（未定义参数、语法错误）：视为假 + 警告。
-- 不支持 `else`；用 `if` + `ifnot` 两个组表达。
+### 5.2 规则
+
+- 属性 `test` 必选；值支持表达式（见 2.6）。
+- 可出现在 `<g>`、`<defs>`、`<s3dx:model>`、`<s3dx:loop-*>`、`<s3dx:bool-*>`、以及嵌套的 `s3dx:if` / `s3dx:if-not` 内。
+- 允许的子元素与 `<g>` 在三维求值中相同：图元、`<s3dx:use>`、嵌套的 `if` / `if-not` / `loop-*` / `bool-*`、以及内层 `<g>`。
+- 可选携带 `s3dx:transform`（与其他 `s3dx:*` 容器一致）；不承担命名分组职责（可复用的命名组仍用带 `id` 的 `<g>`）。
+- 条件求值失败（未定义参数、语法错误、类型不匹配）：视为假 + 警告。
+- 不支持 `else`；互斥分支用一对 `s3dx:if` + `s3dx:if-not`（同一 `test`）表达。
+- 不在标准 SVG 元素上挂 `if` / `ifnot` 属性；旧写法不属于本草案合规文档。
 
 ## 6. 循环展开
 
 ### 6.1 分工
 
-- `<g>` 负责命名分组与条件；`<s3dx:loop-*>` 负责重复展开。
-- 循环元素必须位于 `<g>`、`<defs>`、`<s3dx:model>` 内。
-- 允许直接写图元、`<s3dx:use>`、嵌套 `loop-*`/`bool-*` 作为子元素。
+- `<g>` 负责命名分组与参数作用域；`<s3dx:if>` / `<s3dx:if-not>` 负责条件；`<s3dx:loop-*>` 负责重复展开。
+- 循环元素必须位于 `<g>`、`<defs>`、`<s3dx:model>`、条件元素或布尔元素内。
+- 允许直接写图元、`<s3dx:use>`、嵌套 `loop-*` / `bool-*` / `if` / `if-not` 作为子元素。
 
 ### 6.2 `s3dx:loop-points`
 
@@ -606,7 +620,7 @@
 2. 建立参数作用域
 3. 解析外部参数
 4. 展开 `loop-*`（求值 `loop-range` 参数）
-5. 求值 `if`/`ifnot`（展开后每个副本独立判断）
+5. 求值 `s3dx:if` / `s3dx:if-not` 的 `test`（展开后每个副本独立判断）
 6. 求值 `<s3dx:exp>` 与表达式
 7. 生成几何操作图
 8. 内核求值，得到几何体集合
@@ -639,14 +653,14 @@
    - `mesh` 是否允许外部二进制缓冲（类似 glTF buffer）。
    - Fillet / Chamfer / Shell 等“修饰特征”是否以可选算子进入（SolidWorks 有，STEP/IFC 交换中较少作为参数配方）。
 2. `mode`（显示）取值集是否够（是否需 `points`、`shaded-edges` 等）。
-3. `if` 与 `ifnot` 同时出现的行为。
-4. 文件扩展名是否用 `.svg3dx`。
-5. 正式版命名空间 URI 的最终形式。
-6. ~~向量分量访问~~ → 已定为 `--loop-value-x` / `-y` / `-z`；是否还需对任意向量参数提供分量拆分【待定】。
+3. 文件扩展名是否用 `.svg3dx`。
+4. 正式版命名空间 URI 的最终形式。
+5. ~~向量分量访问~~ → 已定为 `--loop-value-x` / `-y` / `-z`；是否还需对任意向量参数提供分量拆分【待定】。
+6. ~~条件挂在 `<g>` 上~~ → 已改为独立元素 `s3dx:if` / `s3dx:if-not`（属性 `test`）。
 
 ### 10.2 示例
 
-完整示例见 [samples/draft-0.1-example.svg3dx](../samples/draft-0.1-example.svg3dx)，涵盖参数类规则、布尔运算、条件组、`loop-points` / `loop-range`、多模型切换与二维标注层。
+完整示例见 [samples/draft-0.1-example.svg3dx](../samples/draft-0.1-example.svg3dx)，涵盖参数类规则、布尔运算、条件元素、`loop-points` / `loop-range`、多模型切换与二维标注层。
 
 ### 10.3 领域扩展（非核心，不要求实现）
 
