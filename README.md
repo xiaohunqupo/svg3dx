@@ -10,6 +10,15 @@
 
 Namespace prefix: `s3dx` · Draft URI: `urn:s3dx:draft:0.1`
 
+## Related libraries
+
+| Repository | Role |
+|------------|------|
+| **svg3dx** (this repo) | Format specification and samples |
+| [svg3dx-core](https://github.com/xiaohunqupo/svg3dx-core) | Parse / evaluate engine (WASM + C ABI) |
+| [svg3dx-viewer](https://github.com/xiaohunqupo/svg3dx-viewer) | Embeddable viewer component |
+| [svg3dx-studio](https://github.com/xiaohunqupo/svg3dx-studio) | svg3dx editor |
+
 ## What it solves
 
 Existing parametric CAD formats (Revit families, Glodon component editors, vendor-specific parametrics) are closed and tied to proprietary kernels. Generic mesh formats (STL, OBJ, GLB) store static results with no notion of a "recipe." svg3dx fills the gap: a **human-readable, kernel-agnostic recipe format** that describes *how* geometry is parameterized, not just *what* the final shape is.

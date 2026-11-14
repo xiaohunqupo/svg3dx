@@ -10,6 +10,15 @@
 
 命名空间前缀：`s3dx` · 草案 URI：`urn:s3dx:draft:0.1`
 
+## 关联库
+
+| 仓库 | 职责 |
+|------|------|
+| **svg3dx**（本仓） | 格式规范与 samples |
+| [svg3dx-core](https://github.com/xiaohunqupo/svg3dx-core) | 解析求值引擎（WASM + C ABI） |
+| [svg3dx-viewer](https://github.com/xiaohunqupo/svg3dx-viewer) | 可嵌入的查看器组件 |
+| [svg3dx-studio](https://github.com/xiaohunqupo/svg3dx-studio) | svg3dx 编辑器 |
+
 ## 要解决的问题
 
 现有参数化 CAD 格式（Revit 族、广联达构件编辑器、各厂商专有参数化）封闭且绑定私有内核；通用网格格式（STL、OBJ、GLB）只保存静态结果，没有“配方”概念。svg3dx 填补这一空白：一种**可读、与内核无关的配方格式**，描述几何*如何*被参数化，而不只是最终形状*是什么*。
