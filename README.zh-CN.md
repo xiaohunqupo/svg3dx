@@ -42,8 +42,11 @@ svg3dx/
 ├── assets/                 # Logo 与标题图
 ├── docs/                   # 格式规范
 │   └── svg3dx-spec-draft-0.1.md
-├── samples/                # 示例 .svg
-│   └── draft-0.1-example.svg3dx
+├── samples/                # 草案 0.1 示例（基本体 / 曲线 / 构造体 / 控制流）
+│   ├── draft-0.1-example.svg3dx
+│   ├── draft-0.1-line.svg3dx / arc / path / curves
+│   ├── draft-0.1-extrude / revolve / loft / sweep / pipe
+│   └── …
 ├── LICENSE-MIT             # MIT（任选其一）
 ├── LICENSE-MulanPSL-2.0    # 木兰宽松许可证第2版
 ├── README.md
@@ -53,7 +56,9 @@ svg3dx/
 ## 文档
 
 - 格式规范（草案 0.1）：[`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
-- 示例文件：[`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
+- 综合示例：[`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
+- 曲线图元：[`line`](samples/draft-0.1-line.svg3dx) / [`arc`](samples/draft-0.1-arc.svg3dx) / [`path`](samples/draft-0.1-path.svg3dx) / [`curves`](samples/draft-0.1-curves.svg3dx)
+- 构造体：[`extrude`](samples/draft-0.1-extrude.svg3dx) / [`revolve`](samples/draft-0.1-revolve.svg3dx) / [`loft`](samples/draft-0.1-loft.svg3dx) / [`sweep`](samples/draft-0.1-sweep.svg3dx) / [`pipe`](samples/draft-0.1-pipe.svg3dx)
 
 ## 目标
 

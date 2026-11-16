@@ -21,7 +21,7 @@
 ### 1.2 命名空间
 
 - 三维元素使用命名空间 `urn:s3dx:draft:0.1`，推荐前缀 `s3dx`。
-- 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`mesh`、`triangles`，以及兼容别名 `polylinestretch`→`extrude`、`cutcylinder`→`sector-cylinder`）；子元 `<s3dx:profile>`、`<s3dx:path>`；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`。
+- 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`line`、`arc`、`path`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`mesh`、`triangles`，以及兼容别名 `polylinestretch`→`extrude`、`cutcylinder`→`sector-cylinder`）；子元 `<s3dx:section>`（以及作为轨迹容器时的 `<s3dx:path>`）；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`。
 - **无前缀属性**（null 命名空间）：图元几何属性（lowerCamelCase，见 3.2）、以及 `href`、`mode`、`test`、`points`、`start`、`end`、`step`、`active`、`svg3d` 等。
 - **带命名空间的属性**：三维变换使用 `s3dx:transform`（见 3.4），**不**占用 SVG 标准的 `transform` 表现属性，以免与二维 6 数 `matrix` 冲突。
 - 标准 SVG 解析器对未知命名空间元素的处理：包含在 DOM 中，不渲染，不进一步处理。本格式依赖此行为实现二维兼容。
@@ -132,13 +132,14 @@
 
 ### 3.1 通用规则
 
-- 三维图元是 `s3dx:` 命名空间下的元素。图元之间不互相嵌套（分组用 `<g>`）；允许的子元素仅限：
+- 三维图元是 `s3dx:` 命名空间下的元素。图元之间一般不互相嵌套（分组用 `<g>`）；允许的子元素仅限：
   - `<s3dx:exp>`（参数覆盖）
-  - `<s3dx:profile>`（拉伸 / 旋转 / 放样 / 扫掠的截面轮廓，见 3.2.3）
-  - `<s3dx:path>`（扫掠 / 圆管路径，见 3.2.3）
+  - `<s3dx:section>`（拉伸 / 旋转 / 放样 / 扫掠的截面，见 3.2.4）
+  - `<s3dx:path>`（扫掠 / 圆管的轨迹容器；亦可作独立复合曲线，见 3.2.3）
+  - **例外**：`<s3dx:path>` 可直接包含 `<s3dx:line>` / `<s3dx:arc>` 作为曲线段（对齐 STEP `composite_curve` / OCC `Wire`）
 - 图元属性表以本节与附录维护；属性表增补不改变文档格式语法。未在表中列出的属性，实现应忽略并警告。
 - 局部坐标 → 父级变换 → 世界坐标的累积规则：图元属性定义的局部几何，先应用图元自身 `s3dx:transform`，再应用父级 `<g>` / `<s3dx:use>` 上的 `s3dx:transform`。
-- **分层原则**：核心层只收各厂商都能映射的通用体元与网格；行业专用形体（风管配件、封头等）不进核心，见附录 10.3（可用 `loft` / `revolve` / 布尔组合表达）。
+- **分层原则**：核心层只收各厂商都能映射的通用体元、曲线与网格；行业专用形体（风管配件、封头等）不进核心，见附录 10.3（可用 `loft` / `revolve` / 布尔组合表达）。
 
 ### 3.2 图元属性表（草案 0.1 · 修订）
 
@@ -286,7 +287,94 @@
 
 局部原点：底面中心；高度沿 `lengthVec × widthVec`。
 
-#### 3.2.3 构造体元（拉伸 / 旋转 / 放样 / 扫掠）
+#### 3.2.3 曲线图元（线 / 圆弧 / 复合路径）
+
+对齐 STEP / IFC 的 `polyline` / `trimmed_curve(circle)` / `composite_curve`，以及 OCC `Edge` / `Wire`：三维线与圆弧是一等图元，可独立显示，也可作为 `<s3dx:path>` 的**轨迹子段**（描述中心线本身长什么样）。
+
+注意：扫掠 / 圆管在折角处**面如何衔接**（圆角弯、倒角、尖角等）由父体的 `corner` 控制并自动生成，**不是**靠在路径里手写一段 `arc` 来代替转角类型。`path` 里的 `line`/`arc` 只表达轨迹几何。
+
+对照关系（非规范性）：
+
+| svg3dx | STEP | IFC | OCC |
+|---|---|---|---|
+| `line` | `polyline`（两点）/ `line`+trim | `IfcPolyline`（两点） | `Geom_Line` → `Edge` |
+| `arc` | `trimmed_curve` + `circle` | `IfcTrimmedCurve` + `IfcCircle`；或 `IfcArcIndex` | `Geom_Circle` → `Edge` |
+| `path` | `composite_curve` | `IfcCompositeCurve` / `IfcIndexedPolyCurve` | `TopoDS_Wire` |
+
+##### `s3dx:line`（三维直线段）
+
+| 属性 | 必选 | 类型 | 默认 | 说明 |
+|---|---|---|---|---|
+| `from` | 条件 | 点 | — | 起点；作为 `path` 子段且紧接上一段时，可省略（默认接上一段终点） |
+| `to` | 是 | 点 | — | 终点；不得与起点重合 |
+
+```xml
+<s3dx:line from="0 0 0" to="200 0 0"/>
+```
+
+##### `s3dx:arc`（三维圆弧段）
+
+圆弧位于以 `center` 为原点、`normal` 为法向的平面上；角参数自 `xDir`（投影到该平面）起，绕 `normal` 按右手系计量。
+
+| 属性 | 必选 | 类型 | 默认 | 说明 |
+|---|---|---|---|---|
+| `center` | 是 | 点 | — | 圆心 |
+| `normal` | 是 | 向量 | — | 圆弧平面法向 |
+| `radius` | 条件 | 数字 | — | 半径；若同时给出 `from`/`to`，可省略并由弦长校核 |
+| `xDir` | 否 | 向量 | 见说明 | 角参数 0° 参考方向；缺省取平面内与世界轴尽量对齐的稳定方向 |
+| `startAngle` | 否 | 角度 | `0` | 起点角 |
+| `angle` | 条件 | 角度 | — | 扫掠角（可负，表示反向）；与 `from`/`to` 二选一体系，见下 |
+| `from` | 条件 | 点 | — | 弧起点（须在圆上，容差内）；作为 `path` 子段时可省略以接上一段终点 |
+| `to` | 条件 | 点 | — | 弧终点（须在圆上） |
+
+写法（择一，实现应支持至少一种；推荐文档写全）：
+
+1. **圆心 + 半径 + 角**：`center` `normal` `radius` `startAngle` `angle`（可选 `xDir`）
+2. **圆心 + 起终点**：`center` `normal` `from` `to`（可选 `radius`）；劣弧 / 优弧歧义时以 `angle` 符号或附加 `major="true"`【待定】消解，0.1 默认取 ≤180° 劣弧
+
+```xml
+<!-- 角参数写法 -->
+<s3dx:arc center="0 0 0" normal="0 0 1" radius="50"
+          xDir="1 0 0" startAngle="0" angle="90"/>
+
+<!-- 起终点写法（90° 弯管常用） -->
+<s3dx:arc center="200 0 75" normal="0 -1 0" radius="75"
+          from="200 0 0" to="275 0 75"/>
+```
+
+约束：`radius > 0`；`|angle|` 为 0 视为退化（跳过 + 警告）；整圆可用 `angle="360"`（显示为闭曲线；作路径段时起终点重合）。
+
+##### `s3dx:path`（复合三维曲线 / 轨迹）
+
+对齐 `composite_curve` / `Wire`：有序曲线段首尾相接。可：
+
+- 作为**独立图元**（中心线、标注辅助线、管道路由预览等）
+- 作为 `sweep` / `pipe` 的**轨迹子元素**
+
+| 属性 | 必选 | 类型 | 默认 | 说明 |
+|---|---|---|---|---|
+| `points` | 条件 | 点列 | — | 折线简便写法（≥2 点）；等价于若干首尾相接的 `line` |
+
+子元素（与 `points` **二选一**；同时出现时优先子元素并警告）：按文档顺序的 `<s3dx:line>` / `<s3dx:arc>`（样条 / 螺旋【待定】）。
+
+段连续性：每一段起点须等于上一段终点（实现容差建议 ≤ 1e-6 × 特征尺寸，或发出警告并强制对接）。
+
+```xml
+<!-- 轨迹本身含圆弧段（曲线路径，不是 sweep 的 corner） -->
+<s3dx:path>
+  <s3dx:line from="0 0 0" to="200 0 0"/>
+  <s3dx:arc  center="200 0 75" normal="0 -1 0" radius="75"
+             from="200 0 0" to="275 0 75"/>
+  <s3dx:line from="275 0 75" to="275 0 200"/>
+</s3dx:path>
+
+<!-- 折线轨迹；若用于 sweep/pipe，折角处的面衔接由 corner 自动补 -->
+<s3dx:path points="0 0 0  200 0 0  200 0 150  50 0 150"/>
+```
+
+在 `sweep` / `pipe` 上亦可用父元素属性 `path="x1 y1 z1 …"` 作为折线简便写法，与子元素 `<s3dx:path>` 二选一。
+
+#### 3.2.4 构造体元（拉伸 / 旋转 / 放样 / 扫掠）
 
 对应 STEP / IFC / SolidWorks / PDMS 等共通的扫掠族构造；行业异形件优先用它们组合，而不是新增专用图元。
 
@@ -300,46 +388,69 @@
 | `sweep` | `surface_curve_swept_area_solid` | `IfcFixedReferenceSweptAreaSolid` 等 | Sweep | EXTR 沿路径 | Curve Bevel / Sweep 修改器 |
 | `pipe` | `swept_disk_solid` | `IfcSweptDiskSolid` | Sweep（圆截面） | CYLI 段 / 弯头 CTOR | Bevel Depth 圆管 |
 
-##### `<s3dx:profile>`（截面轮廓，非独立图元）
+**职责拆分**：
 
-仅作为 `extrude` / `revolve` / `loft` / `sweep` 的子元素。
+| 角色 | 元素 | 内容 |
+|---|---|---|
+| 位姿 | 父体（`extrude` / `revolve` / `sweep`）或每个 `section`（`loft`）上的 `origin` / `normal` / `xDir` | 截面落在哪、朝哪 |
+| 二维轮廓 | `<s3dx:section>` 内的 SVG 几何子元素（`path` / `circle` / `polygon` / `rect` / `ellipse`） | 局部 2D；可含直线与圆弧 |
+| 三维轨迹 | `<s3dx:path>`（`points` 或 `line`/`arc` 子段） | 中心线**路径几何**（线段 / 圆弧等组成轨迹本身） |
+| 扫掠转角 | `sweep` / `pipe` 的 `corner`（+ `cornerRadius`） | 轨迹折角处**各面如何衔接**；求值时自动生成，不写入 path |
+
+截面局部坐标 → 世界坐标：
+
+- 局部 \(u\) 轴：将 `xDir` 投影到垂直于 `normal` 的平面并归一化（记为 \(\hat{X}\)）。
+- 局部 \(v\) 轴：\(\hat{Y} = \hat{N} \times \hat{X}\)（右手系；\(\hat{N}\) 为归一化 `normal`）。
+- 点映射：\(P = \mathrm{origin} + u\,\hat{X} + v\,\hat{Y}\)。
+- 缺省：`origin="0 0 0"`、`normal="0 0 1"`、`xDir="1 0 0"`。
+
+##### `<s3dx:section>`（截面，非独立图元）
+
+仅作为 `extrude` / `revolve` / `loft` / `sweep` 的子元素。截面形状由**子级 SVG 几何**给出（无 `s3dx` 前缀，落在 SVG 命名空间），坐标为截面局部 2D。
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
-| `type` | 否 | 枚举 | `polygon` | `polygon` \| `circle` |
-| `points` | 条件 | 点列 | — | `type=polygon` 时必选；封闭折线顶点 |
-| `center` | 条件 | 点 | — | `type=circle` 时必选 |
-| `radius` | 条件 | 数字 | — | `type=circle` 时必选 |
-| `normal` | 否 | 向量 | 见说明 | 圆所在平面法向；缺省由上下文推定 |
+| `origin` | 否 | 点 | 见说明 | 截面原点；`loft` 各截面通常自带；`extrude` / `revolve` / `sweep` 缺省继承父元素位姿 |
+| `normal` | 否 | 向量 | 见说明 | 截面平面法向 |
+| `xDir` | 否 | 向量 | 见说明 | 截面局部 +X 参考方向 |
 
-##### `<s3dx:path>`（路径，非独立图元）
+草案 0.1 允许的子元素（至少一个）：
 
-仅作为 `sweep` / `pipe` 的子元素。草案 0.1 仅要求折线路径；曲线路径【待定】。
+| 子元素 | 说明 |
+|---|---|
+| `<path d="…">` | SVG path；0.1 实现至少支持 `M`/`L`/`H`/`V`/`Z`（及相对形式）；`A`/`C`/`Q` 等【待定，推荐实现】 |
+| `<circle cx cy r>` | 圆 |
+| `<ellipse cx cy rx ry>` | 椭圆 |
+| `<polygon points="x1 y1 …">` | 封闭折线（二维点列） |
+| `<rect x y width height>` | 轴对齐矩形 |
 
-| 属性 | 必选 | 类型 | 默认 | 说明 |
-|---|---|---|---|---|
-| `points` | 是 | 点列 | — | 路径折线顶点，至少 2 点；相邻点不得重合 |
+多个子形状时：实现可将外轮廓取并集，或仅取第一个并警告；须在文档中说明。
 
-也可用父元素属性 `path="x1 y1 z1 …"` 作为折线简便写法，与子元素 `<s3dx:path>` 二选一。
+轨迹用 `<s3dx:path>`（见 3.2.3）：折线 `points` 或 `line`/`arc` 子段。`sweep` / `pipe` 的折角面衔接另见 `corner`，与路径段定义分层。
 
 ##### `s3dx:extrude`（拉伸体）
 
-对齐 STEP `extruded_area_solid` / OCC `MakePrism` / AutoCAD `EXTRUDE`。轮廓与 `revolve` / `loft` 相同：必须用子元素 `<s3dx:profile>`，不在父元素上用属性携带点列。
+对齐 STEP `extruded_area_solid` / IFC `IfcExtrudedAreaSolid` / OCC `MakePrism` / AutoCAD `EXTRUDE`。父元素携带截面位姿与拉伸量；轮廓必须用子元素 `<s3dx:section>`。
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
-| `dir` | 是 | 向量 | — | 拉伸方向 |
+| `origin` | 否 | 点 | `0 0 0` | 截面原点 |
+| `normal` | 否 | 向量 | `0 0 1` | 截面法向；亦为缺省拉伸方向 |
+| `xDir` | 否 | 向量 | `1 0 0` | 截面局部 +X |
+| `dir` | 否 | 向量 | `normal` | 拉伸方向（可斜挤） |
 | `length` | 是 | 数字 | — | 拉伸长度 |
 
-子元素：恰好一个 `<s3dx:profile>`（封闭轮廓生成实体）。
+子元素：恰好一个 `<s3dx:section>`（封闭轮廓生成实体）。
 
 ```xml
-<s3dx:extrude dir="0 0 1" length="60">
-  <s3dx:profile type="polygon" points="0 0 0  100 0 0  100 50 0  0 50 0"/>
+<s3dx:extrude origin="0 0 0" normal="0 0 1" length="60">
+  <s3dx:section>
+    <path d="M 0 0 L 100 0 L 100 50 L 0 50 Z"/>
+  </s3dx:section>
 </s3dx:extrude>
 ```
 
-**兼容别名**：`s3dx:polylinestretch` 视为 `extrude` 的旧名；新文件应写 `extrude`。若仍使用 `polylinestretch`，轮廓同样须为子元素 `<s3dx:profile>`（不再支持 `stretchFace` 属性）。
+**兼容别名**：`s3dx:polylinestretch` 视为 `extrude` 的旧名；新文件应写 `extrude`。若仍使用 `polylinestretch`，轮廓同样须为子元素 `<s3dx:section>`（不再支持 `stretchFace` 属性）。
 
 ##### `s3dx:revolve`（旋转体）
 
@@ -347,27 +458,65 @@
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
+| `origin` | 否 | 点 | `0 0 0` | 截面原点 |
+| `normal` | 否 | 向量 | `0 0 1` | 截面法向 |
+| `xDir` | 否 | 向量 | `1 0 0` | 截面局部 +X |
 | `axisOrigin` | 是 | 点 | — | 旋转轴上一点 |
 | `axisDir` | 是 | 向量 | — | 旋转轴方向 |
 | `angle` | 否 | 角度 | `360` | 旋转角 |
 
-子元素：恰好一个 `<s3dx:profile>`（母线轮廓；封闭轮廓生成实体，开放轮廓生成薄壳，由内核决定，实现应文档化）。
+子元素：恰好一个 `<s3dx:section>`（母线轮廓；封闭轮廓生成实体，开放轮廓生成薄壳，由内核决定，实现应文档化）。
+
+```xml
+<!-- 截面在缺省 XY 面（normal +Z）；u=半径，v=沿轴高度；绕 Y 旋转 -->
+<s3dx:revolve axisOrigin="0 0 0" axisDir="0 1 0" angle="360">
+  <s3dx:section>
+    <path d="M 40 0 L 80 0 L 80 60 L 40 40 Z"/>
+  </s3dx:section>
+</s3dx:revolve>
+```
+
+若轴为 `+Z`、截面放在 `XZ` 面，右手系下 `normal` 应为 `0 -1 0`（使局部 \(v\) 指向 `+Z`）；写 `0 1 0` 会使高度反向。
 
 ##### `s3dx:loft`（放样体）
 
-对齐 OCC `ThruSections` / SolidWorks Loft：若干截面蒙皮（无路径；截面已就位）。
+对齐 OCC `ThruSections` / SolidWorks Loft / 数学上的 blended surface：若干截面蒙皮（**无扫掠路径**；截面已就位）。每位姿挂在各自 `<s3dx:section>` 上。
+
+放样**不需要**扫掠意义上的「转角类型」：相邻截面之间没有中心线拐角，几何由截面位姿与截面间的**过渡 / 趋近律**决定。
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
 | `solid` | 否 | 布尔 | `true` | 是否封成实体 |
-| `ruled` | 否 | 布尔 | `true` | `true` 直纹面；`false` 光滑蒙皮（若内核支持） |
+| `blend` | 否 | 枚举 | `linear` | 截面间变形的**趋近律**（见下） |
 
-子元素：至少两个 `<s3dx:profile>`，按文档顺序为截面序列。
+子元素：至少两个 `<s3dx:section>`，按文档顺序为截面序列。
+
+**趋近律 `blend`（截面形状过渡）**
+
+相邻两截面之间，位姿 / 中心沿参数 \(t \in [0,1]\) **匀速**推进；截面**轮廓形状**的插值权重为 \(s = f(t)\)，\(f(0)=0\)、\(f(1)=1\)。`blend` 只改形状何时变，不改截面中心走位：
+
+| 值 | \(f(t)\) | 形态 |
+|---|---|---|
+| `linear` | \(t\) | 形状匀速变 |
+| `sine` | \(\sin(\pi t / 2)\) | 前半仍像起始截面，后半加速变到终止 |
+| `cosine` | \(\tfrac12 - \tfrac12\cos(\pi t)\) | 两端慢、中间快 |
+| `tan` | \(\tan(\pi t / 4)\) | 前更慢、后更快 |
+| `cotan` | \(1 - \tan(\pi (1-t) / 4)\) | 前更快、后更慢（`tan` 的镜像） |
+
+约束与实现：
+
+- 0.1 **须**支持上表五种；未知值回退 `linear` + 警告。
+- 多截面时，趋近律作用于**每一对相邻截面**之间。
+- 引导线 / 中心线约束的放样（SolidWorks guide / centerline loft）不在 0.1 核心。
 
 ```xml
-<s3dx:loft solid="true" ruled="true">
-  <s3dx:profile type="polygon" points="-50 -40 0  50 -40 0  50 40 0  -50 40 0"/>
-  <s3dx:profile type="circle" center="0 0 80" radius="30" normal="0 0 1"/>
+<s3dx:loft solid="true" blend="linear">
+  <s3dx:section origin="0 0 0" normal="0 0 1">
+    <path d="M -50 -40 L 50 -40 L 50 40 L -50 40 Z"/>
+  </s3dx:section>
+  <s3dx:section origin="0 0 80" normal="0 0 1">
+    <circle cx="0" cy="0" r="30"/>
+  </s3dx:section>
 </s3dx:loft>
 ```
 
@@ -377,23 +526,55 @@
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
-| `orient` | 否 | 枚举 | `frenet` | 截面姿态：`frenet`（随切向/法向）\| `fixed`（平行于起始姿态，对齐 IFC FixedReference）\| `parallel`（截面法向始终平行于给定 `refDir`） |
-| `refDir` | 条件 | 向量 | — | `orient=fixed` 或 `parallel` 时的参考方向 |
+| `orient` | 否 | 枚举 | `frenet` | 截面姿态：`frenet`（沿路径平行搬运）\| `fixed`（IFC FixedReference：`refDir` 投影为截面局部 +X）\| `parallel`（`refDir` 投影为截面局部 +Y / “上”） |
+| `refDir` | 条件 | 向量 | — | `orient=fixed` / `parallel` 的参考方向。**勿取弯道所在平面内的角平分线方向**（会与切向平行而奇异）；与切向平行时回退为上一帧平行搬运，并保持帧手性连续 |
 | `solid` | 否 | 布尔 | `true` | 封闭截面是否生成实体 |
 | `path` | 否 | 点列 | — | 折线路径简便写法；与子元素 `<s3dx:path>` 二选一（须具其一） |
+| `corner` | 否 | 枚举 | `arc` | 折线顶点处的**转角生成**（见下） |
+| `cornerRadius` | 条件 | 数字 | — | `arc` / `chamfer` 的半径或倒角边长；缺省时由实现按邻边长度取合理默认并警告 |
 
-子元素：恰好一个 `<s3dx:profile>`；路径用 `path` 属性或子元素 `<s3dx:path>`。
+子元素：恰好一个 `<s3dx:section>`；路径用 `path` 属性或子元素 `<s3dx:path>`。截面二维轮廓在路径各帧的局部 \((u,v)\) 中解释（姿态由 `orient` 决定）。
+
+**两层分工（勿混淆）**
+
+| 层 | 谁表达 | 含义 |
+|---|---|---|
+| **轨迹** | `<s3dx:path>` 的 `points` / `line` / `arc` | 中心线本身：折线走哪、曲线段怎么弯 |
+| **转角衔接** | `corner` + `cornerRadius` | 扫掠体在轨迹**折角顶点**处，侧面如何圆角 / 倒角 / 尖接；**求值时自动补**，不写进 path |
+
+`path` 里的 `arc` 是「这段轨迹就是圆弧」；`corner="arc"` 是「折线拐弯处，把扫掠面衔接成圆弧弯」。前者属于路径定义，后者属于扫掠构造。
+
+**转角 `corner`（默认圆弧弯）**
+
+对轨迹上切向不连续的内顶点，由实现按 `corner` 自动生成衔接（作者不必、也不应用 path 子段去“模拟”转角类型）：
+
+| 值 | 生成结果 | 说明 |
+|---|---|---|
+| `arc` | 圆弧弯（圆角 / elbow） | **默认**；在顶点处生成与邻边相切的圆弧衔接，半径 = `cornerRadius` |
+| `chamfer` | 倒角弯 | 在顶点处切一刀衔接，倒角边长 = `cornerRadius` |
+| `sharp` | 尖角 | 保持折点；截面双帧对接（尺寸不撑宽） |
+| `miter` | 尖角斜接 | 保持折点；入/出切向平均为一帧（拐角处截面可能变宽） |
+
+约束与行为：
+
+- 几乎共线的顶点（偏转角过小）跳过。
+- `cornerRadius` 过大以至超过邻边可用长度时：缩小到可放得下，并警告。
+- 轨迹段本身已是光滑曲线（例如 path 子段 `arc` 内部采样点）处切向连续，不触发 `corner`；`corner` 只作用于折角顶点。
+- `orient` 只管截面朝向，与转角衔接正交。
 
 ```xml
-<s3dx:sweep orient="frenet" solid="true">
-  <s3dx:profile type="polygon" points="-10 -5 0  10 -5 0  10 5 0  -10 5 0"/>
-  <s3dx:path points="0 0 0  200 0 0  200 0 150  50 0 150"/>
+<!-- 轨迹用折线；转角由 corner 自动补（默认 arc） -->
+<s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="50">
+  <s3dx:section>
+    <path d="M -10 -5 L 10 -5 L 10 5 L -10 5 Z"/>
+  </s3dx:section>
+  <s3dx:path points="0 0 0  200 0 0  200 0 200"/>
 </s3dx:sweep>
 ```
 
 约束：
 
-- 路径至少两段（≥3 点）时拐角处的截面插值由内核决定；实现应保证不自交或给出警告。
+- 折线路径至少两段（≥3 点）；转角按 `corner` 处理，实现应尽量避免自交，无法保证时给出警告。
 - `orient` 与内核能力不匹配时：回退到 `frenet` + 警告。
 - 多截面沿路径变化（SolidWorks 引导线 / IFC SectionedSolid）不在 0.1 核心；可用 `loft` 近似或后续扩展。
 
@@ -405,16 +586,19 @@
 |---|---|---|---|---|
 | `radius` | 是 | 数字 | — | 外半径（≡ STEP `radius`） |
 | `innerRadius` | 否 | 数字 | — | 内半径；缺省为实心；若给出须满足 `0 < innerRadius < radius` |
-| `path` / 子 `<s3dx:path>` | 是 | — | — | 中心线路径（directrix） |
+| `path` / 子 `<s3dx:path>` | 是 | — | — | 中心线**轨迹**（折线或 `line`/`arc` 段） |
+| `corner` | 否 | 枚举 | `arc` | 折角面衔接，同 `sweep`（与轨迹段分层） |
+| `cornerRadius` | 条件 | 数字 | — | 同 `sweep` |
 
 ```xml
-<s3dx:pipe radius="50" innerRadius="45"
-           path="0 0 0  300 0 0  300 0 200"/>
+<s3dx:pipe radius="50" innerRadius="45" corner="arc" cornerRadius="100">
+  <s3dx:path points="0 0 0  300 0 0  300 0 300"/>
+</s3dx:pipe>
 ```
 
-语义上等价于 `sweep` + `profile type="circle"`（及空心时的内侧圆），但实现应优先按 swept-disk 算法求值（截面始终垂直于路径切向）。
+语义上等价于 `sweep` + 圆形 `<s3dx:section>`（及空心时的内侧圆），但实现应优先按 swept-disk 算法求值（截面始终垂直于路径切向）。轨迹与 `corner` 转角衔接的分工与 `sweep` 相同。
 
-#### 3.2.4 网格（OpenGL / glTF 风格）
+#### 3.2.5 网格（OpenGL / glTF 风格）
 
 ##### `s3dx:mesh`（通用索引网格）
 
@@ -460,7 +644,7 @@
 
 新内容优先写 `mesh`；`triangles` 仍须被实现支持。
 
-#### 3.2.5 核心层总览速查
+#### 3.2.6 核心层总览速查
 
 | 图元 | 必选 | 可选 / 子元素 |
 |---|---|---|
@@ -473,21 +657,24 @@
 | `pyramid` | length, width, height | lengthVec, widthVec, topLength, topWidth |
 | `prism` | points, height | normal |
 | `sector-cylinder` | diameter, bottomCenterPt, topCenterPt | angle |
-| `extrude` | dir, length | 恰好 1 × `<s3dx:profile>`；旧名 `polylinestretch` |
-| `revolve` | axisOrigin, axisDir | angle；恰好 1 × `<s3dx:profile>` |
-| `loft` | — | solid, ruled；≥2 × `<s3dx:profile>` |
-| `sweep` | orient, refDir, solid | 1 × `<s3dx:profile>` + path / `<s3dx:path>` |
-| `pipe` | radius + path | innerRadius；`<s3dx:path>` |
+| `line` | to | from |
+| `arc` | center, normal | radius, xDir, startAngle, angle, from, to |
+| `path` | points **或** ≥1 曲线段 | 子：`line` / `arc` |
+| `extrude` | length | origin, normal, xDir, dir；恰好 1 × `<s3dx:section>`；旧名 `polylinestretch` |
+| `revolve` | axisOrigin, axisDir | origin, normal, xDir, angle；恰好 1 × `<s3dx:section>` |
+| `loft` | — | solid, blend；≥2 × `<s3dx:section>`（各位姿自带；无扫掠转角） |
+| `sweep` | — | orient, refDir, solid, corner, cornerRadius；1 × `<s3dx:section>` + path / `<s3dx:path>` |
+| `pipe` | radius + path | innerRadius, corner, cornerRadius；`<s3dx:path>`（转角同 sweep） |
 | `mesh` | position | mode, normal, texcoord, color, colorSize, index, indexBase |
 | `triangles` | point, normal, index | （≡ mesh 简写，1-based） |
 
-#### 3.2.6 参考来源（非规范性）
+#### 3.2.7 参考来源（非规范性）
 
-- STEP ISO 10303-42：`extruded/revolved/surface_curve_swept_area_solid`、`swept_disk_solid`、CSG 基本体。
-- IFC：`IfcExtrudedAreaSolid`、`IfcRevolvedAreaSolid`、`IfcSweptDiskSolid`、`IfcFixedReferenceSweptAreaSolid`、`IfcCsgPrimitive3D`、`IfcTriangulatedFaceSet`。
+- STEP ISO 10303-42：`composite_curve`、`trimmed_curve`、`circle`、`extruded/revolved/surface_curve_swept_area_solid`、`swept_disk_solid`、CSG 基本体。
+- IFC：`IfcCompositeCurve`、`IfcIndexedPolyCurve`、`IfcTrimmedCurve`、`IfcExtrudedAreaSolid`、`IfcRevolvedAreaSolid`、`IfcSweptDiskSolid`、`IfcFixedReferenceSweptAreaSolid`、`IfcCsgPrimitive3D`、`IfcTriangulatedFaceSet`。
 - SolidWorks：Extrude / Revolve / Sweep / Loft。
 - PDMS / AVEVA E3D：BOX、CYLI、CONE、PYRA、CTOR、EXTR、REVO 等设备图元。
-- AutoCAD / OCC：实体图元与 `MakePrism` / `MakeRevol` / `MakePipeShell` / `ThruSections`。
+- AutoCAD / OCC：实体图元与 `MakePrism` / `MakeRevol` / `MakePipeShell` / `ThruSections`；曲线 `Edge` / `Wire`。
 - Blender / 3ds Max：Extrude、Spin、Curve Bevel / Sweep 修改器、网格。
 - 网格：OpenGL 拓扑；glTF 2.0 `POSITION` / `NORMAL` / `TEXCOORD_0` / `COLOR_0` / `indices`。
 
@@ -644,15 +831,17 @@
 
 ### 10.1 待定项汇总
 
-1. 核心属性表已按「基本体 + 拉伸/旋转/放样/扫掠/圆管 + mesh」修订（见 3.2）；仍待定：
-   - `path` 是否支持圆弧 / 样条（目前仅折线）。
+1. 核心属性表已按「基本体 + 曲线（line/arc/path）+ 拉伸/旋转/放样/扫掠/圆管 + mesh」修订（见 3.2）；仍待定：
+   - `path` 是否增加样条 / 螺旋子段（`spline` / `helix`）。
+   - `arc` 优弧歧义（`major`）与三点弧（起/弧上点/终，对齐 IFC `IfcArcIndex`）是否纳入。
+   - `section` 内 `<path d>` 对 `A`/`C`/`Q` 的合规要求级别。
    - `sweep` 多截面沿路径（引导线 / IFC SectionedSolid）是否进入核心。
    - `torus` 扇环扫掠起始方位是否增加 `refDir`。
    - `revolve` 开放轮廓是生成壳还是自动封盖。
-   - `loft` 是否支持尖点截面（顶点代替 `profile`）。
+   - `loft` 是否支持尖点截面（顶点代替 `section`）。
    - `mesh` 是否允许外部二进制缓冲（类似 glTF buffer）。
    - Fillet / Chamfer / Shell 等“修饰特征”是否以可选算子进入（SolidWorks 有，STEP/IFC 交换中较少作为参数配方）。
-2. `mode`（显示）取值集是否够（是否需 `points`、`shaded-edges` 等）。
+2. `mode`（显示）取值集是否够（是否需 `points`、`shaded-edges`、曲线专用 `wire` 等）。
 3. 文件扩展名是否用 `.svg3dx`。
 4. 正式版命名空间 URI 的最终形式。
 5. ~~向量分量访问~~ → 已定为 `--loop-value-x` / `-y` / `-z`；是否还需对任意向量参数提供分量拆分【待定】。
@@ -660,7 +849,15 @@
 
 ### 10.2 示例
 
-完整示例见 [samples/draft-0.1-example.svg3dx](../samples/draft-0.1-example.svg3dx)，涵盖参数类规则、布尔运算、条件元素、`loop-points` / `loop-range`、多模型切换与二维标注层。
+| 文件 | 内容 |
+|---|---|
+| [draft-0.1-example.svg3dx](../samples/draft-0.1-example.svg3dx) | 参数、布尔、条件、`loop-*`、多模型、二维标注 |
+| [draft-0.1-line.svg3dx](../samples/draft-0.1-line.svg3dx) | `s3dx:line` |
+| [draft-0.1-arc.svg3dx](../samples/draft-0.1-arc.svg3dx) | `s3dx:arc`（角参数 / 起终点） |
+| [draft-0.1-path.svg3dx](../samples/draft-0.1-path.svg3dx) | `s3dx:path`（`points` 与 `line`/`arc` 子段） |
+| [draft-0.1-curves.svg3dx](../samples/draft-0.1-curves.svg3dx) | 曲线 + 沿曲线 `pipe` |
+| [draft-0.1-extrude.svg3dx](../samples/draft-0.1-extrude.svg3dx) / [revolve](../samples/draft-0.1-revolve.svg3dx) / [loft](../samples/draft-0.1-loft.svg3dx) / [sweep](../samples/draft-0.1-sweep.svg3dx) / [pipe](../samples/draft-0.1-pipe.svg3dx) | `section` + 位姿 / 复合轨迹 |
+| 其余 `draft-0.1-*.svg3dx` | 基本体、网格、条件与循环 |
 
 ### 10.3 领域扩展（非核心，不要求实现）
 
@@ -668,7 +865,7 @@
 
 | 扩展名 | 建议用核心表达 | 说明 |
 |---|---|---|
-| `rectocircle`（天圆地方） | `loft`：矩形 + 圆 `profile` | |
+| `rectocircle`（天圆地方） | `loft`：矩形 + 圆 `section` | |
 | `ecccone` / PDMS `SNOU` | `loft` 两圆（可偏心）或 `cone` | |
 | `saddle`（马鞍三通） | `cylinder` + 布尔 | |
 | `ellipsehead` / PDMS `DISH` | `revolve` 母线 | |
@@ -686,6 +883,8 @@
 |---|---|---|
 | 长方体 / 圆柱 / 圆锥 / 球 / 环 / 楔 | 是 | CSG 基本体；各系统均有 |
 | 棱锥 / 棱台 | 是（`pyramid`） | IFC Pyramid、PDMS PYRA |
+| 三维直线 / 圆弧 | 是（`line` / `arc`） | STEP trimmed circle、IFC TrimmedCurve / ArcIndex、OCC Edge |
+| 复合曲线 / 轨迹 | 是（`path`） | STEP composite_curve、IFC CompositeCurve / IndexedPolyCurve、OCC Wire |
 | 拉伸 Extrude | 是 | STEP/IFC/SW/PDMS/Blender/Max |
 | 旋转 Revolve | 是 | 同上；Blender Spin |
 | 放样 Loft | 是 | SW/OCC/Blender 插件；IFC 用截面实体近似 |

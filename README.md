@@ -42,8 +42,11 @@ svg3dx/
 ├── assets/                 # Logo and title artwork
 ├── docs/                   # Format specification
 │   └── svg3dx-spec-draft-0.1.md
-├── samples/                # Example .svg files
-│   └── draft-0.1-example.svg3dx
+├── samples/                # Draft 0.1 samples (solids / curves / constructs / control)
+│   ├── draft-0.1-example.svg3dx
+│   ├── draft-0.1-line / arc / path / curves
+│   ├── draft-0.1-extrude / revolve / loft / sweep / pipe
+│   └── …
 ├── LICENSE-MIT             # MIT (choose either)
 ├── LICENSE-MulanPSL-2.0    # 木兰宽松许可证第2版
 ├── README.md
@@ -53,7 +56,9 @@ svg3dx/
 ## Documentation
 
 - Format specification (draft 0.1): [`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
-- Sample file: [`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
+- Full sample: [`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
+- Curves: [`line`](samples/draft-0.1-line.svg3dx) / [`arc`](samples/draft-0.1-arc.svg3dx) / [`path`](samples/draft-0.1-path.svg3dx) / [`curves`](samples/draft-0.1-curves.svg3dx)
+- Constructs: [`extrude`](samples/draft-0.1-extrude.svg3dx) / [`revolve`](samples/draft-0.1-revolve.svg3dx) / [`loft`](samples/draft-0.1-loft.svg3dx) / [`sweep`](samples/draft-0.1-sweep.svg3dx) / [`pipe`](samples/draft-0.1-pipe.svg3dx)
 
 ## Goals
 

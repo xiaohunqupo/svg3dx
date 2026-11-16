@@ -6,16 +6,87 @@
      xmlns:s3dx="urn:s3dx:draft:0.1">
 
   <style>
-    :root { --topRadius: 30; }
+    <!-- 大底小顶 + 较高，中段外形差才明显 -->
+    :root { --topR: 12; --H: 160; --gap: 180; --row: 280; }
   </style>
 
   <defs>
     <g id="main">
-      <s3dx:loft solid="true" ruled="true">
-        <s3dx:profile type="polygon"
-                      points="-50 -40 0  50 -40 0  50 40 0  -50 40 0"/>
-        <s3dx:profile type="circle" center="0 0 80"
-                      radius="var(--topRadius)" normal="0 0 1"/>
+      <!-- ========== blend：形状趋近律（中心匀速上升，形状按 f(t) 变） ========== -->
+      <!-- 1. linear -->
+      <s3dx:loft solid="true" blend="linear"
+                 s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 0 0)">
+        <s3dx:section origin="0 0 0" normal="0 0 1">
+          <path d="M -60 -60 L 60 -60 L 60 60 L -60 60 Z"/>
+        </s3dx:section>
+        <s3dx:section origin="0 0 var(--H)" normal="0 0 1">
+          <circle cx="0" cy="0" r="var(--topR)"/>
+        </s3dx:section>
+      </s3dx:loft>
+
+      <!-- 2. sine：中段仍偏方 -->
+      <s3dx:loft solid="true" blend="sine"
+                 s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 var(--gap) 0 0)">
+        <s3dx:section origin="0 0 0" normal="0 0 1">
+          <path d="M -60 -60 L 60 -60 L 60 60 L -60 60 Z"/>
+        </s3dx:section>
+        <s3dx:section origin="0 0 var(--H)" normal="0 0 1">
+          <circle cx="0" cy="0" r="var(--topR)"/>
+        </s3dx:section>
+      </s3dx:loft>
+
+      <!-- 3. cosine -->
+      <s3dx:loft solid="true" blend="cosine"
+                 s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 calc(var(--gap) * 2) 0 0)">
+        <s3dx:section origin="0 0 0" normal="0 0 1">
+          <path d="M -60 -60 L 60 -60 L 60 60 L -60 60 Z"/>
+        </s3dx:section>
+        <s3dx:section origin="0 0 var(--H)" normal="0 0 1">
+          <circle cx="0" cy="0" r="var(--topR)"/>
+        </s3dx:section>
+      </s3dx:loft>
+
+      <!-- 4. tan：下部几乎保持大方 -->
+      <s3dx:loft solid="true" blend="tan"
+                 s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 calc(var(--gap) * 3) 0 0)">
+        <s3dx:section origin="0 0 0" normal="0 0 1">
+          <path d="M -60 -60 L 60 -60 L 60 60 L -60 60 Z"/>
+        </s3dx:section>
+        <s3dx:section origin="0 0 var(--H)" normal="0 0 1">
+          <circle cx="0" cy="0" r="var(--topR)"/>
+        </s3dx:section>
+      </s3dx:loft>
+
+      <!-- 5. cotan：下部很快变圆 -->
+      <s3dx:loft solid="true" blend="cotan"
+                 s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 calc(var(--gap) * 4) 0 0)">
+        <s3dx:section origin="0 0 0" normal="0 0 1">
+          <path d="M -60 -60 L 60 -60 L 60 60 L -60 60 Z"/>
+        </s3dx:section>
+        <s3dx:section origin="0 0 var(--H)" normal="0 0 1">
+          <circle cx="0" cy="0" r="var(--topR)"/>
+        </s3dx:section>
+      </s3dx:loft>
+
+      <!-- ========== solid ========== -->
+      <s3dx:loft solid="true" blend="linear"
+                 s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 var(--row) 0)">
+        <s3dx:section origin="0 0 0" normal="0 0 1">
+          <path d="M -60 -60 L 60 -60 L 60 60 L -60 60 Z"/>
+        </s3dx:section>
+        <s3dx:section origin="0 0 var(--H)" normal="0 0 1">
+          <circle cx="0" cy="0" r="var(--topR)"/>
+        </s3dx:section>
+      </s3dx:loft>
+
+      <s3dx:loft solid="false" blend="linear"
+                 s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 var(--gap) var(--row) 0)">
+        <s3dx:section origin="0 0 0" normal="0 0 1">
+          <path d="M -60 -60 L 60 -60 L 60 60 L -60 60 Z"/>
+        </s3dx:section>
+        <s3dx:section origin="0 0 var(--H)" normal="0 0 1">
+          <circle cx="0" cy="0" r="var(--topR)"/>
+        </s3dx:section>
       </s3dx:loft>
     </g>
   </defs>

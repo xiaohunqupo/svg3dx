@@ -6,13 +6,15 @@
      xmlns:s3dx="urn:s3dx:draft:0.1">
 
   <style>
-    :root { --radius: 20; --innerRadius: 16; }
+    :root { --radius: 20; --innerRadius: 16; --bend: 80; }
   </style>
 
   <defs>
     <g id="main">
       <s3dx:pipe radius="var(--radius)" innerRadius="var(--innerRadius)"
-                 path="0 0 0  300 0 0  300 0 200"/>
+                 corner="arc" cornerRadius="var(--bend)">
+        <s3dx:path points="0 0 0  300 0 0  300 0 300"/>
+      </s3dx:pipe>
     </g>
   </defs>
 

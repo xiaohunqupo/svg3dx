@@ -6,15 +6,95 @@
      xmlns:s3dx="urn:s3dx:draft:0.1">
 
   <style>
-    :root { --pathLen: 200; }
+    <!-- Three.js 为 Y-up：水平弯应在 XZ 面（Y=0） -->
+    :root { --pathLen: 100; --up: 140; --bend: 55; --row: 320; }
   </style>
 
   <defs>
     <g id="main">
-      <s3dx:sweep orient="frenet" solid="true">
-        <s3dx:profile type="polygon"
-                      points="-10 -5 0  10 -5 0  10 5 0  -10 5 0"/>
-        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 150  50 0 150"/>
+      <!-- ========== corner：轨迹折角面衔接（XZ 水平弯） ========== -->
+      <!-- 1. arc -->
+      <s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="var(--bend)"
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 0 0)">
+        <s3dx:section>
+          <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
+        </s3dx:section>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+      </s3dx:sweep>
+
+      <!-- 2. chamfer -->
+      <s3dx:sweep orient="frenet" solid="true" corner="chamfer" cornerRadius="var(--bend)"
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 300 0 0)">
+        <s3dx:section>
+          <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
+        </s3dx:section>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+      </s3dx:sweep>
+
+      <!-- 3. sharp -->
+      <s3dx:sweep orient="frenet" solid="true" corner="sharp"
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 600 0 0)">
+        <s3dx:section>
+          <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
+        </s3dx:section>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+      </s3dx:sweep>
+
+      <!-- 4. miter -->
+      <s3dx:sweep orient="frenet" solid="true" corner="miter"
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 900 0 0)">
+        <s3dx:section>
+          <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
+        </s3dx:section>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+      </s3dx:sweep>
+
+      <!-- ========== orient：截面朝向（XZ 水平弯 + 旗形截面） ========== -->
+      <!-- Three.js Y-up。旗形长边在 u：立起≈高墙，躺平≈矮板。 -->
+      <!-- 5. frenet：长边沿 +Y → 高墙 -->
+      <s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="var(--bend)"
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 var(--row) 0)">
+        <s3dx:section>
+          <path d="M 0 -4 L 50 -4 L 50 4 L 12 4 L 12 18 L 0 18 Z"/>
+        </s3dx:section>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+      </s3dx:sweep>
+
+      <!-- 6. fixed：refDir=+Z 作截面 +X → 长边水平躺平（勿用弯道角平分线方向作 refDir，会奇异） -->
+      <s3dx:sweep orient="fixed" refDir="0 0 1" solid="true" corner="arc" cornerRadius="var(--bend)"
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 300 var(--row) 0)">
+        <s3dx:section>
+          <path d="M 0 -4 L 50 -4 L 50 4 L 12 4 L 12 18 L 0 18 Z"/>
+        </s3dx:section>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+      </s3dx:sweep>
+
+      <!-- 7. parallel：refDir=+Y 作截面 +Y → 长边水平、凸起朝上（相对 fixed 上下翻转） -->
+      <s3dx:sweep orient="parallel" refDir="0 1 0" solid="true" corner="arc" cornerRadius="var(--bend)"
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 600 var(--row) 0)">
+        <s3dx:section>
+          <path d="M 0 -4 L 50 -4 L 50 4 L 12 4 L 12 18 L 0 18 Z"/>
+        </s3dx:section>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+      </s3dx:sweep>
+
+      <!-- ========== solid ========== -->
+      <!-- 8. solid=true -->
+      <s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="var(--bend)"
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 calc(var(--row) * 2) 0)">
+        <s3dx:section>
+          <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
+        </s3dx:section>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+      </s3dx:sweep>
+
+      <!-- 9. solid=false -->
+      <s3dx:sweep orient="frenet" solid="false" corner="arc" cornerRadius="var(--bend)"
+                  s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 300 calc(var(--row) * 2) 0)">
+        <s3dx:section>
+          <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
+        </s3dx:section>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
       </s3dx:sweep>
     </g>
   </defs>

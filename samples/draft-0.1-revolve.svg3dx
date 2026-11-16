@@ -11,9 +11,11 @@
 
   <defs>
     <g id="main">
-      <s3dx:revolve axisOrigin="0 0 0" axisDir="0 0 1" angle="var(--angle)">
-        <s3dx:profile type="polygon"
-                      points="40 0 0  80 0 0  80 0 60  40 0 40"/>
+      <!-- Section in default XY (normal +Z); u = radius, v = height along axis Y -->
+      <s3dx:revolve axisOrigin="0 0 0" axisDir="0 1 0" angle="var(--angle)">
+        <s3dx:section>
+          <path d="M 40 0 L 80 0 L 80 60 L 40 40 Z"/>
+        </s3dx:section>
       </s3dx:revolve>
     </g>
   </defs>
