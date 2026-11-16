@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.1">
+
+  <!-- Element fill colors with default material (neutral white multiplier). -->
+  <!-- Ordinary SVG text/labels are shown in the 3D scene on the XY plane. -->
+  <style>
+    .red { fill: 0.90 0.20 0.20 1; }
+    .green { fill: 0.20 0.75 0.35 1; }
+    .blue { fill: 0.20 0.45 0.90 1; }
+  </style>
+
+  <defs>
+    <g id="c-default">
+      <s3dx:box length="55" width="55" height="55"
+                lengthVec="1 0 0" widthVec="0 1 0"/>
+    </g>
+    <g id="c-red" class="red">
+      <s3dx:box length="55" width="55" height="55"
+                lengthVec="1 0 0" widthVec="0 1 0"/>
+    </g>
+    <g id="c-green" class="green">
+      <s3dx:box length="55" width="55" height="55"
+                lengthVec="1 0 0" widthVec="0 1 0"/>
+    </g>
+    <g id="c-blue" class="blue">
+      <s3dx:box length="55" width="55" height="55"
+                lengthVec="1 0 0" widthVec="0 1 0"/>
+    </g>
+    <g id="c-yellow">
+      <s3dx:box length="55" width="55" height="55"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="0.95 0.85 0.15 1"/>
+    </g>
+    <g id="c-cyan">
+      <s3dx:box length="55" width="55" height="55"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="0.15 0.85 0.90 1"/>
+    </g>
+    <g id="c-magenta">
+      <s3dx:box length="55" width="55" height="55"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="0.85 0.20 0.75 1"/>
+    </g>
+    <g id="c-translucent">
+      <s3dx:box length="55" width="55" height="55"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="0.30 0.60 1.0 0.4"/>
+    </g>
+  </defs>
+
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <s3dx:use href="#c-default"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -315 0 0)"/>
+    <s3dx:use href="#c-red"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -225 0 0)"/>
+    <s3dx:use href="#c-green"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -135 0 0)"/>
+    <s3dx:use href="#c-blue"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -45 0 0)"/>
+    <s3dx:use href="#c-yellow"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 45 0 0)"/>
+    <s3dx:use href="#c-cyan"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 135 0 0)"/>
+    <s3dx:use href="#c-magenta"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 225 0 0)"/>
+    <s3dx:use href="#c-translucent"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 315 0 0)"/>
+  </s3dx:model>
+
+  <!-- SVG 2D as XY-plane 3D primitives (x/y world units, z≈0). -->
+  <g fill="#1f2937" font-family="sans-serif" font-size="8" text-anchor="middle">
+    <text x="0" y="80" font-size="12" font-weight="600">fill colors (RGBA)</text>
+
+    <text x="-315" y="-50">default</text>
+    <text x="-315" y="-62" font-size="6">0.53 0.67 0.80 1</text>
+
+    <text x="-225" y="-50">red</text>
+    <text x="-225" y="-62" font-size="6">0.90 0.20 0.20 1</text>
+
+    <text x="-135" y="-50">green</text>
+    <text x="-135" y="-62" font-size="6">0.20 0.75 0.35 1</text>
+
+    <text x="-45" y="-50">blue</text>
+    <text x="-45" y="-62" font-size="6">0.20 0.45 0.90 1</text>
+
+    <text x="45" y="-50">yellow</text>
+    <text x="45" y="-62" font-size="6">0.95 0.85 0.15 1</text>
+
+    <text x="135" y="-50">cyan</text>
+    <text x="135" y="-62" font-size="6">0.15 0.85 0.90 1</text>
+
+    <text x="225" y="-50">magenta</text>
+    <text x="225" y="-62" font-size="6">0.85 0.20 0.75 1</text>
+
+    <text x="315" y="-50">translucent</text>
+    <text x="315" y="-62" font-size="6">0.30 0.60 1.00 0.4</text>
+  </g>
+</svg>

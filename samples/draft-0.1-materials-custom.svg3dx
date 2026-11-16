@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.1">
+
+  <!-- Custom materials defined in s3dx:materials, shown on boxes. -->
+  <s3dx:materials>
+    <s3dx:material id="tank-paint"
+                   color="0.15 0.55 0.35 1"
+                   metalness="0"
+                   roughness="0.55"/>
+    <s3dx:material id="safety-orange"
+                   color="0.95 0.45 0.10 1"
+                   metalness="0.05"
+                   roughness="0.4"/>
+    <s3dx:material id="brushed-blue"
+                   color="0.25 0.45 0.75 1"
+                   metalness="0.7"
+                   roughness="0.35"/>
+    <s3dx:material id="frosted-glass"
+                   color="0.90 0.95 1.0 0.35"
+                   metalness="0"
+                   roughness="0.08"/>
+    <s3dx:material id="matte-black"
+                   color="0.08 0.08 0.08 1"
+                   metalness="0"
+                   roughness="0.9"/>
+  </s3dx:materials>
+
+  <defs>
+    <g id="tank">
+      <s3dx:box length="60" width="60" height="60"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="url(#tank-paint)"/>
+    </g>
+    <g id="orange">
+      <s3dx:box length="60" width="60" height="60"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="url(#safety-orange)"/>
+    </g>
+    <g id="blue">
+      <s3dx:box length="60" width="60" height="60"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="url(#brushed-blue)"/>
+    </g>
+    <g id="frost">
+      <s3dx:box length="60" width="60" height="60"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="url(#frosted-glass)"/>
+    </g>
+    <g id="black">
+      <s3dx:box length="60" width="60" height="60"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="url(#matte-black)"/>
+    </g>
+  </defs>
+
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <s3dx:use href="#tank"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -240 0 0)"/>
+    <s3dx:use href="#orange"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -120 0 0)"/>
+    <s3dx:use href="#blue"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 0 0)"/>
+    <s3dx:use href="#frost"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 120 0 0)"/>
+    <s3dx:use href="#black"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 240 0 0)"/>
+  </s3dx:model>
+
+  <!-- Custom material id + color / metalness / roughness. -->
+  <g fill="#1f2937" font-family="sans-serif" font-size="7" text-anchor="middle">
+    <text x="0" y="95" font-size="12">custom s3dx:material</text>
+
+    <text x="-240" y="-50" font-size="9">tank-paint</text>
+    <text x="-240" y="-62">color 0.15 0.55 0.35 1</text>
+    <text x="-240" y="-72">metalness 0</text>
+    <text x="-240" y="-82">roughness 0.55</text>
+
+    <text x="-120" y="-50" font-size="9">safety-orange</text>
+    <text x="-120" y="-62">color 0.95 0.45 0.10 1</text>
+    <text x="-120" y="-72">metalness 0.05</text>
+    <text x="-120" y="-82">roughness 0.4</text>
+
+    <text x="0" y="-50" font-size="9">brushed-blue</text>
+    <text x="0" y="-62">color 0.25 0.45 0.75 1</text>
+    <text x="0" y="-72">metalness 0.7</text>
+    <text x="0" y="-82">roughness 0.35</text>
+
+    <text x="120" y="-50" font-size="9">frosted-glass</text>
+    <text x="120" y="-62">color 0.90 0.95 1.0 0.35</text>
+    <text x="120" y="-72">metalness 0</text>
+    <text x="120" y="-82">roughness 0.08</text>
+
+    <text x="240" y="-50" font-size="9">matte-black</text>
+    <text x="240" y="-62">color 0.08 0.08 0.08 1</text>
+    <text x="240" y="-72">metalness 0</text>
+    <text x="240" y="-82">roughness 0.9</text>
+  </g>
+</svg>

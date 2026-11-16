@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.1">
+
+  <!-- Built-in presets: row 1 boxes, row 2 spheres. Neutral fill so material.color shows. -->
+  <defs>
+    <g id="box-default">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="default"/>
+    </g>
+    <g id="box-steel">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="steel"/>
+    </g>
+    <g id="box-stainless">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="stainless"/>
+    </g>
+    <g id="box-aluminum">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="aluminum"/>
+    </g>
+    <g id="box-copper">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="copper"/>
+    </g>
+    <g id="box-brass">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="brass"/>
+    </g>
+    <g id="box-plastic">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="plastic"/>
+    </g>
+    <g id="box-rubber">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="rubber"/>
+    </g>
+    <g id="box-concrete">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="concrete"/>
+    </g>
+    <g id="box-glass">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="glass"/>
+    </g>
+    <g id="box-wood">
+      <s3dx:box length="50" width="50" height="50"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="1 1 1 1" material="wood"/>
+    </g>
+
+    <g id="sph-default">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="default"/>
+    </g>
+    <g id="sph-steel">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="steel"/>
+    </g>
+    <g id="sph-stainless">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="stainless"/>
+    </g>
+    <g id="sph-aluminum">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="aluminum"/>
+    </g>
+    <g id="sph-copper">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="copper"/>
+    </g>
+    <g id="sph-brass">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="brass"/>
+    </g>
+    <g id="sph-plastic">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="plastic"/>
+    </g>
+    <g id="sph-rubber">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="rubber"/>
+    </g>
+    <g id="sph-concrete">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="concrete"/>
+    </g>
+    <g id="sph-glass">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="glass"/>
+    </g>
+    <g id="sph-wood">
+      <s3dx:sphere radius="25" center="0 0 25" fill="1 1 1 1" material="wood"/>
+    </g>
+  </defs>
+
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <!-- Row 1: preset boxes along +X -->
+    <s3dx:use href="#box-default"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -500 0 0)"/>
+    <s3dx:use href="#box-steel"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -400 0 0)"/>
+    <s3dx:use href="#box-stainless"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -300 0 0)"/>
+    <s3dx:use href="#box-aluminum"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -200 0 0)"/>
+    <s3dx:use href="#box-copper"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -100 0 0)"/>
+    <s3dx:use href="#box-brass"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 0 0)"/>
+    <s3dx:use href="#box-plastic"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 0 0)"/>
+    <s3dx:use href="#box-rubber"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 200 0 0)"/>
+    <s3dx:use href="#box-concrete"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 300 0 0)"/>
+    <s3dx:use href="#box-glass"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 400 0 0)"/>
+    <s3dx:use href="#box-wood"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 500 0 0)"/>
+
+    <!-- Row 2: same presets as spheres, offset in -Y -->
+    <s3dx:use href="#sph-default"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -500 -120 0)"/>
+    <s3dx:use href="#sph-steel"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -400 -120 0)"/>
+    <s3dx:use href="#sph-stainless"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -300 -120 0)"/>
+    <s3dx:use href="#sph-aluminum"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -200 -120 0)"/>
+    <s3dx:use href="#sph-copper"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 -100 -120 0)"/>
+    <s3dx:use href="#sph-brass"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 -120 0)"/>
+    <s3dx:use href="#sph-plastic"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 -120 0)"/>
+    <s3dx:use href="#sph-rubber"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 200 -120 0)"/>
+    <s3dx:use href="#sph-concrete"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 300 -120 0)"/>
+    <s3dx:use href="#sph-glass"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 400 -120 0)"/>
+    <s3dx:use href="#sph-wood"
+              s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 500 -120 0)"/>
+  </s3dx:model>
+
+  <!-- Built-in material names (XY-plane SVG text). -->
+  <g fill="#1f2937" font-family="sans-serif" font-size="9" text-anchor="middle">
+    <text x="0" y="90" font-size="14">built-in materials</text>
+    <text x="-500" y="70" font-size="8">box</text>
+    <text x="-500" y="-155" font-size="8">sphere</text>
+
+    <text x="-500" y="-45">default</text>
+    <text x="-400" y="-45">steel</text>
+    <text x="-300" y="-45">stainless</text>
+    <text x="-200" y="-45">aluminum</text>
+    <text x="-100" y="-45">copper</text>
+    <text x="0" y="-45">brass</text>
+    <text x="100" y="-45">plastic</text>
+    <text x="200" y="-45">rubber</text>
+    <text x="300" y="-45">concrete</text>
+    <text x="400" y="-45">glass</text>
+    <text x="500" y="-45">wood</text>
+  </g>
+</svg>

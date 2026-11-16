@@ -6,7 +6,7 @@
      xmlns:s3dx="urn:s3dx:draft:0.1">
 
   <style>
-    :root { --diameter: 100; --height: 25; --angle: 270; }
+    :root { --diameter: 100; --height: 25; --angle: 60; }
   </style>
 
   <defs>

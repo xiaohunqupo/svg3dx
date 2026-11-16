@@ -94,4 +94,30 @@
   <s3dx:model id="solid-view" mode="solid" active="true">
     <s3dx:use href="#main"/>
   </s3dx:model>
+
+  <!-- Labels: blend / solid (gap=180, row=280). -->
+  <g fill="#1f2937" font-family="sans-serif" font-size="12" text-anchor="middle">
+    <text x="360" y="-50" font-size="16">loft</text>
+
+    <text x="0" y="-28">blend=linear</text>
+    <text x="0" y="-44" font-size="9">uniform f(t)=t</text>
+
+    <text x="180" y="-28">blend=sine</text>
+    <text x="180" y="-44" font-size="9">mid stays squarer</text>
+
+    <text x="360" y="-28">blend=cosine</text>
+    <text x="360" y="-44" font-size="9">ease in/out</text>
+
+    <text x="540" y="-28">blend=tan</text>
+    <text x="540" y="-44" font-size="9">base stays square</text>
+
+    <text x="720" y="-28">blend=cotan</text>
+    <text x="720" y="-44" font-size="9">rounds early</text>
+
+    <text x="0" y="250">solid=true</text>
+    <text x="0" y="234" font-size="9">blend=linear</text>
+
+    <text x="180" y="250">solid=false</text>
+    <text x="180" y="234" font-size="9">open shell</text>
+  </g>
 </svg>

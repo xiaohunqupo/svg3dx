@@ -6,20 +6,20 @@
      xmlns:s3dx="urn:s3dx:draft:0.1">
 
   <style>
-    <!-- Three.js 为 Y-up：水平弯应在 XZ 面（Y=0） -->
-    :root { --pathLen: 100; --up: 140; --bend: 55; --row: 320; }
+    <!-- 世界坐标 Z-up：水平弯在 XY 面（Z=0），+Z 为高度 -->
+    :root { --pathLen: 100; --bendY: 140; --bend: 55; --row: 400; }
   </style>
 
   <defs>
     <g id="main">
-      <!-- ========== corner：轨迹折角面衔接（XZ 水平弯） ========== -->
+      <!-- ========== corner：轨迹折角面衔接（XY 水平弯） ========== -->
       <!-- 1. arc -->
       <s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="var(--bend)"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 0 0)">
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
         </s3dx:section>
-        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
       <!-- 2. chamfer -->
@@ -28,7 +28,7 @@
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
         </s3dx:section>
-        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
       <!-- 3. sharp -->
@@ -37,7 +37,7 @@
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
         </s3dx:section>
-        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
       <!-- 4. miter -->
@@ -46,36 +46,36 @@
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
         </s3dx:section>
-        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
-      <!-- ========== orient：截面朝向（XZ 水平弯 + 旗形截面） ========== -->
-      <!-- Three.js Y-up。旗形长边在 u：立起≈高墙，躺平≈矮板。 -->
-      <!-- 5. frenet：长边沿 +Y → 高墙 -->
+      <!-- ========== orient：截面朝向（XY 水平弯 + 旗形截面） ========== -->
+      <!-- 旗形长边在 u：立起≈高墙，躺平≈矮板。 -->
+      <!-- 5. frenet：随弯侧倾 -->
       <s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="var(--bend)"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 var(--row) 0)">
         <s3dx:section>
           <path d="M 0 -4 L 50 -4 L 50 4 L 12 4 L 12 18 L 0 18 Z"/>
         </s3dx:section>
-        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
-      <!-- 6. fixed：refDir=+Z 作截面 +X → 长边水平躺平（勿用弯道角平分线方向作 refDir，会奇异） -->
+      <!-- 6. fixed：refDir=+Z → 截面 +u 朝上 → 长边立起成墙 -->
       <s3dx:sweep orient="fixed" refDir="0 0 1" solid="true" corner="arc" cornerRadius="var(--bend)"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 300 var(--row) 0)">
         <s3dx:section>
           <path d="M 0 -4 L 50 -4 L 50 4 L 12 4 L 12 18 L 0 18 Z"/>
         </s3dx:section>
-        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
-      <!-- 7. parallel：refDir=+Y 作截面 +Y → 长边水平、凸起朝上（相对 fixed 上下翻转） -->
-      <s3dx:sweep orient="parallel" refDir="0 1 0" solid="true" corner="arc" cornerRadius="var(--bend)"
+      <!-- 7. parallel：refDir=+Z → 截面 +v 保持朝上（相对 fixed 像“放倒/立起”差） -->
+      <s3dx:sweep orient="parallel" refDir="0 0 1" solid="true" corner="arc" cornerRadius="var(--bend)"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 600 var(--row) 0)">
         <s3dx:section>
           <path d="M 0 -4 L 50 -4 L 50 4 L 12 4 L 12 18 L 0 18 Z"/>
         </s3dx:section>
-        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
       <!-- ========== solid ========== -->
@@ -85,7 +85,7 @@
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
         </s3dx:section>
-        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
       <!-- 9. solid=false -->
@@ -94,7 +94,7 @@
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
         </s3dx:section>
-        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) 0 var(--up)"/>
+        <s3dx:path points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
     </g>
   </defs>
@@ -102,4 +102,39 @@
   <s3dx:model id="solid-view" mode="solid" active="true">
     <s3dx:use href="#main"/>
   </s3dx:model>
+
+  <!-- Labels sit south of each row (smaller Y than geometry) with clear gaps. -->
+  <g fill="#1f2937" font-family="sans-serif" font-size="14" text-anchor="middle">
+    <text x="450" y="-90" font-size="18">sweep</text>
+
+    <!-- row0 at Y=0: labels above -->
+    <text x="50" y="-55">corner=arc</text>
+    <text x="50" y="-72" font-size="10">cornerRadius=55</text>
+
+    <text x="350" y="-55">corner=chamfer</text>
+    <text x="350" y="-72" font-size="10">cornerRadius=55</text>
+
+    <text x="650" y="-55">corner=sharp</text>
+    <text x="650" y="-72" font-size="10">no radius</text>
+
+    <text x="950" y="-55">corner=miter</text>
+    <text x="950" y="-72" font-size="10">bevel join</text>
+
+    <!-- row1 at Y=400: labels in the gap after row0 bend (~140) -->
+    <text x="50" y="345">orient=frenet</text>
+    <text x="50" y="328" font-size="10">banks with bend</text>
+
+    <text x="350" y="345">orient=fixed</text>
+    <text x="350" y="328" font-size="10">refDir=0 0 1</text>
+
+    <text x="650" y="345">orient=parallel</text>
+    <text x="650" y="328" font-size="10">refDir=0 0 1</text>
+
+    <!-- row2 at Y=800 -->
+    <text x="50" y="745">solid=true</text>
+    <text x="50" y="728" font-size="10">capped solid</text>
+
+    <text x="350" y="745">solid=false</text>
+    <text x="350" y="728" font-size="10">open shell</text>
+  </g>
 </svg>

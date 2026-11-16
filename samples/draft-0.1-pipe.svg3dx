@@ -6,6 +6,7 @@
      xmlns:s3dx="urn:s3dx:draft:0.1">
 
   <style>
+    <!-- Z-up：沿 +X 再立起 +Z -->
     :root { --radius: 20; --innerRadius: 16; --bend: 80; }
   </style>
 
