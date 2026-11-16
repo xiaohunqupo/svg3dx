@@ -127,7 +127,7 @@
   </s3dx:model>
 
   <!-- 二维覆盖层：标准 SVG 内容，在标准渲染器下仍可见 -->
-  <g id="annotations">
+  <g id="annotations" fill="#2563eb" font-family="sans-serif">
     <text x="20" y="580" font-size="14">svg3dx draft 0.1 — 二维标注层</text>
   </g>
 </svg>
