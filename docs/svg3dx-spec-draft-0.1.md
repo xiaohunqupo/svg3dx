@@ -1,6 +1,8 @@
-# svg3dx 格式规范（草案 0.1）
+# svg3dx 格式规范（草案 0.1）· 中文版
 
-> 项目概览与授权说明见仓库根目录 [README.zh-CN.md](../README.zh-CN.md) / [README.md](../README.md)。作者：danny许。
+> 项目概览与授权说明见仓库根目录 [README.zh-CN.md](../README.zh-CN.md) / [README.md](../README.md)。作者：danny许。  
+> **语言**：本文件为**中文版**。English edition: [svg3dx-spec-draft-0.1.en.md](./svg3dx-spec-draft-0.1.en.md)。  
+> **官方名词**：属性、类型、预制材质的官方中文名见 [svg3dx-vocab-draft-0.1.md](./svg3dx-vocab-draft-0.1.md)；文档中的英文标识符为保存用词，中文名为规范显示名。
 
 ## 0. 文档状态
 
@@ -8,6 +10,7 @@
 - 项目/格式名：`svg3dx`。命名空间前缀：`s3dx`。Logo 标识为 `s3dx`，全称标题为 `svg 3dx`。
 - 本草案文件不保证在正式版中可解析。实现应按 URI 识别三维命名空间，不依赖前缀字面量（推荐前缀 `s3dx`）。
 - 文件扩展名：沿用 `.svg`，通过根属性 `svg3d="true"` 区分三维内容。正式版可考虑 `.svg3dx`【待定】。
+- **双语与名词**：规范同时维护中文版与英文版；文件内属性名 / 元素名 / 材质关键词保持英文标识符，中文版正文与编辑器 UI 使用官方中文名（见名词表）。
 
 ## 1. 文档模型
 
@@ -152,6 +155,8 @@
 属性名与 [`samples/draft-0.1-example.svg3dx`](../samples/draft-0.1-example.svg3dx) 对齐；几何语义对齐 AutoCAD 实体图元、Open CASCADE 构造算子（`MakePrism` / `MakeRevol` / `ThruSections`）、以及 glTF / OpenGL 风格的索引网格。
 
 **属性命名**：图元属性名采用 SVG 常见的 **lowerCamelCase**（全小写开头，如 `length`、`lengthVec`、`bottomCenterPt`）。元素名保持小写；多词时用连字符（如 `sector-cylinder`、`if-not`、`loop-points`、`bool-union`）。XML 属性名大小写敏感；实现不得把 `Length` 当作 `length` 的别名。
+
+**官方中文名**：下表「属性」列为保存用英文标识符；对应官方中文名（如 `length` → **长度**、`bottomCenterPt` → **底面圆心**）以 [官方名词表](./svg3dx-vocab-draft-0.1.md) 为准。图元标题括号内名称（如 `s3dx:box`（长方体））为该类型的官方中文名。
 
 #### 3.2.1 类型与通用约定
 
@@ -866,21 +871,22 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 
 ### 8.5 内置预设（参考外观）
 
-全部为 metallic-roughness。`default` 为中性乘子，不改变图元 `fill`：
+全部为 metallic-roughness。`default` 为中性乘子，不改变图元 `fill`。  
+「关键词」为文件中保存的值；「中文名」为官方显示名（中文 UI / 文档）：
 
-| 关键词 | color (RGBA) | metalness | roughness |
-|---|---|---|---|
-| `default` | `1 1 1 1` | 0 | 0.6 |
-| `steel` | `0.56 0.57 0.58 1` | 1 | 0.35 |
-| `stainless` | `0.70 0.70 0.72 1` | 1 | 0.25 |
-| `aluminum` | `0.91 0.92 0.92 1` | 1 | 0.30 |
-| `copper` | `0.95 0.64 0.54 1` | 1 | 0.35 |
-| `brass` | `0.88 0.78 0.45 1` | 1 | 0.30 |
-| `plastic` | `0.85 0.85 0.85 1` | 0 | 0.45 |
-| `rubber` | `0.15 0.15 0.15 1` | 0 | 0.85 |
-| `concrete` | `0.55 0.55 0.52 1` | 0 | 0.90 |
-| `glass` | `0.90 0.95 1.0 0.25` | 0 | 0.05 |
-| `wood` | `0.55 0.35 0.18 1` | 0 | 0.75 |
+| 关键词 | 中文名 | color (RGBA) | metalness | roughness |
+|---|---|---|---|---|
+| `default` | 默认 | `1 1 1 1` | 0 | 0.6 |
+| `steel` | 钢 | `0.56 0.57 0.58 1` | 1 | 0.35 |
+| `stainless` | 不锈钢 | `0.70 0.70 0.72 1` | 1 | 0.25 |
+| `aluminum` | 铝 | `0.91 0.92 0.92 1` | 1 | 0.30 |
+| `copper` | 铜 | `0.95 0.64 0.54 1` | 1 | 0.35 |
+| `brass` | 黄铜 | `0.88 0.78 0.45 1` | 1 | 0.30 |
+| `plastic` | 塑料 | `0.85 0.85 0.85 1` | 0 | 0.45 |
+| `rubber` | 橡胶 | `0.15 0.15 0.15 1` | 0 | 0.85 |
+| `concrete` | 混凝土 | `0.55 0.55 0.52 1` | 0 | 0.90 |
+| `glass` | 玻璃 | `0.90 0.95 1.0 0.25` | 0 | 0.05 |
+| `wood` | 木材 | `0.55 0.35 0.18 1` | 0 | 0.75 |
 
 ## 9. `<s3dx:use>`
 
