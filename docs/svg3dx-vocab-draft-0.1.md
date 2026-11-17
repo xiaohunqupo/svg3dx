@@ -62,10 +62,10 @@
 | `metalness` | 金属度 | metalness |
 | `roughness` | 粗糙度 | roughness |
 | `s3dx:transform` | 变换 | transform |
-| `position` | 位置 | position |
 | `xdir` | X 轴方向 | xdir |
 | `ydir` | Y 轴方向 | ydir |
 | `zdir` | Z 轴方向 | zdir |
+| `translation` | 平移 | translation |
 | `length` | 长度 | length |
 | `width` | 宽度 | width |
 | `height` | 高度 | height |
