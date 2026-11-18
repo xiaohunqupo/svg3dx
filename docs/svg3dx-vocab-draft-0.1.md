@@ -48,8 +48,9 @@
 | 标识符 | 中文名 | English |
 |---|---|---|
 | `id` | 标识 | id |
-| `class` | 类名 | class |
+| `class` | 分类 | class |
 | `type` | 类型 | type |
+| `form` | 形式 | form |
 | `href` | 引用 | href |
 | `mode` | 模式 | mode |
 | `test` | 条件 | test |
@@ -105,6 +106,19 @@
 | `start` | 起点值 | start |
 | `end` | 终点值 | end |
 | `step` | 步长 | step |
+
+## 2.1 `form` 枚举值 · Form enum values（§3.2）
+
+不同图元可用子集不同；相同语义共用同一标识符。
+
+| 标识符 | 中文名 | English | 用于 |
+|---|---|---|---|
+| `angles` | 角参数 | Angles | `arc` |
+| `ends` | 起终点 | Endpoints | `arc` |
+| `polyline` | 折线 | Polyline | `path` |
+| `segments` | 曲线段 | Segments | `path` |
+| `inline` | 内联 | Inline | `sweep` / `pipe` |
+| `child` | 子路径 | Child path | `sweep` / `pipe` |
 
 ## 3. 预制材质 · Built-in materials（§8.5）
 

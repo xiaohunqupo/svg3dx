@@ -12,9 +12,9 @@
 
   <defs>
     <g id="main">
-      <s3dx:pipe radius="var(--radius)" innerRadius="var(--innerRadius)"
+      <s3dx:pipe form="child" radius="var(--radius)" innerRadius="var(--innerRadius)"
                  corner="arc" cornerRadius="var(--bend)">
-        <s3dx:path points="0 0 0  300 0 0  300 0 300"/>
+        <s3dx:path form="polyline" points="0 0 0  300 0 0  300 0 300"/>
       </s3dx:pipe>
     </g>
   </defs>

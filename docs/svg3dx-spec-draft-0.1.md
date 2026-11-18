@@ -340,27 +340,28 @@
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
+| `form` | 否 | 枚举 | 见推断 | 参数形式：`angles`（角参数）或 `ends`（起终点）；缺省由属性推断，编辑器 / 优化应写出 |
 | `center` | 是 | 点 | `0 0 0` | 圆心 |
 | `normal` | 是 | 向量 | `0 0 1` | 圆弧平面法向 |
-| `radius` | 条件 | 数字 | `100` | 半径；若同时给出 `from`/`to`，可省略并由弦长校核 |
-| `xDir` | 否 | 向量 | 见说明 | 角参数 0° 参考方向；缺省取平面内与世界轴尽量对齐的稳定方向 |
-| `startAngle` | 否 | 角度 | `0` | 起点角 |
-| `angle` | 条件 | 角度 | `90` | 扫掠角（可负，表示反向）；与 `from`/`to` 二选一体系，见下 |
-| `from` | 条件 | 点 | — | 弧起点（须在圆上，容差内）；作为 `path` 子段时可省略以接上一段终点 |
-| `to` | 条件 | 点 | — | 弧终点（须在圆上） |
+| `radius` | 条件 | 数字 | `100` | 半径；`form="ends"` 时可省略并由弦长校核 |
+| `xDir` | 否 | 向量 | 见说明 | **`angles`**：角参数 0° 参考方向；缺省取平面内与世界轴尽量对齐的稳定方向 |
+| `startAngle` | 否 | 角度 | `0` | **`angles`**：起点角 |
+| `angle` | 条件 | 角度 | `90` | **`angles`**：扫掠角（可负，表示反向） |
+| `from` | 条件 | 点 | — | **`ends`**：弧起点（须在圆上，容差内）；作为 `path` 子段时可省略以接上一段终点 |
+| `to` | 条件 | 点 | — | **`ends`**：弧终点（须在圆上） |
 
-写法（择一，实现应支持至少一种；推荐文档写全）：
+**`form`（参数形式）**：两种写法互斥；实现须按 `form` 解释，并忽略（或优化时移除）另一形式的专属属性。缺省推断：同时有非空 `from` 与 `to` → `ends`，否则 → `angles`。
 
-1. **圆心 + 半径 + 角**：`center` `normal` `radius` `startAngle` `angle`（可选 `xDir`）
-2. **圆心 + 起终点**：`center` `normal` `from` `to`（可选 `radius`）；劣弧 / 优弧歧义时以 `angle` 符号或附加 `major="true"`【待定】消解，0.1 默认取 ≤180° 劣弧
+1. **`form="angles"`**（圆心 + 半径 + 角）：`center` `normal` `radius` `startAngle` `angle`（可选 `xDir`）
+2. **`form="ends"`**（圆心 + 起终点）：`center` `normal` `from` `to`（可选 `radius`）；劣弧 / 优弧歧义时附加 `major="true"`【待定】消解，0.1 默认取 ≤180° 劣弧
 
 ```xml
 <!-- 角参数写法 -->
-<s3dx:arc center="0 0 0" normal="0 0 1" radius="100"
+<s3dx:arc form="angles" center="0 0 0" normal="0 0 1" radius="100"
           xDir="1 0 0" startAngle="0" angle="90"/>
 
 <!-- 起终点写法（90° 弯管常用） -->
-<s3dx:arc center="100 0 50" normal="0 -1 0" radius="50"
+<s3dx:arc form="ends" center="100 0 50" normal="0 -1 0" radius="50"
           from="100 0 0" to="150 0 50"/>
 ```
 
@@ -375,26 +376,29 @@
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
-| `points` | 条件 | 点列 | `0 0 0  100 0 0  100 0 100` | 折线简便写法（≥2 点）；等价于若干首尾相接的 `line` |
+| `form` | 否 | 枚举 | 见推断 | 参数形式：`polyline`（折线点列）或 `segments`（曲线段子元素） |
+| `points` | 条件 | 点列 | `0 0 0  100 0 0  100 0 100` | **`polyline`**：折线简便写法（≥2 点）；等价于若干首尾相接的 `line` |
 
-子元素（与 `points` **二选一**；同时出现时优先子元素并警告）：按文档顺序的 `<s3dx:line>` / `<s3dx:arc>`（样条 / 螺旋【待定】）。
+子元素（**`form="segments"`**）：按文档顺序的 `<s3dx:line>` / `<s3dx:arc>`（样条 / 螺旋【待定】）。
+
+**`form`**：与 `points` / 子元素互斥。缺省推断：存在 `line`/`arc` 子元素 → `segments`；否则有 `points` → `polyline`。同时出现时优先子元素并警告；优化应移除与 `form` 不符的一侧。
 
 段连续性：每一段起点须等于上一段终点（实现容差建议 ≤ 1e-6 × 特征尺寸，或发出警告并强制对接）。
 
 ```xml
 <!-- 轨迹本身含圆弧段（曲线路径，不是 sweep 的 corner） -->
-<s3dx:path>
+<s3dx:path form="segments">
   <s3dx:line from="0 0 0" to="100 0 0"/>
-  <s3dx:arc  center="100 0 50" normal="0 -1 0" radius="50"
-             from="100 0 0" to="150 0 50"/>
+  <s3dx:arc form="ends" center="100 0 50" normal="0 -1 0" radius="50"
+            from="100 0 0" to="150 0 50"/>
   <s3dx:line from="150 0 50" to="150 0 100"/>
 </s3dx:path>
 
 <!-- 折线轨迹；若用于 sweep/pipe，折角处的面衔接由 corner 自动补 -->
-<s3dx:path points="0 0 0  100 0 0  100 0 100"/>
+<s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 ```
 
-在 `sweep` / `pipe` 上亦可用父元素属性 `path="x1 y1 z1 …"` 作为折线简便写法，与子元素 `<s3dx:path>` 二选一。
+在 `sweep` / `pipe` 上亦可用父元素属性 `path="x1 y1 z1 …"`（`form="inline"`）作为折线简便写法，与子元素 `<s3dx:path>`（`form="child"`）二选一。
 
 #### 3.2.4 构造体元（拉伸 / 旋转 / 放样 / 扫掠）
 
@@ -548,14 +552,17 @@
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
+| `form` | 否 | 枚举 | 见推断 | 轨迹形式：`inline`（父上 `path` 点列）或 `child`（子元素 `<s3dx:path>`） |
 | `orient` | 否 | 枚举 | `frenet` | 截面姿态：`frenet`（沿路径平行搬运）\| `fixed`（IFC FixedReference：`refDir` 投影为截面局部 +X）\| `parallel`（`refDir` 投影为截面局部 +Y / “上”） |
 | `refDir` | 条件 | 向量 | — | `orient=fixed` / `parallel` 的参考方向。**勿取弯道所在平面内的角平分线方向**（会与切向平行而奇异）；与切向平行时回退为上一帧平行搬运，并保持帧手性连续 |
 | `solid` | 否 | 布尔 | `true` | 封闭截面是否生成实体 |
-| `path` | 否 | 点列 | — | 折线路径简便写法；与子元素 `<s3dx:path>` 二选一（须具其一） |
+| `path` | 条件 | 点列 | — | **`inline`**：折线路径简便写法 |
 | `corner` | 否 | 枚举 | `arc` | 折线顶点处的**转角生成**（见下） |
 | `cornerRadius` | 条件 | 数字 | `50` | `arc` / `chamfer` 的半径或倒角边长；缺省时由实现按邻边长度取合理默认并警告 |
 
-子元素：恰好一个 `<s3dx:section>`；路径用 `path` 属性或子元素 `<s3dx:path>`。截面二维轮廓在路径各帧的局部 \((u,v)\) 中解释（姿态由 `orient` 决定）。
+子元素：恰好一个 `<s3dx:section>`；**`form="child"`** 时另需子元素 `<s3dx:path>`。截面二维轮廓在路径各帧的局部 \((u,v)\) 中解释（姿态由 `orient` 决定）。
+
+**轨迹 `form`**：`inline` 与 `child` 互斥（须具其一）。缺省推断：有 `<s3dx:path>` 子元素 → `child`；否则有 `path` 属性 → `inline`。优化应移除与 `form` 不符的一侧。
 
 **两层分工（勿混淆）**
 
@@ -586,11 +593,11 @@
 
 ```xml
 <!-- 轨迹用折线（XZ 弯，Z-up）；转角由 corner 自动补（默认 arc） -->
-<s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="50">
+<s3dx:sweep form="child" orient="frenet" solid="true" corner="arc" cornerRadius="50">
   <s3dx:section>
     <path d="M -20 -10 L 20 -10 L 20 10 L -20 10 Z"/>
   </s3dx:section>
-  <s3dx:path points="0 0 0  100 0 0  100 0 100"/>
+  <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 </s3dx:sweep>
 ```
 
@@ -606,15 +613,18 @@
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
+| `form` | 否 | 枚举 | 见推断 | 轨迹形式：同 `sweep`（`inline` / `child`） |
 | `radius` | 是 | 数字 | `20` | 外半径（≡ STEP `radius`） |
 | `innerRadius` | 否 | 数字 | — | 内半径；缺省为实心；推荐示例 `16`（须 `0 < innerRadius < radius`） |
-| `path` / 子 `<s3dx:path>` | 是 | — | — | 中心线**轨迹**（折线或 `line`/`arc` 段） |
+| `path` | 条件 | 点列 | — | **`inline`**：中心线折线点列 |
 | `corner` | 否 | 枚举 | `arc` | 折角面衔接，同 `sweep`（与轨迹段分层） |
 | `cornerRadius` | 条件 | 数字 | `50` | 同 `sweep` |
 
+子元素：**`form="child"`** 时须有 `<s3dx:path>`（折线或 `line`/`arc` 段）。轨迹 `form` 规则同 `sweep`。
+
 ```xml
-<s3dx:pipe radius="20" innerRadius="16" corner="arc" cornerRadius="50">
-  <s3dx:path points="0 0 0  100 0 0  100 0 100"/>
+<s3dx:pipe form="child" radius="20" innerRadius="16" corner="arc" cornerRadius="50">
+  <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 </s3dx:pipe>
 ```
 
@@ -680,13 +690,13 @@
 | `prism` | points, height | normal |
 | `sector-cylinder` | diameter, bottomCenterPt, topCenterPt | angle |
 | `line` | to | from |
-| `arc` | center, normal | radius, xDir, startAngle, angle, from, to |
-| `path` | points **或** ≥1 曲线段 | 子：`line` / `arc` |
+| `arc` | center, normal | form=`angles`\|`ends`；angles：radius, xDir, startAngle, angle；ends：from, to（可选 radius） |
+| `path` | form 决定一侧 | form=`polyline`（points）\|`segments`（子：`line` / `arc`） |
 | `extrude` | length | origin, normal, xDir, dir；恰好 1 × `<s3dx:section>`；旧名 `polylinestretch` |
 | `revolve` | axisOrigin, axisDir | origin, normal, xDir, angle；恰好 1 × `<s3dx:section>` |
 | `loft` | — | solid, blend；≥2 × `<s3dx:section>`（各位姿自带；无扫掠转角） |
-| `sweep` | — | orient, refDir, solid, corner, cornerRadius；1 × `<s3dx:section>` + path / `<s3dx:path>` |
-| `pipe` | radius + path | innerRadius, corner, cornerRadius；`<s3dx:path>`（转角同 sweep） |
+| `sweep` | — | form=`inline`\|`child`；orient, refDir, solid, corner, cornerRadius；1 × `<s3dx:section>` + path / `<s3dx:path>` |
+| `pipe` | radius + 轨迹 | form=`inline`\|`child`；innerRadius, corner, cornerRadius；path / `<s3dx:path>` |
 | `mesh` | position | mode, normal, texcoord, color, colorSize, index, indexBase |
 | `triangles` | point, normal, index | （≡ mesh 简写，1-based） |
 

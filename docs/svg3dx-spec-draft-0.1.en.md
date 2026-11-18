@@ -340,27 +340,28 @@ The arc lies in the plane with origin `center` and normal `normal`; angular para
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
+| `form` | no | enum | see inference | Parameter form: `angles` or `ends`; if omitted, inferred from attributes; editors / optimize should write it |
 | `center` | yes | point | `0 0 0` | Arc center |
 | `normal` | yes | vector | `0 0 1` | Arc-plane normal |
-| `radius` | conditional | number | `100` | Radius; if `from`/`to` are both given, may be omitted and checked against chord length |
-| `xDir` | no | vector | see notes | 0° reference direction; default is a stable in-plane direction aligned with world axes as far as possible |
-| `startAngle` | no | angle | `0` | Start angle |
-| `angle` | conditional | angle | `90` | Sweep angle (may be negative for reverse); mutually exclusive system with `from`/`to`, see below |
-| `from` | conditional | point | — | Arc start (must lie on the circle within tolerance); as a `path` segment may be omitted to connect to previous end |
-| `to` | conditional | point | — | Arc end (must lie on the circle) |
+| `radius` | conditional | number | `100` | Radius; may be omitted under `form="ends"` and checked against chord length |
+| `xDir` | no | vector | see notes | **`angles`**: 0° reference direction; default is a stable in-plane direction aligned with world axes as far as possible |
+| `startAngle` | no | angle | `0` | **`angles`**: start angle |
+| `angle` | conditional | angle | `90` | **`angles`**: sweep angle (may be negative for reverse) |
+| `from` | conditional | point | — | **`ends`**: arc start (must lie on the circle within tolerance); as a `path` segment may be omitted to connect to previous end |
+| `to` | conditional | point | — | **`ends`**: arc end (must lie on the circle) |
 
-Authoring forms (choose one; implementations should support at least one; documents are recommended to write the full form):
+**`form` (parameter form)**: the two authoring systems are mutually exclusive; implementations must interpret by `form` and ignore (or strip on optimize) attributes exclusive to the other form. Inference when omitted: both `from` and `to` non-empty → `ends`; otherwise → `angles`.
 
-1. **Center + radius + angles**: `center` `normal` `radius` `startAngle` `angle` (optional `xDir`)
-2. **Center + endpoints**: `center` `normal` `from` `to` (optional `radius`); minor/major ambiguity resolved by `angle` sign or optional `major="true"` [TBD]; draft 0.1 defaults to the ≤180° minor arc
+1. **`form="angles"`** (center + radius + angles): `center` `normal` `radius` `startAngle` `angle` (optional `xDir`)
+2. **`form="ends"`** (center + endpoints): `center` `normal` `from` `to` (optional `radius`); minor/major ambiguity resolved by optional `major="true"` [TBD]; draft 0.1 defaults to the ≤180° minor arc
 
 ```xml
 <!-- Angle-parameter form -->
-<s3dx:arc center="0 0 0" normal="0 0 1" radius="100"
+<s3dx:arc form="angles" center="0 0 0" normal="0 0 1" radius="100"
           xDir="1 0 0" startAngle="0" angle="90"/>
 
 <!-- Endpoint form (common for 90° pipe bends) -->
-<s3dx:arc center="100 0 50" normal="0 -1 0" radius="50"
+<s3dx:arc form="ends" center="100 0 50" normal="0 -1 0" radius="50"
           from="100 0 0" to="150 0 50"/>
 ```
 
@@ -375,26 +376,29 @@ Aligned with `composite_curve` / `Wire`: ordered curve segments joined end-to-en
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
-| `points` | conditional | point list | `0 0 0  100 0 0  100 0 100` | Polyline shorthand (≥2 points); equivalent to end-to-end `line` segments |
+| `form` | no | enum | see inference | Parameter form: `polyline` (point list) or `segments` (curve-segment children) |
+| `points` | conditional | point list | `0 0 0  100 0 0  100 0 100` | **`polyline`**: polyline shorthand (≥2 points); equivalent to end-to-end `line` segments |
 
-Children (**mutually exclusive** with `points`; if both appear, prefer children and warn): `<s3dx:line>` / `<s3dx:arc>` in document order (spline / helix [TBD]).
+Children (**`form="segments"`**): `<s3dx:line>` / `<s3dx:arc>` in document order (spline / helix [TBD]).
+
+**`form`**: mutually exclusive with `points` vs children. Inference when omitted: `line`/`arc` children present → `segments`; else `points` present → `polyline`. If both appear, prefer children and warn; optimize should remove the side that does not match `form`.
 
 Segment continuity: each segment’s start must equal the previous end (suggested implementation tolerance ≤ 1e-6 × characteristic size, or warn and force join).
 
 ```xml
 <!-- Trajectory itself includes an arc segment (curve path, not sweep corner) -->
-<s3dx:path>
+<s3dx:path form="segments">
   <s3dx:line from="0 0 0" to="100 0 0"/>
-  <s3dx:arc  center="100 0 50" normal="0 -1 0" radius="50"
-             from="100 0 0" to="150 0 50"/>
+  <s3dx:arc form="ends" center="100 0 50" normal="0 -1 0" radius="50"
+            from="100 0 0" to="150 0 50"/>
   <s3dx:line from="150 0 50" to="150 0 100"/>
 </s3dx:path>
 
 <!-- Polyline trajectory; for sweep/pipe, face joining at corners is filled by corner -->
-<s3dx:path points="0 0 0  100 0 0  100 0 100"/>
+<s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 ```
 
-On `sweep` / `pipe`, parent attribute `path="x1 y1 z1 …"` may also be used as a polyline shorthand, mutually exclusive with child `<s3dx:path>`.
+On `sweep` / `pipe`, parent attribute `path="x1 y1 z1 …"` (`form="inline"`) may also be used as a polyline shorthand, mutually exclusive with child `<s3dx:path>` (`form="child"`).
 
 #### 3.2.4 Constructed solids (extrude / revolve / loft / sweep)
 
@@ -548,14 +552,17 @@ Aligned with STEP `surface_curve_swept_area_solid`, IFC `IfcFixedReferenceSweptA
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
+| `form` | no | enum | see inference | Trajectory form: `inline` (parent `path` point list) or `child` (child `<s3dx:path>`) |
 | `orient` | no | enum | `frenet` | Section attitude: `frenet` (parallel transport along path) \| `fixed` (IFC FixedReference: `refDir` projected as section-local +X) \| `parallel` (`refDir` projected as section-local +Y / “up”) |
 | `refDir` | conditional | vector | — | Reference for `orient=fixed` / `parallel`. **Do not** use the in-plane angle bisector of a bend (can become parallel to the tangent and singular); when parallel to the tangent, fall back to previous-frame parallel transport and keep frame handedness continuous |
 | `solid` | no | boolean | `true` | Whether a closed section produces a solid |
-| `path` | no | point list | — | Polyline-path shorthand; mutually exclusive with child `<s3dx:path>` (one of the two is required) |
+| `path` | conditional | point list | — | **`inline`**: polyline-path shorthand |
 | `corner` | no | enum | `arc` | **Corner generation** at polyline vertices (below) |
 | `cornerRadius` | conditional | number | `50` | Radius or chamfer length for `arc` / `chamfer`; when omitted, implementations pick a reasonable default from adjacent edge lengths and warn |
 
-Children: exactly one `<s3dx:section>`; path via `path` attribute or child `<s3dx:path>`. The 2D profile is interpreted in each path frame’s local \((u,v)\) (attitude from `orient`).
+Children: exactly one `<s3dx:section>`; under **`form="child"`**, also a child `<s3dx:path>`. The 2D profile is interpreted in each path frame’s local \((u,v)\) (attitude from `orient`).
+
+**Trajectory `form`**: `inline` and `child` are mutually exclusive (one required). Inference when omitted: `<s3dx:path>` child present → `child`; else `path` attribute present → `inline`. Optimize should remove the side that does not match `form`.
 
 **Two layers (do not confuse)**
 
@@ -586,11 +593,11 @@ Constraints and behavior:
 
 ```xml
 <!-- Polyline trajectory (XZ bend, Z-up); corners filled by corner (default arc) -->
-<s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="50">
+<s3dx:sweep form="child" orient="frenet" solid="true" corner="arc" cornerRadius="50">
   <s3dx:section>
     <path d="M -20 -10 L 20 -10 L 20 10 L -20 10 Z"/>
   </s3dx:section>
-  <s3dx:path points="0 0 0  100 0 0  100 0 100"/>
+  <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 </s3dx:sweep>
 ```
 
@@ -606,15 +613,18 @@ Aligned with STEP `swept_disk_solid` / IFC `IfcSweptDiskSolid`: circular (option
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
+| `form` | no | enum | see inference | Trajectory form: same as `sweep` (`inline` / `child`) |
 | `radius` | yes | number | `20` | Outer radius (≡ STEP `radius`) |
 | `innerRadius` | no | number | — | Inner radius; omit for solid; recommended example `16` (must `0 < innerRadius < radius`) |
-| `path` / child `<s3dx:path>` | yes | — | — | Centerline **trajectory** (polyline or `line`/`arc` segments) |
+| `path` | conditional | point list | — | **`inline`**: centerline polyline point list |
 | `corner` | no | enum | `arc` | Corner face joining, same as `sweep` (layered separately from trajectory segments) |
 | `cornerRadius` | conditional | number | `50` | Same as `sweep` |
 
+Children: under **`form="child"`**, a `<s3dx:path>` is required (polyline or `line`/`arc` segments). Trajectory `form` rules match `sweep`.
+
 ```xml
-<s3dx:pipe radius="20" innerRadius="16" corner="arc" cornerRadius="50">
-  <s3dx:path points="0 0 0  100 0 0  100 0 100"/>
+<s3dx:pipe form="child" radius="20" innerRadius="16" corner="arc" cornerRadius="50">
+  <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 </s3dx:pipe>
 ```
 
@@ -680,13 +690,13 @@ Prefer `mesh` for new content; implementations must still support `triangles`.
 | `prism` | points, height | normal |
 | `sector-cylinder` | diameter, bottomCenterPt, topCenterPt | angle |
 | `line` | to | from |
-| `arc` | center, normal | radius, xDir, startAngle, angle, from, to |
-| `path` | points **or** ≥1 curve segment | children: `line` / `arc` |
+| `arc` | center, normal | form=`angles`\|`ends`; angles: radius, xDir, startAngle, angle; ends: from, to (optional radius) |
+| `path` | one side per form | form=`polyline` (points) \| `segments` (children: `line` / `arc`) |
 | `extrude` | length | origin, normal, xDir, dir; exactly 1 × `<s3dx:section>`; old name `polylinestretch` |
 | `revolve` | axisOrigin, axisDir | origin, normal, xDir, angle; exactly 1 × `<s3dx:section>` |
 | `loft` | — | solid, blend; ≥2 × `<s3dx:section>` (each carries pose; no sweep corners) |
-| `sweep` | — | orient, refDir, solid, corner, cornerRadius; 1 × `<s3dx:section>` + path / `<s3dx:path>` |
-| `pipe` | radius + path | innerRadius, corner, cornerRadius; `<s3dx:path>` (corners same as sweep) |
+| `sweep` | — | form=`inline`\|`child`; orient, refDir, solid, corner, cornerRadius; 1 × `<s3dx:section>` + path / `<s3dx:path>` |
+| `pipe` | radius + trajectory | form=`inline`\|`child`; innerRadius, corner, cornerRadius; path / `<s3dx:path>` |
 | `mesh` | position | mode, normal, texcoord, color, colorSize, index, indexBase |
 | `triangles` | point, normal, index | (≡ mesh shorthand, 1-based) |
 

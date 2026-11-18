@@ -12,22 +12,22 @@
   <defs>
     <g id="wires">
       <s3dx:line from="0 40 0" to="200 40 0"/>
-      <s3dx:arc center="0 40 0" normal="0 0 1" radius="40"
+      <s3dx:arc form="angles" center="0 40 0" normal="0 0 1" radius="40"
                 xDir="1 0 0" startAngle="0" angle="90"/>
-      <s3dx:path>
+      <s3dx:path form="segments">
         <s3dx:line from="0 0 0" to="200 0 0"/>
-        <s3dx:arc  center="200 0 var(--r)" normal="0 -1 0" radius="var(--r)"
-                   from="200 0 0" to="275 0 var(--r)"/>
+        <s3dx:arc form="ends" center="200 0 var(--r)" normal="0 -1 0" radius="var(--r)"
+                  from="200 0 0" to="275 0 var(--r)"/>
         <s3dx:line from="275 0 var(--r)" to="275 0 200"/>
       </s3dx:path>
     </g>
 
     <g id="pipe-along-curve">
-      <s3dx:pipe radius="12" innerRadius="9">
-        <s3dx:path>
+      <s3dx:pipe form="child" radius="12" innerRadius="9">
+        <s3dx:path form="segments">
           <s3dx:line from="0 -80 0" to="200 -80 0"/>
-          <s3dx:arc  center="200 -80 var(--r)" normal="0 -1 0" radius="var(--r)"
-                     from="200 -80 0" to="275 -80 var(--r)"/>
+          <s3dx:arc form="ends" center="200 -80 var(--r)" normal="0 -1 0" radius="var(--r)"
+                    from="200 -80 0" to="275 -80 var(--r)"/>
           <s3dx:line from="275 -80 var(--r)" to="275 -80 200"/>
         </s3dx:path>
       </s3dx:pipe>
