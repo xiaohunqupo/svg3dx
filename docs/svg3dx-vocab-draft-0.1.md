@@ -21,10 +21,10 @@
 | `prism` | 棱柱 | Prism |
 | `sector-cylinder` | 扇形柱 | Sector Cylinder |
 | `pyramid` | 棱锥 | Pyramid |
-| `extrude` | 拉伸 | Extrude |
-| `revolve` | 旋转 | Revolve |
-| `loft` | 放样 | Loft |
-| `sweep` | 扫掠 | Sweep |
+| `extrude` | 拉伸体 | Extrude |
+| `revolve` | 旋转体 | Revolve |
+| `loft` | 放样体 | Loft |
+| `sweep` | 扫掠体 | Sweep |
 | `pipe` | 圆管 | Pipe |
 | `mesh` | 网格 | Mesh |
 | `triangles` | 三角面 | Triangles |
@@ -117,8 +117,8 @@
 | `ends` | 起终点 | Endpoints | `arc` |
 | `polyline` | 折线 | Polyline | `path` |
 | `segments` | 曲线段 | Segments | `path` |
-| `inline` | 内联 | Inline | `sweep` / `pipe` |
-| `child` | 子路径 | Child path | `sweep` / `pipe` |
+| `inline` | 内联 | Inline | `pipe` 的 `form`（父上 `path=` 点列） |
+| `child` | 子路径 | Child path | `pipe` 的 `form`（子 `<s3dx:path>`） |
 
 ## 3. 预制材质 · Built-in materials（§8.5）
 

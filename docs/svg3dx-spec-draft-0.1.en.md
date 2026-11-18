@@ -398,7 +398,7 @@ Segment continuity: each segment’s start must equal the previous end (suggeste
 <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 ```
 
-On `sweep` / `pipe`, parent attribute `path="x1 y1 z1 …"` (`form="inline"`) may also be used as a polyline shorthand, mutually exclusive with child `<s3dx:path>` (`form="child"`).
+`sweep` takes its trajectory as a child `<s3dx:path>`. `pipe` selects the trajectory with `form`: `form="child"` uses a child `<s3dx:path>`; `form="inline"` uses the parent attribute `path="x1 y1 z1 …"` (mutually exclusive).
 
 #### 3.2.4 Constructed solids (extrude / revolve / loft / sweep)
 
@@ -552,17 +552,13 @@ Aligned with STEP `surface_curve_swept_area_solid`, IFC `IfcFixedReferenceSweptA
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
-| `form` | no | enum | see inference | Trajectory form: `inline` (parent `path` point list) or `child` (child `<s3dx:path>`) |
 | `orient` | no | enum | `frenet` | Section attitude: `frenet` (parallel transport along path) \| `fixed` (IFC FixedReference: `refDir` projected as section-local +X) \| `parallel` (`refDir` projected as section-local +Y / “up”) |
 | `refDir` | conditional | vector | — | Reference for `orient=fixed` / `parallel`. **Do not** use the in-plane angle bisector of a bend (can become parallel to the tangent and singular); when parallel to the tangent, fall back to previous-frame parallel transport and keep frame handedness continuous |
 | `solid` | no | boolean | `true` | Whether a closed section produces a solid |
-| `path` | conditional | point list | — | **`inline`**: polyline-path shorthand |
 | `corner` | no | enum | `arc` | **Corner generation** at polyline vertices (below) |
 | `cornerRadius` | conditional | number | `50` | Radius or chamfer length for `arc` / `chamfer`; when omitted, implementations pick a reasonable default from adjacent edge lengths and warn |
 
-Children: exactly one `<s3dx:section>`; under **`form="child"`**, also a child `<s3dx:path>`. The 2D profile is interpreted in each path frame’s local \((u,v)\) (attitude from `orient`).
-
-**Trajectory `form`**: `inline` and `child` are mutually exclusive (one required). Inference when omitted: `<s3dx:path>` child present → `child`; else `path` attribute present → `inline`. Optimize should remove the side that does not match `form`.
+Children: exactly one `<s3dx:section>`, plus a **required** trajectory child `<s3dx:path>`. The 2D profile is interpreted in each path frame’s local \((u,v)\) (attitude from `orient`).
 
 **Two layers (do not confuse)**
 
@@ -593,7 +589,7 @@ Constraints and behavior:
 
 ```xml
 <!-- Polyline trajectory (XZ bend, Z-up); corners filled by corner (default arc) -->
-<s3dx:sweep form="child" orient="frenet" solid="true" corner="arc" cornerRadius="50">
+<s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="50">
   <s3dx:section>
     <path d="M -20 -10 L 20 -10 L 20 10 L -20 10 Z"/>
   </s3dx:section>
@@ -613,14 +609,14 @@ Aligned with STEP `swept_disk_solid` / IFC `IfcSweptDiskSolid`: circular (option
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
-| `form` | no | enum | see inference | Trajectory form: same as `sweep` (`inline` / `child`) |
+| `form` | no | enum | see inference | Trajectory form: `inline` (parent `path` point list) or `child` (child `<s3dx:path>`) |
 | `radius` | yes | number | `20` | Outer radius (≡ STEP `radius`) |
 | `innerRadius` | no | number | — | Inner radius; omit for solid; recommended example `16` (must `0 < innerRadius < radius`) |
 | `path` | conditional | point list | — | **`inline`**: centerline polyline point list |
 | `corner` | no | enum | `arc` | Corner face joining, same as `sweep` (layered separately from trajectory segments) |
 | `cornerRadius` | conditional | number | `50` | Same as `sweep` |
 
-Children: under **`form="child"`**, a `<s3dx:path>` is required (polyline or `line`/`arc` segments). Trajectory `form` rules match `sweep`.
+Children: under **`form="child"`**, a `<s3dx:path>` is required (polyline or `line`/`arc` segments). Trajectory `form`: `inline` and `child` are mutually exclusive (one required). Inference when omitted: `<s3dx:path>` child present → `child`; else `path` attribute present → `inline`. Optimize should remove the side that does not match `form`.
 
 ```xml
 <s3dx:pipe form="child" radius="20" innerRadius="16" corner="arc" cornerRadius="50">
@@ -695,7 +691,7 @@ Prefer `mesh` for new content; implementations must still support `triangles`.
 | `extrude` | length | origin, normal, xDir, dir; exactly 1 × `<s3dx:section>`; old name `polylinestretch` |
 | `revolve` | axisOrigin, axisDir | origin, normal, xDir, angle; exactly 1 × `<s3dx:section>` |
 | `loft` | — | solid, blend; ≥2 × `<s3dx:section>` (each carries pose; no sweep corners) |
-| `sweep` | — | form=`inline`\|`child`; orient, refDir, solid, corner, cornerRadius; 1 × `<s3dx:section>` + path / `<s3dx:path>` |
+| `sweep` | — | orient, refDir, solid, corner, cornerRadius; 1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
 | `pipe` | radius + trajectory | form=`inline`\|`child`; innerRadius, corner, cornerRadius; path / `<s3dx:path>` |
 | `mesh` | position | mode, normal, texcoord, color, colorSize, index, indexBase |
 | `triangles` | point, normal, index | (≡ mesh shorthand, 1-based) |
