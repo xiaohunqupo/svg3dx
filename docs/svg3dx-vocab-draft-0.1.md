@@ -42,6 +42,9 @@
 | `materials` | 材质集 | Materials |
 | `exp` | 表达式 | Expression |
 | `group` | 组 | Group |
+| `metadata` | 元数据 | Metadata |
+
+> `metadata` 为 **SVG 标准元素**（非 `s3dx:`）。作者用它承载外挂命名空间中的厂商/领域属性表；关联与实现义务见规范第 9 节。各厂商属性表内的字段名由对应命名空间 URI 的规范给出。
 
 ## 2. 属性 · Attributes
 

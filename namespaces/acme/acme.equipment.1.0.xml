@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Machine-readable property table for urn:acme:equipment:1.0
+  Used inside SVG <metadata> after: xmlns:acme="urn:acme:equipment:1.0"
+-->
+<nsdef xmlns="urn:s3dx:nsdef:0.1"
+       uri="urn:acme:equipment:1.0"
+       prefix="acme"
+       version="1.0"
+       title="ACME equipment"
+       status="draft">
+
+  <element name="profile"
+           title="Profile"
+           title-zh="剖面声明"
+           use="document">
+    <attr name="version" type="string" use="required"
+          title="Version" title-zh="版本"/>
+    <attr name="spec" type="path" use="required"
+          title="Spec path" title-zh="属性表路径"
+          description="Path relative to the svg3dx repository root"/>
+    <attr name="productLine" type="string" use="optional"
+          title="Product line" title-zh="产品系列"/>
+  </element>
+
+  <element name="equipment"
+           title="Equipment" title-zh="设备">
+    <attr name="tag" type="string" use="required"
+          title="Tag" title-zh="位号"/>
+    <attr name="model" type="string" use="optional"
+          title="Model" title-zh="型号"/>
+    <attr name="manufacturer" type="string" use="optional"
+          title="Manufacturer" title-zh="制造厂"/>
+  </element>
+
+  <element name="nozzle"
+           title="Nozzle" title-zh="管嘴">
+    <attr name="tag" type="string" use="required"
+          title="Tag" title-zh="管嘴编号"/>
+    <attr name="nominalSize" type="string" use="required"
+          title="Nominal size" title-zh="公称尺寸"/>
+    <attr name="rating" type="string" use="optional"
+          title="Rating" title-zh="压力等级"/>
+    <attr name="facing" type="enum" use="optional"
+          enum="RF FF RTJ"
+          title="Facing" title-zh="密封面"/>
+    <attr name="endType" type="string" use="optional"
+          title="End type" title-zh="端部型式"/>
+    <attr name="service" type="string" use="optional"
+          title="Service" title-zh="介质用途"/>
+    <attr name="orientation" type="string" use="optional"
+          title="Orientation" title-zh="方位"/>
+  </element>
+
+  <element name="note"
+           title="Note" title-zh="备注"
+           content="text"/>
+
+</nsdef>

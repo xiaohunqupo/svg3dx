@@ -24,10 +24,11 @@
 ### 1.2 Namespace
 
 - 3D elements use namespace `urn:s3dx:draft:0.1`, recommended prefix `s3dx`.
-- 3D **elements** enter the namespace: core primitives are listed in §3.2 (`box`, `cylinder`, `sphere`, `cone`, `torus`, `wedge`, `pyramid`, `prism`, `sector-cylinder`, `line`, `arc`, `path`, `extrude`, `revolve`, `loft`, `sweep`, `pipe`, `mesh`, `triangles`, plus compatibility aliases `polylinestretch`→`extrude`, `cutcylinder`→`sector-cylinder`); child `<s3dx:section>` (and `<s3dx:path>` when used as a trajectory container); plus `<s3dx:if>`, `<s3dx:if-not>`, `<s3dx:loop-points>`, `<s3dx:loop-range>`, `<s3dx:bool-union>`, `<s3dx:bool-subtract>`, `<s3dx:bool-intersect>`, `<s3dx:use>`, `<s3dx:model>`, `<s3dx:exp>`, `<s3dx:materials>`, `<s3dx:material>`.
+- 3D **elements** enter the namespace: core primitives are listed in §3.2 (`box`, `cylinder`, `sphere`, `cone`, `torus`, `wedge`, `pyramid`, `prism`, `sector-cylinder`, `line`, `arc`, `path`, `extrude`, `revolve`, `loft`, `sweep`, `pipe`, `mesh`, `triangles`, plus compatibility aliases `polylinestretch`→`extrude`, `cutcylinder`→`sector-cylinder`); child `<s3dx:section>` (and `<s3dx:path>` when used as a trajectory container); plus `<s3dx:if>`, `<s3dx:if-not>`, `<s3dx:loop-points>`, `<s3dx:loop-range>`, `<s3dx:bool-union>`, `<s3dx:bool-subtract>`, `<s3dx:bool-intersect>`, `<s3dx:use>`, `<s3dx:model>`, `<s3dx:exp>`, `<s3dx:materials>`, `<s3dx:material>`. A machine-readable element/attribute catalog is [`namespaces/svg3dx/svg3dx.draft.0.1.xml`](../namespaces/svg3dx/svg3dx.draft.0.1.xml), registered in [`namespaces/registry.xml`](../namespaces/registry.xml); **evaluation and semantics remain defined by this document**.
 - **Unprefixed attributes** (null namespace): geometry attrs (lowerCamelCase, see §3.2), plus `href`, `mode`, `test`, `points`, `start`, `end`, `step`, `active`, `svg3d`, and appearance `fill` / `material` / `opacity` (§8).
 - **Namespaced attributes**: 3D transform uses `s3dx:transform` (see §3.4), **not** the SVG presentation attribute `transform`, to avoid clashing with the 2D 6-number `matrix`.
 - Standard SVG parsers keep unknown-namespace elements in the DOM without rendering or further processing. This format relies on that behavior for 2D compatibility.
+- **Foreign namespaces and metadata (mandatory)**: When parsing, implementations must place foreign-namespace elements/attributes fully into the DOM; official round-trips and optimize must keep those nodes intact. Geometry evaluation covers only this format’s `s3dx` semantics plus SVG grouping/style scope (see §11); foreign namespaces and the standard SVG [`<metadata>`](https://www.w3.org/TR/SVG11/metadata.html) subtree remain in the DOM for hosts and domain tools (see §9).
 
 ### 1.3 2D compatibility
 
@@ -148,7 +149,7 @@ Layered convention (stay close to CSS; comparison / logic are filled in by this 
   - **Exception**: `<s3dx:path>` may directly contain `<s3dx:line>` / `<s3dx:arc>` as curve segments (aligned with STEP `composite_curve` / OCC `Wire`)
 - Primitive attribute tables are maintained in this section and the appendix; adding rows does not change document syntax. Attributes not listed must be ignored with a warning.
 - Local → parent → world accumulation: local geometry defined by primitive attributes first applies the element’s own `s3dx:transform`, then parent `<g>` / `<s3dx:use>` `s3dx:transform` values.
-- **Layering principle**: the core layer only accepts generic solids, curves, and meshes that vendors can map; industry-specific shapes (duct fittings, heads, etc.) stay out of the core — see Appendix §11.3 (expressible via `loft` / `revolve` / boolean combinations).
+- **Layering principle**: the core layer only accepts generic solids, curves, and meshes that vendors can map; industry-specific shapes (duct fittings, heads, etc.) stay out of the core — see Appendix §12.3 (expressible via `loft` / `revolve` / boolean combinations).
 
 ### 3.2 Primitive attribute tables (draft 0.1 · revised)
 
@@ -404,7 +405,7 @@ Segment continuity: each segment’s start must equal the previous end (suggeste
 
 Correspond to the common swept-family constructors across STEP / IFC / SolidWorks / PDMS; prefer composing these for industry specials rather than adding dedicated primitives.
 
-Correspondence (non-normative; see Appendix §11.4):
+Correspondence (non-normative; see Appendix §12.4):
 
 | svg3dx | STEP (ISO 10303-42) | IFC | SolidWorks | PDMS/E3D | Blender / 3ds Max |
 |---|---|---|---|---|---|
@@ -490,12 +491,13 @@ Aligned with STEP `revolved_area_solid` / OCC `MakeRevol` / AutoCAD `REVOLVE` / 
 | `axisOrigin` | yes | point | `0 0 0` | A point on the revolution axis |
 | `axisDir` | yes | vector | `0 1 0` | Axis direction |
 | `angle` | no | angle | `360` | Revolution angle |
+| `solid` | no | boolean | `true` | Whether to close as a solid. When the angle is less than 360°, `true` caps a closed profile with the two end faces; `false` keeps only the revolved side |
 
-Children: exactly one `<s3dx:section>` (generatrix profile; closed → solid, open → thin shell as decided by the kernel — implementations should document).
+Children: exactly one `<s3dx:section>` (generatrix profile). A full turn of a closed profile is already closed by the side surface; a partial turn uses `solid` to decide whether to add the end faces. An open profile produces a thin shell as decided by the kernel — implementations should document.
 
 ```xml
 <!-- Section on default XY (normal +Z); u = radius, v = height along axis; revolved about Y -->
-<s3dx:revolve axisOrigin="0 0 0" axisDir="0 1 0" angle="360">
+<s3dx:revolve solid="true" axisOrigin="0 0 0" axisDir="0 1 0" angle="360">
   <s3dx:section>
     <path d="M 40 0 L 100 0 L 100 100 L 40 60 Z"/>
   </s3dx:section>
@@ -689,7 +691,7 @@ Prefer `mesh` for new content; implementations must still support `triangles`.
 | `arc` | center, normal | form=`angles`\|`ends`; angles: radius, xDir, startAngle, angle; ends: from, to (optional radius) |
 | `path` | one side per form | form=`polyline` (points) \| `segments` (children: `line` / `arc`) |
 | `extrude` | length | origin, normal, xDir, dir; exactly 1 × `<s3dx:section>`; old name `polylinestretch` |
-| `revolve` | axisOrigin, axisDir | origin, normal, xDir, angle; exactly 1 × `<s3dx:section>` |
+| `revolve` | axisOrigin, axisDir | origin, normal, xDir, angle, solid; exactly 1 × `<s3dx:section>` |
 | `loft` | — | solid, blend; ≥2 × `<s3dx:section>` (each carries pose; no sweep corners) |
 | `sweep` | — | orient, refDir, solid, corner, cornerRadius; 1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
 | `pipe` | radius + trajectory | form=`inline`\|`child`; innerRadius, corner, cornerRadius; path / `<s3dx:path>` |
@@ -894,7 +896,39 @@ All metallic-roughness. `default` is a neutral multiplier that does not change e
 | `glass` | Glass | `0.90 0.95 1.0 0.25` | 0 | 0.05 |
 | `wood` | Wood | `0.55 0.35 0.18 1` | 0 | 0.75 |
 
-## 9. `<s3dx:use>`
+## 9. Metadata (follows SVG)
+
+Application and vendor descriptive data are carried in standard SVG [`<metadata>`](https://www.w3.org/TR/SVG11/metadata.html), using the same authoring pattern as 2D SVG. Implementations must follow the rules below.
+
+### 9.1 Container and payload
+
+- **Container**: Write `<metadata>` in the SVG namespace.
+- **Payload**: Inside `<metadata>`, write elements from other XML namespaces to express vendor or domain property tables. Field names, types, optionality, and versioning are defined by the specification bound to that namespace URI; this core format defines the container, association, and preservation rules.
+- **Implementation duties**: After parsing, keep every `<metadata>` element and its full foreign-namespace subtree in the DOM; official round-trips and optimize must retain those nodes. Geometry evaluation, booleans, and loop expansion process only this format’s geometry semantics (see §11). Hosts and domain tools may read the preserved metadata subtree directly.
+- **Division of roles with materials**: `<s3dx:materials>` / `material` supply 3D **render** shading; `<metadata>` supplies object **description**. Both may appear in the same document, each for its role.
+
+### 9.2 Association
+
+Authors associate metadata with objects using one or more of the SVG mechanisms below:
+
+| Mode | Usage |
+|---|---|
+| Child element (primary path) | Place `<metadata>` as a child of the host (e.g. `<g>`); association is the DOM parent/child link. Prefer one `<metadata>` per host, early among children (aligned with SVG guidance). |
+| Document-level | Place `<metadata>` under the root `<svg>` to describe the whole document (for example, the vendor profile this file uses). |
+| Non-local / library-style | Place `<metadata>` elsewhere in the document; in the payload use RDF `about="#elementId"` (or an equivalent pointer defined by that foreign namespace) to reference a graphics element that has an `id`. |
+
+### 9.3 Vendor property tables and registry
+
+- **Introducing a property table**: Declare `xmlns:prefix="namespaceURI"` on the root `<svg>`. Document-level `<metadata>` may carry that namespace’s profile declaration (for example a property-table document path or product line).
+- **Where tables live**: Vendor property tables are **machine-readable XML definitions** under [`namespaces/`](../namespaces/), in a folder named by the vendor id (e.g. `acme/`), with filenames such as `vendor.topic.version.xml` (e.g. `acme.equipment.1.0.xml`). The definition lists elements and attributes in that namespace (e.g. `acme:nozzle`, `tag`, `nominalSize`) for editor validation and host parsing.
+- **Registry (index)**: [`namespaces/registry.xml`](../namespaces/registry.xml) indexes entries by `namespace` URI with `vendor`, `status`, `spec` (path relative to `namespaces/`), `prefix`, `title`, and related fields for discovery and interface naming.
+- **Core implementations**: Geometry evaluation must retain the foreign nodes above and may treat foreign-namespace elements as opaque subtrees. A host that interprets fields for a given URI must validate and read elements/attributes according to the property-table definition referenced in the registry.
+
+### 9.4 Sample
+
+Shell cylinder + side nozzle with in-place `<metadata>` and a vendor namespace: [draft-0.1-metadata-oem-nozzle.svg3dx](../samples/draft-0.1-metadata-oem-nozzle.svg3dx).
+
+## 10. `<s3dx:use>`
 
 - Attributes: `href` (required, references `<g id="...">`), `s3dx:transform` (optional, 12-number 3D matrix).
 - No `x`/`y`; 3D translation uses `tx/ty/tz` of `s3dx:transform`.
@@ -902,9 +936,9 @@ All metallic-roughness. `default` is a neutral multiplier that does not change e
 - If `<s3dx:use>` references a pure-2D `<g>` (only 2D elements): skip + warning.
 - Transform accumulation: referenced group’s own `s3dx:transform` → `<s3dx:use>`’s `s3dx:transform` → parent `s3dx:transform`.
 
-## 10. Evaluation model
+## 11. Evaluation model
 
-### 10.1 Stage order
+### 11.1 Stage order
 
 1. Parse the document tree
 2. Build parameter scopes
@@ -916,23 +950,23 @@ All metallic-roughness. `default` is a neutral multiplier that does not change e
 8. Kernel evaluation → geometry set
 9. Filter/render by `<s3dx:model>` `mode`, materials / `fill`, and child `<s3dx:use>`
 
-Key point: `<s3dx:model>` and the material library do not participate in geometry evaluation — only at render time; geometry evaluates once and is shared across models.
+Key point: geometry evaluates once and is shared across models. The evaluation stage processes parameters, control flow, and geometry; `<s3dx:model>` and the material library apply at render time; SVG `<metadata>` and foreign-namespace payloads remain in the DOM for hosts (§9).
 
-### 10.2 Error handling
+### 11.2 Error handling
 
 - Evaluation-error scope: expression syntax errors, undefined parameter references, type mismatches, `loop-range` parameters that are not numeric after evaluation.
 - Handling: skip the failing element and its subtree; record a warning. Warning form is host-defined; this specification does not bind one.
 - Document-level fatal errors (ill-formed XML, missing root): follow existing XML/SVG rules; outside this format’s “skip” scope.
 - “Skip + warning” is the recommended behavior; implementations may choose stricter error modes, but that is not a compliance requirement.
 
-### 10.3 Determinism and precision
+### 11.3 Determinism and precision
 
 - The same file evaluated on different kernels: topological equivalence is the kernel’s responsibility; this format does not specify numeric precision.
 - Definitions in `<defs>` not reachable from any `<s3dx:model>` instantiation chain are not evaluated.
 
-## 11. Appendix
+## 12. Appendix
 
-### 11.1 Open items
+### 12.1 Open items
 
 1. Core attribute tables have been revised around “basic solids + curves (line/arc/path) + extrude/revolve/loft/sweep/pipe + mesh” (see §3.2); still open:
    - Whether `path` gains spline / helix child segments (`spline` / `helix`).
@@ -950,8 +984,9 @@ Key point: `<s3dx:model>` and the material library do not participate in geometr
 5. ~~Vector component access~~ → settled as `--loop-value-x` / `-y` / `-z`; whether arbitrary vector parameters also get component splitting [TBD].
 6. ~~Conditionals hung on `<g>`~~ → changed to independent elements `s3dx:if` / `s3dx:if-not` (attribute `test`).
 7. ~~Materials / shading~~ → incorporated in §8 (`s3dx:materials`, `fill` × material, built-in presets); textures and fuller PBR channels [TBD].
+8. ~~Metadata~~ → incorporated in §9 (SVG `<metadata>` + foreign-namespace property tables + optional registry).
 
-### 11.2 Samples
+### 12.2 Samples
 
 | File | Content |
 |---|---|
@@ -964,9 +999,10 @@ Key point: `<s3dx:model>` and the material library do not participate in geometr
 | [draft-0.1-materials.svg3dx](../samples/draft-0.1-materials.svg3dx) | Built-in presets: boxes on top row, spheres below |
 | [draft-0.1-materials-custom.svg3dx](../samples/draft-0.1-materials-custom.svg3dx) | Custom `<s3dx:materials>` + box |
 | [draft-0.1-color.svg3dx](../samples/draft-0.1-color.svg3dx) | Element `fill` color (attribute / CSS) |
+| [draft-0.1-metadata-oem-nozzle.svg3dx](../samples/draft-0.1-metadata-oem-nozzle.svg3dx) | SVG `<metadata>` + vendor NS: shell cylinder and side nozzle |
 | Other `draft-0.1-*.svg3dx` | Basic solids, mesh, conditionals and loops |
 
-### 11.3 Domain extensions (non-core; not required)
+### 12.3 Domain extensions (non-core; not required)
 
 The following names lean toward industry short names or vendor primitives and are **not** in the core compliance set; express them with core constructors.
 
@@ -982,7 +1018,7 @@ The following names lean toward industry short names or vendor primitives and ar
 
 If extension elements appear: core implementations should skip and warn; opening a general file must not depend on extensions.
 
-### 11.4 Cross-system construction map (non-normative)
+### 12.4 Cross-system construction map (non-normative)
 
 Survey scope: STEP ISO 10303-42, IFC 4.x, SolidWorks, AVEVA PDMS/E3D, Smart 3D (similar equipment-primitive approach), Blender, 3ds Max.
 
@@ -1003,4 +1039,4 @@ Survey scope: STEP ISO 10303-42, IFC 4.x, SolidWorks, AVEVA PDMS/E3D, Smart 3D (
 | Boundary / Class-A dual-guide surfaces | no | Advanced SW surfacing; high exchange cost |
 | Fillet / Chamfer / Shell | no (TBD) | Feature modifiers; approximate with boolean or mesh |
 | Tapered extrude | no (TBD) | IFC has subtypes; approximate with `loft` |
-| Equipment short names DISH/SNOU/RTOR/SLCY | no | See §11.3; map to constructors |
+| Equipment short names DISH/SNOU/RTOR/SLCY | no | See §12.3; map to constructors |
