@@ -144,16 +144,22 @@
     <attr name="orient" type="string" use="optional" title-zh="姿态"/>
     <attr name="refDir" type="vector" use="optional" title-zh="参考方向"/>
     <attr name="solid" type="boolean" use="optional" title-zh="实体"/>
-    <attr name="corner" type="string" use="optional" title-zh="拐角"/>
-    <attr name="cornerRadius" type="number" use="optional" title-zh="拐角半径"/>
+    <attr name="outerCorner" type="string" use="optional" title-zh="外角"/>
+    <attr name="innerCorner" type="string" use="optional" title-zh="内角"/>
+    <attr name="outerCornerRadius" type="number" use="optional" title-zh="外角半径"/>
+    <attr name="innerCornerRadius" type="number" use="optional" title-zh="内角半径"/>
+    <attr name="miterLimit" type="number" use="optional" title-zh="斜接极限"/>
   </element>
 
   <element name="pipe" title="Pipe" title-zh="圆管" extends="drawable">
     <attr name="form" type="enum" use="optional" enum="inline child" title-zh="形式"/>
     <attr name="radius" type="number" use="optional" title-zh="半径"/>
     <attr name="innerRadius" type="number" use="optional" title-zh="内半径"/>
-    <attr name="corner" type="string" use="optional" title-zh="拐角"/>
-    <attr name="cornerRadius" type="number" use="optional" title-zh="拐角半径"/>
+    <attr name="outerCorner" type="string" use="optional" title-zh="外角"/>
+    <attr name="innerCorner" type="string" use="optional" title-zh="内角"/>
+    <attr name="outerCornerRadius" type="number" use="optional" title-zh="外角半径"/>
+    <attr name="innerCornerRadius" type="number" use="optional" title-zh="内角半径"/>
+    <attr name="miterLimit" type="number" use="optional" title-zh="斜接极限"/>
     <attr name="path" type="string" use="optional" title-zh="路径"/>
   </element>
 

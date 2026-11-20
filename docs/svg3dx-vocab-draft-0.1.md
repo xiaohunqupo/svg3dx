@@ -100,8 +100,11 @@
 | `blend` | 混合 | blend |
 | `orient` | 姿态 | orient |
 | `refDir` | 参考方向 | refDir |
-| `corner` | 拐角 | corner |
-| `cornerRadius` | 拐角半径 | cornerRadius |
+| `outerCorner` | 外角 | outerCorner |
+| `innerCorner` | 内角 | innerCorner |
+| `outerCornerRadius` | 外角半径 | outerCornerRadius |
+| `innerCornerRadius` | 内角半径 | innerCornerRadius |
+| `miterLimit` | 斜接极限 | miterLimit |
 | `path` | 路径 | path |
 | `innerRadius` | 内半径 | innerRadius |
 | `start` | 起点值 | start |
@@ -120,6 +123,16 @@
 | `segments` | 曲线段 | Segments | `path` |
 | `inline` | 内联 | Inline | `pipe` 的 `form`（父上 `path=` 点列） |
 | `child` | 子路径 | Child path | `pipe` 的 `form`（子 `<s3dx:path>`） |
+
+## 2.2 转角枚举值 · Corner enum values（§3.2 `outerCorner` / `innerCorner`）
+
+对齐 SVG/CSS `stroke-linejoin` 的三种主流转角。
+
+| 标识符 | 中文名 | English |
+|---|---|---|
+| `round` | 圆角 | Round |
+| `bevel` | 斜切 | Bevel |
+| `miter` | 斜接 | Miter |
 
 ## 3. 预制材质 · Built-in materials（§8.5）
 

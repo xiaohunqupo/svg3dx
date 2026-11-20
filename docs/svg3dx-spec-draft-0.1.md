@@ -314,7 +314,7 @@
 
 对齐 STEP / IFC 的 `polyline` / `trimmed_curve(circle)` / `composite_curve`，以及 OCC `Edge` / `Wire`：三维线与圆弧是一等图元，可独立显示，也可作为 `<s3dx:path>` 的**轨迹子段**（描述中心线本身长什么样）。
 
-注意：扫掠体 / 圆管在折角处**面如何衔接**（圆角弯、倒角、尖角等）由父体的 `corner` 控制并自动生成，**不是**靠在路径里手写一段 `arc` 来代替转角类型。`path` 里的 `line`/`arc` 只表达轨迹几何。
+注意：扫掠体 / 圆管在折角处**面如何衔接**（圆角 / 斜切 / 斜接；外角 / 内角可不同）由父体的外角 / 内角属性在求值时自动生成。`path` 里的 `line`/`arc` 只表达轨迹几何。
 
 对照关系（非规范性）：
 
@@ -387,7 +387,7 @@
 段连续性：每一段起点须等于上一段终点（实现容差建议 ≤ 1e-6 × 特征尺寸，或发出警告并强制对接）。
 
 ```xml
-<!-- 轨迹本身含圆弧段（曲线路径，不是 sweep 的 corner） -->
+<!-- 轨迹本身含圆弧段（曲线路径几何） -->
 <s3dx:path form="segments">
   <s3dx:line from="0 0 0" to="100 0 0"/>
   <s3dx:arc form="ends" center="100 0 50" normal="0 -1 0" radius="50"
@@ -395,7 +395,7 @@
   <s3dx:line from="150 0 50" to="150 0 100"/>
 </s3dx:path>
 
-<!-- 折线轨迹；若用于扫掠体/圆管，折角处的面衔接由 corner 自动补 -->
+<!-- 折线轨迹；若用于扫掠体/圆管，折角处的面衔接由外角/内角自动补 -->
 <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 ```
 
@@ -422,7 +422,7 @@
 | 位姿 | `extrude` / `sweep` 的 `origin` / `normal` / `xDir`；`loft` / `revolve` 各 `section` 自带（`revolve` 还可用 section 的 `s3dx:transform` 做相对偏移）；旋转体整体位姿用父元素 `s3dx:transform` | 截面落在哪、朝哪 |
 | 二维轮廓 | `<s3dx:section>` 内的二维体元（可多个） | 截面局部 2D |
 | 三维轨迹 | `<s3dx:path>`（`points` 或 `line`/`arc` 子段） | 中心线**路径几何**（线段 / 圆弧等组成轨迹本身） |
-| 扫掠体转角 | `sweep` / `pipe` 的 `corner`（+ `cornerRadius`） | 轨迹折角处**各面如何衔接**；求值时自动生成，不写入 path |
+| 扫掠体转角 | `sweep` / `pipe` 的外角 / 内角（`outerCorner` / `innerCorner` 及对应半径） | 轨迹折角处**外侧面 / 内侧面如何衔接**；求值时按属性自动生成 |
 
 截面局部坐标 → 父局部 / 世界坐标（`extrude` / `loft` / `sweep` / `revolve`）：
 
@@ -459,7 +459,7 @@
 
 多个二维体元时：**各自独立参与**父构造（对 `revolve` 即同时旋转），不做并集 / 布尔；求值按文档顺序处理每一个。
 
-轨迹用 `<s3dx:path>`（见 3.2.3）：折线 `points` 或 `line`/`arc` 子段。`sweep` / `pipe` 的折角面衔接另见 `corner`，与路径段定义分层。
+轨迹用 `<s3dx:path>`（见 3.2.3）：折线 `points` 或 `line`/`arc` 子段。`sweep` / `pipe` 的折角面衔接另见外角 / 内角，与路径段定义分层。
 
 ##### `s3dx:extrude`（拉伸体）
 
@@ -564,43 +564,83 @@
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
 | `orient` | 否 | 枚举 | `frenet` | 截面姿态：`frenet`（沿路径平行搬运）\| `fixed`（IFC FixedReference：`refDir` 投影为截面局部 +X）\| `parallel`（`refDir` 投影为截面局部 +Y / “上”） |
-| `refDir` | 条件 | 向量 | — | `orient=fixed` / `parallel` 的参考方向。**勿取弯道所在平面内的角平分线方向**（会与切向平行而奇异）；与切向平行时回退为上一帧平行搬运，并保持帧手性连续 |
+| `refDir` | 条件 | 向量 | — | `orient=fixed` / `parallel` 的参考方向。宜取与路径切向夹角足够大的方向（弯道平面内的角平分线易与切向平行而奇异）；与切向平行时按上一帧平行搬运，并保持帧手性连续 |
 | `solid` | 否 | 布尔 | `true` | 封闭截面是否生成实体 |
-| `corner` | 否 | 枚举 | `arc` | 折线顶点处的**转角生成**（见下） |
-| `cornerRadius` | 条件 | 数字 | `50` | `arc` / `chamfer` 的半径或倒角边长；缺省时由实现按邻边长度取合理默认并警告 |
+| `outerCorner` | 否 | 枚举 | `round` | **外角**（弯道凸侧）衔接类型（见下） |
+| `innerCorner` | 否 | 枚举 | `round` | **内角**（弯道凹侧）衔接类型（见下） |
+| `outerCornerRadius` | 条件 | 数字 | `50` | 外角为 `round` 时的圆角半径；缺省时由实现按邻边长度取合理默认并警告 |
+| `innerCornerRadius` | 条件 | 数字 | `50` | 内角为 `round` 时的圆角半径；缺省同上 |
+| `miterLimit` | 否 | 数字 | `4` | 斜接极限（见下）；须 `≥ 1`；任一侧为 `miter` 时生效 |
 
 子元素：恰好一个 `<s3dx:section>`，以及**必需**的轨迹子元素 `<s3dx:path>`。截面二维轮廓在路径各帧的局部 \((u,v)\) 中解释（姿态由 `orient` 决定）。
 
-**两层分工（勿混淆）**
+**两层分工**
 
 | 层 | 谁表达 | 含义 |
 |---|---|---|
 | **轨迹** | `<s3dx:path>` 的 `points` / `line` / `arc` | 中心线本身：折线走哪、曲线段怎么弯 |
-| **转角衔接** | `corner` + `cornerRadius` | 扫掠体在轨迹**折角顶点**处，侧面如何圆角 / 倒角 / 尖接；**求值时自动补**，不写进 path |
+| **转角衔接** | 外角 / 内角（及 `round` 时的半径） | 扫掠体在轨迹**折角顶点**处，**外侧面与内侧面**如何圆角 / 斜切 / 斜接；由属性在**求值时自动生成** |
 
-`path` 里的 `arc` 是「这段轨迹就是圆弧」；`corner="arc"` 是「折线拐弯处，把扫掠体侧面衔接成圆弧弯」。前者属于路径定义，后者属于扫掠体构造。
+`path` 里的 `arc` 是「这段轨迹就是圆弧」；外角/内角为 `round` 是「折线拐弯处，把扫掠体对应侧面衔接成圆角」。前者属于路径定义，后者属于扫掠体构造。
 
-**转角 `corner`（默认圆弧弯）**
+**外角与内角（对齐常见 CAD / SVG `stroke-linejoin` / Blender Bevel 的 outer·inner）**
 
-对轨迹上切向不连续的内顶点，由实现按 `corner` 自动生成衔接（作者不必、也不应用 path 子段去“模拟”转角类型）：
+折角处扫掠体同时有**外角**（凸侧，弯道外侧）与**内角**（凹侧，弯道内侧）。两侧常常需要不同状态（例如外侧斜接、内侧斜切），故分开表达：
 
-| 值 | 生成结果 | 说明 |
-|---|---|---|
-| `arc` | 圆弧弯（圆角 / elbow） | **默认**；在顶点处生成与邻边相切的圆弧衔接，半径 = `cornerRadius` |
-| `chamfer` | 倒角弯 | 在顶点处切一刀衔接，倒角边长 = `cornerRadius` |
-| `sharp` | 尖角 | 保持折点；截面双帧对接（尺寸不撑宽） |
-| `miter` | 尖角斜接 | 保持折点；入/出切向平均为一帧（拐角处截面可能变宽） |
+| 属性 | 作用侧 |
+|---|---|
+| `outerCorner` (+ `outerCornerRadius`) | 外角（凸侧） |
+| `innerCorner` (+ `innerCornerRadius`) | 内角（凹侧） |
 
-约束与行为：
+解析（每侧独立；缺省为 `round`）：
 
-- 几乎共线的顶点（偏转角过小）跳过。
-- `cornerRadius` 过大以至超过邻边可用长度时：缩小到可放得下，并警告。
-- 轨迹段本身已是光滑曲线（例如 path 子段 `arc` 内部采样点）处切向连续，不触发 `corner`；`corner` 只作用于折角顶点。
-- `orient` 只管截面朝向，与转角衔接正交。
+```
+outer = outerCorner ?? "round"
+inner = innerCorner ?? "round"
+outerR = outerCornerRadius
+innerR = innerCornerRadius
+```
+
+对轨迹上切向不连续的内顶点，由实现按解析后的外角 / 内角生成衔接；转角类型写在外角 / 内角属性上，`path` 子段只描述轨迹几何。枚举对齐 SVG/CSS `stroke-linejoin` 的三种主流转角（标识符亦同）：
+
+| 值 | 中文 | 生成结果 | 说明 |
+|---|---|---|---|
+| `round` | 圆角 | 圆弧衔接 | **默认**；与邻边相切的圆角，半径取该侧 `*CornerRadius` |
+| `bevel` | 斜切 | 斜切补面 | 保持折点；该侧用斜切面衔接，折点处截面半宽保持 |
+| `miter` | 斜接 | 尖角斜接 | 保持折点；该侧按壁面交线斜接（折点处截面可能变宽）；比值超过 `miterLimit` 时按斜切衔接 |
+
+**斜接极限 `miterLimit`（默认 4）**
+
+对齐 SVG/CSS [`stroke-miterlimit`](https://www.w3.org/TR/SVG11/painting.html#StrokeMiterlimitProperty)（默认亦为 **4**）。定义：斜接尖端相对路径中心的伸出长度，与该剖面顶点相对中心的半宽之比。平面折角时与路径转角 \(\theta\) 的关系为：
+
+\[
+\frac{\text{miterExtent}}{\text{halfWidth}} \approx \frac{1}{\sin(\theta/2)}
+\]
+
+当该比值 \(\le\) `miterLimit` 时保持斜接；否则该顶点按斜切衔接。默认 `4` 对应约 \(\theta \gtrsim 29°\) 仍保持斜接（更尖的弯转为斜切）。取值范围 `miterLimit ≥ 1`；小于 `1` 时按 `1`。参考：Canvas / PDF / PostScript 默认常为 **10**（约 \(\theta \gtrsim 11.5°\) 仍保持斜接）；本格式与 SVG 一致，取 **4**。
+
+路径整形与剖面衔接：
+
+- 当解析后 **外角 = 内角 = `round`**：在中心线上做圆角（两侧同型时的常见写法）；中心线半径优先 `outerR`，否则 `innerR` / 实现默认。
+- 当两侧类型**不同**，或任一侧为 `bevel` / `miter`：保持轨迹折点；对截面环上落在外 / 内侧的顶点分别按该侧类型衔接。单侧为 `round` 时，实现宜在该侧生成圆角补面；若当前内核尚未支持单侧圆角，可暂按 `bevel` 衔接并警告。
+- 仅对偏转角达到实现阈值的折点生成转角衔接。
+- 当半径超过邻边可用长度时，实现缩小到可放得下的值，并警告。
+- 轨迹段本身已是光滑曲线（例如 path 子段 `arc` 内部采样点）时切向连续，保持光滑；转角衔接仅作用于切向不连续的折角顶点。
+- `orient` 控制截面朝向，与转角衔接正交、彼此独立。
 
 ```xml
-<!-- 轨迹用折线（XZ 弯，Z-up）；转角由 corner 自动补（默认 arc） -->
-<s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="50">
+<!-- 两侧同型 round -->
+<s3dx:sweep orient="frenet" solid="true"
+            outerCorner="round" innerCorner="round"
+            outerCornerRadius="50" innerCornerRadius="50">
+  <s3dx:section>
+    <path d="M -20 -10 L 20 -10 L 20 10 L -20 10 Z"/>
+  </s3dx:section>
+  <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
+</s3dx:sweep>
+
+<!-- 外角斜接、内角斜切（两侧不同状态） -->
+<s3dx:sweep orient="frenet" solid="true" outerCorner="miter" innerCorner="bevel">
   <s3dx:section>
     <path d="M -20 -10 L 20 -10 L 20 10 L -20 10 Z"/>
   </s3dx:section>
@@ -610,9 +650,9 @@
 
 约束：
 
-- 折线路径至少两段（≥3 点）；转角按 `corner` 处理，实现应尽量避免自交，无法保证时给出警告。
-- `orient` 与内核能力不匹配时：回退到 `frenet` + 警告。
-- 多截面沿路径变化（SolidWorks 引导线 / IFC SectionedSolid）不在 0.1 核心；可用 `loft` 近似或后续扩展。
+- 折线路径至少两段（≥3 点）；转角按外角 / 内角处理；实现宜生成无自交几何，若无法保证无自交则发出警告。
+- 当 `orient` 超出当前内核能力时：按 `frenet` 求值并警告。
+- 0.1 核心覆盖单截面扫掠；多截面沿路径变化（SolidWorks 引导线 / IFC SectionedSolid）可用 `loft` 近似，或留待后续扩展。
 
 ##### `s3dx:pipe`（圆盘扫掠 / 圆管）
 
@@ -624,18 +664,21 @@
 | `radius` | 是 | 数字 | `20` | 外半径（≡ STEP `radius`） |
 | `innerRadius` | 否 | 数字 | — | 内半径；缺省为实心；推荐示例 `16`（须 `0 < innerRadius < radius`） |
 | `path` | 条件 | 点列 | — | **`inline`**：中心线折线点列 |
-| `corner` | 否 | 枚举 | `arc` | 折角面衔接，同 `sweep`（与轨迹段分层） |
-| `cornerRadius` | 条件 | 数字 | `50` | 同 `sweep` |
+| `outerCorner` / `innerCorner` | 否 | 枚举 | `round` | 外角 / 内角面衔接，同 `sweep` |
+| `outerCornerRadius` / `innerCornerRadius` | 条件 | 数字 | `50` | 同 `sweep` |
+| `miterLimit` | 否 | 数字 | `4` | 同 `sweep` |
 
 子元素：**`form="child"`** 时须有 `<s3dx:path>`（折线或 `line`/`arc` 段）。轨迹 `form`：`inline` 与 `child` 互斥（须具其一）；缺省推断：有 `<s3dx:path>` 子元素 → `child`；否则有 `path` 属性 → `inline`。优化应移除与 `form` 不符的一侧。
 
 ```xml
-<s3dx:pipe form="child" radius="20" innerRadius="16" corner="arc" cornerRadius="50">
+<s3dx:pipe form="child" radius="20" innerRadius="16"
+           outerCorner="round" innerCorner="round"
+           outerCornerRadius="50" innerCornerRadius="50">
   <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 </s3dx:pipe>
 ```
 
-语义上等价于 `sweep` + 圆形 `<s3dx:section>`（及空心时的内侧圆），但实现应优先按 swept-disk 算法求值（截面始终垂直于路径切向）。轨迹与 `corner` 转角衔接的分工与 `sweep` 相同。
+语义上等价于 `sweep` + 圆形 `<s3dx:section>`（及空心时的内侧圆），但实现应优先按 swept-disk 算法求值（截面始终垂直于路径切向）。轨迹与外角 / 内角转角衔接的分工与 `sweep` 相同。
 
 #### 3.2.5 网格（OpenGL / glTF 风格）
 
@@ -702,8 +745,8 @@
 | `extrude` | length | origin, normal, xDir, dir；恰好 1 × `<s3dx:section>`；旧名 `polylinestretch` |
 | `revolve` | — | angle, solid；恰好 1 × `<s3dx:section>`（平面须 ∥ 体 +Z；位姿/偏移在 section；绕体 +Z 逆时针） |
 | `loft` | — | solid, blend；≥2 × `<s3dx:section>`（各位姿自带；无扫掠体转角） |
-| `sweep` | — | orient, refDir, solid, corner, cornerRadius；1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
-| `pipe` | radius + 轨迹 | form=`inline`\|`child`；innerRadius, corner, cornerRadius；path / `<s3dx:path>` |
+| `sweep` | — | orient, refDir, solid, outerCorner, innerCorner, outerCornerRadius, innerCornerRadius, miterLimit；1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
+| `pipe` | radius + 轨迹 | form=`inline`\|`child`；innerRadius, outerCorner, innerCorner, outerCornerRadius, innerCornerRadius, miterLimit；path / `<s3dx:path>` |
 | `mesh` | position | mode, normal, texcoord, color, colorSize, index, indexBase |
 | `triangles` | point, normal, index | （≡ mesh 简写，1-based） |
 

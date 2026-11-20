@@ -12,9 +12,11 @@
 
   <defs>
     <g id="main">
-      <!-- ========== corner：轨迹折角面衔接（XY 水平弯） ========== -->
-      <!-- 1. arc -->
-      <s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="var(--bend)"
+      <!-- ========== 外角 / 内角 / miterLimit（§3.2 sweep） ========== -->
+      <!-- 1. 两侧 round（默认类型；写出半径） -->
+      <s3dx:sweep orient="frenet" solid="true"
+                  outerCorner="round" innerCorner="round"
+                  outerCornerRadius="var(--bend)" innerCornerRadius="var(--bend)"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 0 0)">
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
@@ -22,8 +24,9 @@
         <s3dx:path form="polyline" points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
-      <!-- 2. chamfer -->
-      <s3dx:sweep orient="frenet" solid="true" corner="chamfer" cornerRadius="var(--bend)"
+      <!-- 2. 两侧 bevel（斜切；无半径） -->
+      <s3dx:sweep orient="frenet" solid="true"
+                  outerCorner="bevel" innerCorner="bevel"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 300 0 0)">
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
@@ -31,8 +34,9 @@
         <s3dx:path form="polyline" points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
-      <!-- 3. sharp -->
-      <s3dx:sweep orient="frenet" solid="true" corner="sharp"
+      <!-- 3. 两侧 miter + 显式 miterLimit（90° 弯：4 保持斜接） -->
+      <s3dx:sweep orient="frenet" solid="true"
+                  outerCorner="miter" innerCorner="miter" miterLimit="4"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 600 0 0)">
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
@@ -40,8 +44,9 @@
         <s3dx:path form="polyline" points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
-      <!-- 4. miter -->
-      <s3dx:sweep orient="frenet" solid="true" corner="miter"
+      <!-- 4. 外角 / 内角不同状态（与规范示例一致） -->
+      <s3dx:sweep orient="frenet" solid="true"
+                  outerCorner="miter" innerCorner="bevel"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 900 0 0)">
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
@@ -49,10 +54,10 @@
         <s3dx:path form="polyline" points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
-      <!-- ========== orient：截面朝向（XY 水平弯 + 旗形截面） ========== -->
+      <!-- ========== orient：截面朝向（转角缺省 = 两侧 round） ========== -->
       <!-- 旗形长边在 u：立起≈高墙，躺平≈矮板。 -->
       <!-- 5. frenet：随弯侧倾 -->
-      <s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="var(--bend)"
+      <s3dx:sweep orient="frenet" solid="true"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 var(--row) 0)">
         <s3dx:section>
           <path d="M 0 -4 L 50 -4 L 50 4 L 12 4 L 12 18 L 0 18 Z"/>
@@ -61,7 +66,7 @@
       </s3dx:sweep>
 
       <!-- 6. fixed：refDir=+Z → 截面 +u 朝上 → 长边立起成墙 -->
-      <s3dx:sweep orient="fixed" refDir="0 0 1" solid="true" corner="arc" cornerRadius="var(--bend)"
+      <s3dx:sweep orient="fixed" refDir="0 0 1" solid="true"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 300 var(--row) 0)">
         <s3dx:section>
           <path d="M 0 -4 L 50 -4 L 50 4 L 12 4 L 12 18 L 0 18 Z"/>
@@ -69,8 +74,8 @@
         <s3dx:path form="polyline" points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
-      <!-- 7. parallel：refDir=+Z → 截面 +v 保持朝上（相对 fixed 像“放倒/立起”差） -->
-      <s3dx:sweep orient="parallel" refDir="0 0 1" solid="true" corner="arc" cornerRadius="var(--bend)"
+      <!-- 7. parallel：refDir=+Z → 截面 +v 保持朝上 -->
+      <s3dx:sweep orient="parallel" refDir="0 0 1" solid="true"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 600 var(--row) 0)">
         <s3dx:section>
           <path d="M 0 -4 L 50 -4 L 50 4 L 12 4 L 12 18 L 0 18 Z"/>
@@ -78,9 +83,9 @@
         <s3dx:path form="polyline" points="0 0 0  var(--pathLen) 0 0  var(--pathLen) var(--bendY) 0"/>
       </s3dx:sweep>
 
-      <!-- ========== solid ========== -->
+      <!-- ========== solid（转角缺省 round） ========== -->
       <!-- 8. solid=true -->
-      <s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="var(--bend)"
+      <s3dx:sweep orient="frenet" solid="true"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 calc(var(--row) * 2) 0)">
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
@@ -89,7 +94,7 @@
       </s3dx:sweep>
 
       <!-- 9. solid=false -->
-      <s3dx:sweep orient="frenet" solid="false" corner="arc" cornerRadius="var(--bend)"
+      <s3dx:sweep orient="frenet" solid="false"
                   s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 300 calc(var(--row) * 2) 0)">
         <s3dx:section>
           <path d="M -22 -4 L 22 -4 L 22 4 L -22 4 Z"/>
@@ -103,26 +108,25 @@
     <s3dx:use href="#main"/>
   </s3dx:model>
 
-  <!-- Labels sit south of each row (smaller Y than geometry) with clear gaps. -->
   <g fill="#2563eb" font-family="sans-serif" font-size="14" text-anchor="middle">
     <text x="450" y="-90" font-size="18">sweep</text>
 
-    <!-- row0 at Y=0: labels above -->
-    <text x="50" y="-55">corner=arc</text>
-    <text x="50" y="-72" font-size="10">cornerRadius=55</text>
+    <!-- row0：外角 / 内角 / miterLimit -->
+    <text x="50" y="-55">outer/inner=round</text>
+    <text x="50" y="-72" font-size="10">R=55 · 圆角</text>
 
-    <text x="350" y="-55">corner=chamfer</text>
-    <text x="350" y="-72" font-size="10">cornerRadius=55</text>
+    <text x="350" y="-55">outer/inner=bevel</text>
+    <text x="350" y="-72" font-size="10">斜切</text>
 
-    <text x="650" y="-55">corner=sharp</text>
-    <text x="650" y="-72" font-size="10">no radius</text>
+    <text x="650" y="-55">outer/inner=miter</text>
+    <text x="650" y="-72" font-size="10">miterLimit=4</text>
 
-    <text x="950" y="-55">corner=miter</text>
-    <text x="950" y="-72" font-size="10">bevel join</text>
+    <text x="950" y="-55">outer=miter</text>
+    <text x="950" y="-72" font-size="10">inner=bevel</text>
 
-    <!-- row1 at Y=400: labels in the gap after row0 bend (~140) -->
+    <!-- row1：orient（转角缺省） -->
     <text x="50" y="345">orient=frenet</text>
-    <text x="50" y="328" font-size="10">banks with bend</text>
+    <text x="50" y="328" font-size="10">corner defaults</text>
 
     <text x="350" y="345">orient=fixed</text>
     <text x="350" y="328" font-size="10">refDir=0 0 1</text>
@@ -130,7 +134,7 @@
     <text x="650" y="345">orient=parallel</text>
     <text x="650" y="328" font-size="10">refDir=0 0 1</text>
 
-    <!-- row2 at Y=800 -->
+    <!-- row2：solid -->
     <text x="50" y="745">solid=true</text>
     <text x="50" y="728" font-size="10">capped solid</text>
 

@@ -314,7 +314,7 @@ Local origin: base center; height along `lengthVec × widthVec`.
 
 Aligned with STEP / IFC `polyline` / `trimmed_curve(circle)` / `composite_curve`, and OCC `Edge` / `Wire`: 3D lines and arcs are first-class primitives — displayable alone, or used as **trajectory segments** of `<s3dx:path>` (what the centerline itself looks like).
 
-Note: how faces meet at corners of a sweep / pipe (filleted bend, chamfer, sharp, etc.) is controlled by the parent body’s `corner` and generated automatically — **not** by hand-writing an `arc` in the path as a stand-in for corner type. `line`/`arc` inside `path` only express trajectory geometry.
+Note: how faces meet at corners of a sweep / pipe (`round` / `bevel` / `miter`; outer and inner may differ) is controlled by the parent body’s outer / inner corner attributes and generated automatically at evaluation. `line`/`arc` inside `path` only express trajectory geometry.
 
 Correspondence (non-normative):
 
@@ -387,7 +387,7 @@ Children (**`form="segments"`**): `<s3dx:line>` / `<s3dx:arc>` in document order
 Segment continuity: each segment’s start must equal the previous end (suggested implementation tolerance ≤ 1e-6 × characteristic size, or warn and force join).
 
 ```xml
-<!-- Trajectory itself includes an arc segment (curve path, not sweep corner) -->
+<!-- Trajectory itself includes an arc segment (curve-path geometry) -->
 <s3dx:path form="segments">
   <s3dx:line from="0 0 0" to="100 0 0"/>
   <s3dx:arc form="ends" center="100 0 50" normal="0 -1 0" radius="50"
@@ -395,7 +395,7 @@ Segment continuity: each segment’s start must equal the previous end (suggeste
   <s3dx:line from="150 0 50" to="150 0 100"/>
 </s3dx:path>
 
-<!-- Polyline trajectory; for sweep/pipe, face joining at corners is filled by corner -->
+<!-- Polyline trajectory; for sweep/pipe, face joining at corners is filled by outer/inner corner -->
 <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 ```
 
@@ -422,7 +422,7 @@ Correspondence (non-normative; see Appendix §12.4):
 | Pose | `origin` / `normal` / `xDir` on `extrude` / `sweep`; each `loft` / `revolve` `section` carries its own (`revolve` may also use the section’s `s3dx:transform` for relative offset); revolve body pose via parent `s3dx:transform` | Where the section sits and which way it faces |
 | 2D profile | 2D shapes inside `<s3dx:section>` (may be multiple) | Section-local 2D |
 | 3D trajectory | `<s3dx:path>` (`points` or `line`/`arc` segments) | Centerline **path geometry** (segments that compose the trajectory itself) |
-| Sweep corner | `corner` (+ `cornerRadius`) on `sweep` / `pipe` | How faces join at trajectory corners; generated at evaluation time, not written into path |
+| Sweep corner | Outer / inner corner on `sweep` / `pipe` (`outerCorner` / `innerCorner` and their radii) | How **outer and inner** faces join at trajectory corners; generated from those attributes at evaluation |
 
 Section local → parent-local / world (`extrude` / `loft` / `sweep` / `revolve`):
 
@@ -450,7 +450,7 @@ Allowed children in draft 0.1 (at least one; **2D shapes only** — bool / condi
 
 | Child | Notes |
 |---|---|
-| `<path d="…">` | SVG path; 0.1 implementations must support at least `M`/`L`/`H`/`V`/`Z` (and relative forms); `A`/`C`/`Q` etc. [TBD, recommended] |
+| `<path d="…">` | SVG path; 0.1 implementations must support at least `M`/`L`/`H`/`V`/`Z` (and relative forms); `C`/`S`/`Q`/`T`/`A` are recommended (flattened to polylines for solid construction) |
 | `<circle cx cy r>` | Circle |
 | `<ellipse cx cy rx ry>` | Ellipse |
 | `<polygon points="x1 y1 …">` | Closed polyline (2D point list) |
@@ -459,7 +459,7 @@ Allowed children in draft 0.1 (at least one; **2D shapes only** — bool / condi
 
 With multiple 2D shapes: each participates **independently** in the parent construct (for `revolve`, all are revolved together). Do not union / boolean them; evaluate each in document order.
 
-Trajectory uses `<s3dx:path>` (see §3.2.3): polyline `points` or `line`/`arc` segments. Face joining at `sweep` / `pipe` corners is separate — see `corner`.
+Trajectory uses `<s3dx:path>` (see §3.2.3): polyline `points` or `line`/`arc` segments. Face joining at `sweep` / `pipe` corners is separate — see outer / inner corner.
 
 ##### `s3dx:extrude` (Extrude)
 
@@ -564,43 +564,83 @@ Aligned with STEP `surface_curve_swept_area_solid`, IFC `IfcFixedReferenceSweptA
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
 | `orient` | no | enum | `frenet` | Section attitude: `frenet` (parallel transport along path) \| `fixed` (IFC FixedReference: `refDir` projected as section-local +X) \| `parallel` (`refDir` projected as section-local +Y / “up”) |
-| `refDir` | conditional | vector | — | Reference for `orient=fixed` / `parallel`. **Do not** use the in-plane angle bisector of a bend (can become parallel to the tangent and singular); when parallel to the tangent, fall back to previous-frame parallel transport and keep frame handedness continuous |
+| `refDir` | conditional | vector | — | Reference for `orient=fixed` / `parallel`. Prefer a direction with a sufficient angle to the path tangent (an in-plane bend bisector readily becomes parallel to the tangent and singular); when parallel to the tangent, use previous-frame parallel transport and keep frame handedness continuous |
 | `solid` | no | boolean | `true` | Whether a closed section produces a solid |
-| `corner` | no | enum | `arc` | **Corner generation** at polyline vertices (below) |
-| `cornerRadius` | conditional | number | `50` | Radius or chamfer length for `arc` / `chamfer`; when omitted, implementations pick a reasonable default from adjacent edge lengths and warn |
+| `outerCorner` | no | enum | `round` | **Outer corner** (convex side of the bend); see below |
+| `innerCorner` | no | enum | `round` | **Inner corner** (concave side of the bend); see below |
+| `outerCornerRadius` | conditional | number | `50` | Fillet radius when the outer type is `round`; when omitted, implementations may pick a length-based default and warn |
+| `innerCornerRadius` | conditional | number | `50` | Fillet radius when the inner type is `round`; omit → same default policy |
+| `miterLimit` | no | number | `4` | Miter limit (below); must be `≥ 1`; applies when either side is `miter` |
 
 Children: exactly one `<s3dx:section>`, plus a **required** trajectory child `<s3dx:path>`. The 2D profile is interpreted in each path frame’s local \((u,v)\) (attitude from `orient`).
 
-**Two layers (do not confuse)**
+**Two layers**
 
 | Layer | Expressed by | Meaning |
 |---|---|---|
 | **Trajectory** | `<s3dx:path>` `points` / `line` / `arc` | The centerline itself: where the polyline goes, how curve segments bend |
-| **Corner joining** | `corner` + `cornerRadius` | At trajectory **kink vertices**, how the swept side faces fillet / chamfer / meet sharply; **auto-filled at evaluation**, not written into path |
+| **Corner joining** | Outer / inner corner (+ radii when `round`) | At trajectory **kink vertices**, how the swept **outer and inner** faces round / bevel / miter; **generated from those attributes at evaluation** |
 
-An `arc` inside `path` means “this trajectory segment *is* an arc”; `corner="arc"` means “at a polyline kink, join the swept faces as an arc bend.” The former is path definition; the latter is sweep construction.
+An `arc` inside `path` means “this trajectory segment *is* an arc”; outer/inner `round` means “at a polyline kink, join that side of the sweep as a round corner.” The former is path definition; the latter is sweep construction.
 
-**Corner `corner` (default arc bend)**
+**Outer vs inner corner (same split as common CAD / SVG `stroke-linejoin` / Blender Bevel outer·inner)**
 
-At interior vertices where the trajectory tangent is discontinuous, the implementation generates joining per `corner` (authors need not — and should not — “simulate” corner type with path segments):
+At a kink the swept solid has an **outer** (convex) side and an **inner** (concave) side. Those sides often need different join states (e.g. miter outside, bevel inside), so they are authored separately:
+
+| Attribute | Side |
+|---|---|
+| `outerCorner` (+ `outerCornerRadius`) | Outer (convex) |
+| `innerCorner` (+ `innerCornerRadius`) | Inner (concave) |
+
+Resolution (each side independently; default `round`):
+
+```
+outer = outerCorner ?? "round"
+inner = innerCorner ?? "round"
+outerR = outerCornerRadius
+innerR = innerCornerRadius
+```
+
+At interior vertices where the trajectory tangent is discontinuous, the implementation generates joining from the resolved outer / inner types. Corner type is authored on the outer / inner attributes; `path` children describe trajectory geometry only. Enum values match SVG/CSS `stroke-linejoin`’s three mainstream joins (same identifiers):
 
 | Value | Result | Notes |
 |---|---|---|
-| `arc` | Arc bend (fillet / elbow) | **Default**; tangent arc join at the vertex, radius = `cornerRadius` |
-| `chamfer` | Chamfer bend | Cut a joining edge at the vertex, length = `cornerRadius` |
-| `sharp` | Sharp corner | Keep the kink; dual-frame section join (does not widen) |
-| `miter` | Mitered sharp | Keep the kink; average in/out tangents into one frame (section may widen at the corner) |
+| `round` | Round / fillet | **Default**; tangent circular join; radius from that side’s `*CornerRadius` |
+| `bevel` | Bevel fill | Keep the kink; dual-frame bevel join on that side; section half-width stays the same at the corner |
+| `miter` | Miter | Keep the kink; wall-wall miter on that side (section may widen); when the ratio exceeds `miterLimit`, join as bevel |
 
-Constraints and behavior:
+**Miter limit `miterLimit` (default 4)**
 
-- Nearly colinear vertices (deflection too small) are skipped.
-- If `cornerRadius` exceeds available adjacent edge length: shrink to fit and warn.
-- Where the trajectory segment is already a smooth curve (e.g. interior samples of a path-child `arc`), tangent is continuous and `corner` does not fire; `corner` only applies at kink vertices.
-- `orient` only controls section attitude and is orthogonal to corner joining.
+Aligned with SVG/CSS [`stroke-miterlimit`](https://www.w3.org/TR/SVG11/painting.html#StrokeMiterlimitProperty) (also default **4**). Definition: the ratio of miter tip extent from the path center to the profile half-width at that vertex. For a planar kink with turn angle \(\theta\):
+
+\[
+\frac{\text{miterExtent}}{\text{halfWidth}} \approx \frac{1}{\sin(\theta/2)}
+\]
+
+When that ratio is \(\le\) `miterLimit`, keep the miter; otherwise join that vertex as bevel. Default `4` keeps miters for about \(\theta \gtrsim 29°\) (sharper bends become bevel). Valid range `miterLimit ≥ 1`; values below `1` clamp to `1`. Note: Canvas / PDF / PostScript often default to **10** (miters kept down to about \(\theta \gtrsim 11.5°\)); this format follows SVG with **4**.
+
+Path shaping vs profile joining:
+
+- When resolved **outer = inner = `round`**: fillet the centerline (common equal-sides case); centerline radius prefers `outerR`, else `innerR` / implementation default.
+- When the two sides **differ**, or either is `bevel` / `miter`: keep the trajectory kink; join each profile-ring vertex by the type of the side it lies on. When only one side is `round`, implementations should round that side in profile space; if the current kernel does not yet support one-sided rounds, it may join as `bevel` and warn.
+- Corner joining applies only at kinks whose deflection meets the implementation threshold.
+- When a radius exceeds available adjacent edge length, shrink to fit and warn.
+- Where the trajectory segment is already a smooth curve (e.g. interior samples of a path-child `arc`), tangent stays continuous and the path remains smooth; corner joining applies only at kink vertices with discontinuous tangent.
+- `orient` controls section attitude and is independent of corner joining.
 
 ```xml
-<!-- Polyline trajectory (XZ bend, Z-up); corners filled by corner (default arc) -->
-<s3dx:sweep orient="frenet" solid="true" corner="arc" cornerRadius="50">
+<!-- Same type on both sides -->
+<s3dx:sweep orient="frenet" solid="true"
+            outerCorner="round" innerCorner="round"
+            outerCornerRadius="50" innerCornerRadius="50">
+  <s3dx:section>
+    <path d="M -20 -10 L 20 -10 L 20 10 L -20 10 Z"/>
+  </s3dx:section>
+  <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
+</s3dx:sweep>
+
+<!-- Different states: miter outside, bevel inside -->
+<s3dx:sweep orient="frenet" solid="true" outerCorner="miter" innerCorner="bevel">
   <s3dx:section>
     <path d="M -20 -10 L 20 -10 L 20 10 L -20 10 Z"/>
   </s3dx:section>
@@ -610,9 +650,9 @@ Constraints and behavior:
 
 Constraints:
 
-- Polyline paths need at least two segments (≥3 points); corners follow `corner`; implementations should try to avoid self-intersection and warn when they cannot guarantee it.
-- If `orient` does not match kernel capability: fall back to `frenet` + warning.
-- Multi-section variation along a path (SolidWorks guides / IFC SectionedSolid) is not in the 0.1 core; approximate with `loft` or later extensions.
+- Polyline paths need at least two segments (≥3 points); corners follow outer / inner; implementations should produce non-self-intersecting geometry and warn when that cannot be guaranteed.
+- When `orient` exceeds current kernel capability: evaluate as `frenet` and warn.
+- The 0.1 core covers single-section sweeps; multi-section variation along a path (SolidWorks guides / IFC SectionedSolid) may be approximated with `loft`, or deferred to later extensions.
 
 ##### `s3dx:pipe` (Swept disk / round pipe)
 
@@ -624,18 +664,21 @@ Aligned with STEP `swept_disk_solid` / IFC `IfcSweptDiskSolid`: circular (option
 | `radius` | yes | number | `20` | Outer radius (≡ STEP `radius`) |
 | `innerRadius` | no | number | — | Inner radius; omit for solid; recommended example `16` (must `0 < innerRadius < radius`) |
 | `path` | conditional | point list | — | **`inline`**: centerline polyline point list |
-| `corner` | no | enum | `arc` | Corner face joining, same as `sweep` (layered separately from trajectory segments) |
-| `cornerRadius` | conditional | number | `50` | Same as `sweep` |
+| `outerCorner` / `innerCorner` | no | enum | `round` | Outer / inner face joining, same as `sweep` |
+| `outerCornerRadius` / `innerCornerRadius` | conditional | number | `50` | Same as `sweep` |
+| `miterLimit` | no | number | `4` | Same as `sweep` |
 
 Children: under **`form="child"`**, a `<s3dx:path>` is required (polyline or `line`/`arc` segments). Trajectory `form`: `inline` and `child` are mutually exclusive (one required). Inference when omitted: `<s3dx:path>` child present → `child`; else `path` attribute present → `inline`. Optimize should remove the side that does not match `form`.
 
 ```xml
-<s3dx:pipe form="child" radius="20" innerRadius="16" corner="arc" cornerRadius="50">
+<s3dx:pipe form="child" radius="20" innerRadius="16"
+           outerCorner="round" innerCorner="round"
+           outerCornerRadius="50" innerCornerRadius="50">
   <s3dx:path form="polyline" points="0 0 0  100 0 0  100 0 100"/>
 </s3dx:pipe>
 ```
 
-Semantically equivalent to `sweep` + circular `<s3dx:section>` (plus an inner circle when hollow), but implementations should prefer a swept-disk algorithm (section always perpendicular to path tangent). Trajectory vs `corner` joining is the same split as `sweep`.
+Semantically equivalent to `sweep` + circular `<s3dx:section>` (plus an inner circle when hollow), but implementations should prefer a swept-disk algorithm (section always perpendicular to path tangent). Trajectory vs outer / inner corner joining is the same split as `sweep`.
 
 #### 3.2.5 Mesh (OpenGL / glTF style)
 
@@ -702,8 +745,8 @@ Prefer `mesh` for new content; implementations must still support `triangles`.
 | `extrude` | length | origin, normal, xDir, dir; exactly 1 × `<s3dx:section>`; old name `polylinestretch` |
 | `revolve` | — | angle, solid; exactly 1 × `<s3dx:section>` (plane must ∥ body +Z; pose/offset on section; CCW about body +Z) |
 | `loft` | — | solid, blend; ≥2 × `<s3dx:section>` (each carries pose; no sweep corners) |
-| `sweep` | — | orient, refDir, solid, corner, cornerRadius; 1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
-| `pipe` | radius + trajectory | form=`inline`\|`child`; innerRadius, corner, cornerRadius; path / `<s3dx:path>` |
+| `sweep` | — | orient, refDir, solid, outerCorner, innerCorner, outerCornerRadius, innerCornerRadius, miterLimit; 1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
+| `pipe` | radius + trajectory | form=`inline`\|`child`; innerRadius, outerCorner, innerCorner, outerCornerRadius, innerCornerRadius, miterLimit; path / `<s3dx:path>` |
 | `mesh` | position | mode, normal, texcoord, color, colorSize, index, indexBase |
 | `triangles` | point, normal, index | (≡ mesh shorthand, 1-based) |
 
