@@ -2,15 +2,15 @@
 
 > Project overview and licensing: [README.md](../README.md) / [README.zh-CN.md](../README.zh-CN.md). Author: danny xu.  
 > **Language**: This file is the **English edition**. Chinese edition: [svg3dx-spec-draft-0.1.md](./svg3dx-spec-draft-0.1.md).  
-> **Official nouns**: Attribute, type, and built-in material display names are listed in [svg3dx-vocab-draft-0.1.md](./svg3dx-vocab-draft-0.1.md). Files always store English identifiers; UIs may show localized official names.
+> **Official nouns**: Attribute, type, and built-in material display names are listed in [svg3dx-vocab-draft-0.1.md](./svg3dx-vocab-draft-0.1.md). Files always store English identifiers; localized official names are the normative display nouns.
 
 ## 0. Document status
 
 - Draft specification. Namespace URI `urn:s3dx:draft:0.1` is temporary and will change for a formal release.
 - Format name: `svg3dx`. Recommended namespace prefix: `s3dx`. Logo mark: `s3dx`; full title: `svg 3dx`.
 - This draft file is not guaranteed to parse in a formal release. Implementations must recognize the 3D namespace by URI, not by the prefix literal (recommended prefix `s3dx`).
-- File extension may remain `.svg` with root attribute `svg3d="true"`. A dedicated `.svg3dx` extension is under consideration for a formal release.
-- **Bilingual editions**: Chinese and English are maintained in parallel. XML element names, attribute names, and material keywords are English identifiers in both editions; the Chinese edition and Chinese UI use the official Chinese nouns from the vocabulary.
+- The file extension is `.svg`, with root attribute `svg3d="true"` marking 3D content. A dedicated `.svg3dx` extension is under consideration for a formal release.
+- **Bilingual editions**: Chinese and English are maintained in parallel. XML element names, attribute names, and material keywords are English identifiers in both editions; the Chinese edition uses the official Chinese nouns from the vocabulary.
 
 ## 1. Document model
 
@@ -19,12 +19,12 @@
 - Root element is SVG `<svg>`, with optional extension attribute `svg3d` (no namespace prefix) on the root.
 - `svg3d="true"` enables 3D semantics; absent or `svg3d="false"` means all `s3dx:*` elements and their subtrees are treated as unknown-namespace SVG: kept in the DOM, not evaluated, not rendered, and do not affect 2D content.
 - `svg3d` is a global switch and outranks the namespace: when `false`, ignore 3D content even if the namespace is correct.
-- The attribute name stays `svg3d` (not `svg3dx`). It means “this SVG contains 3D content,” decoupled from the project name. Standard SVG user agents ignore unknown attributes and are unaffected for 2D rendering.
+- The attribute name is `svg3d`. It means “this SVG contains 3D content,” decoupled from the project name. Standard SVG user agents ignore unknown attributes and are unaffected for 2D rendering.
 
 ### 1.2 Namespace
 
 - 3D elements use namespace `urn:s3dx:draft:0.1`, recommended prefix `s3dx`.
-- 3D **elements** enter the namespace: core primitives are listed in §3.2 (`box`, `cylinder`, `sphere`, `cone`, `torus`, `wedge`, `pyramid`, `prism`, `sector-cylinder`, `line`, `arc`, `path`, `extrude`, `revolve`, `loft`, `sweep`, `pipe`, `mesh`, `triangles`, plus compatibility aliases `polylinestretch`→`extrude`, `cutcylinder`→`sector-cylinder`); child `<s3dx:section>` (and `<s3dx:path>` when used as a trajectory container); plus `<s3dx:if>`, `<s3dx:if-not>`, `<s3dx:loop-points>`, `<s3dx:loop-range>`, `<s3dx:bool-union>`, `<s3dx:bool-subtract>`, `<s3dx:bool-intersect>`, `<s3dx:use>`, `<s3dx:model>`, `<s3dx:exp>`, `<s3dx:materials>`, `<s3dx:material>`. A machine-readable element/attribute catalog is [`namespaces/svg3dx/svg3dx.draft.0.1.xml`](../namespaces/svg3dx/svg3dx.draft.0.1.xml), registered in [`namespaces/registry.xml`](../namespaces/registry.xml); **evaluation and semantics remain defined by this document**.
+- 3D **elements** enter the namespace: core primitives are listed in §3.2 (`box`, `cylinder`, `sphere`, `cone`, `torus`, `wedge`, `pyramid`, `prism`, `sector-cylinder`, `line`, `arc`, `path`, `extrude`, `revolve`, `loft`, `sweep`, `pipe`, `mesh`, `triangles`); child `<s3dx:section>` (and `<s3dx:path>` when used as a trajectory container); plus `<s3dx:if>`, `<s3dx:if-not>`, `<s3dx:loop-points>`, `<s3dx:loop-range>`, `<s3dx:bool-union>`, `<s3dx:bool-subtract>`, `<s3dx:bool-intersect>`, `<s3dx:use>`, `<s3dx:model>`, `<s3dx:exp>`, `<s3dx:materials>`, `<s3dx:material>`. A machine-readable element/attribute catalog is [`namespaces/svg3dx/svg3dx.draft.0.1.xml`](../namespaces/svg3dx/svg3dx.draft.0.1.xml), registered in [`namespaces/registry.xml`](../namespaces/registry.xml); **evaluation and semantics remain defined by this document**.
 - **Unprefixed attributes** (null namespace): geometry attrs (lowerCamelCase, see §3.2), plus `href`, `mode`, `test`, `points`, `start`, `end`, `step`, `active`, `svg3d`, and appearance `fill` / `material` / `opacity` (§8).
 - **Namespaced attributes**: 3D transform uses `s3dx:transform` (see §3.4), **not** the SVG presentation attribute `transform`, to avoid clashing with the 2D 6-number `matrix`.
 - Standard SVG parsers keep unknown-namespace elements in the DOM without rendering or further processing. This format relies on that behavior for 2D compatibility.
@@ -151,7 +151,7 @@ Layered convention (stay close to CSS; comparison / logic are filled in by this 
 - Local → parent → world accumulation: local geometry defined by primitive attributes first applies the element’s own `s3dx:transform`, then parent `<g>` / `<s3dx:use>` `s3dx:transform` values.
 - **Layering principle**: the core layer only accepts generic solids, curves, and meshes that vendors can map; industry-specific shapes (duct fittings, heads, etc.) stay out of the core — see Appendix §12.3 (expressible via `loft` / `revolve` / boolean combinations).
 
-### 3.2 Primitive attribute tables (draft 0.1 · revised)
+### 3.2 Primitive attribute tables (draft 0.1)
 
 Attribute names align with [`samples/draft-0.1-example.svg3dx`](../samples/draft-0.1-example.svg3dx); geometry semantics align with AutoCAD solid primitives, Open CASCADE constructors (`MakePrism` / `MakeRevol` / `ThruSections`), and glTF / OpenGL-style indexed meshes.
 
@@ -181,8 +181,8 @@ Attribute names align with [`samples/draft-0.1-example.svg3dx`](../samples/draft
 
 **Size scale and recommended defaults**:
 
-- Primary dimensions (edge length, diameter, height, path span, etc.) should be on the order of **`100`** (in document user units), for sample alignment, editor insert templates, and interoperability.
-- In the tables below, the “Default” column: for **optional** attributes it is the evaluation default when omitted; for **required** attributes the number is a **recommended default** (editor insert template / placeholder hint) — documents should still write the attribute. For spheres sized around diameter `100`, the recommended radius is `50`.
+- Primary dimensions (edge length, diameter, height, path span, etc.) should be on the order of **`100`** (in document user units), for sample alignment and interoperability.
+- In the tables below, the “Default” column: for **optional** attributes it is the evaluation default when omitted; for **required** attributes the number is a **recommended default** — documents should still write the attribute. For spheres sized around diameter `100`, the recommended radius is `50`.
 
 **Local-frame conventions**:
 
@@ -279,14 +279,14 @@ Bottom polygon extruded straight along the normal (rectangular/polygonal shortcu
 
 ##### `s3dx:sector-cylinder` (Sector Cylinder)
 
-Aligned with OCC `MakeCylinder(r, h, angle)`. Multi-word element names use hyphens so `cutcylinder` is not misread as a boolean cut. Compatibility alias: `cutcylinder` (treated as this element on read; writers should use `sector-cylinder`).
+Aligned with OCC `MakeCylinder(r, h, angle)`.
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
 | `diameter` | yes | number | `100` | Diameter |
 | `bottomCenterPt` | yes | point | `0 0 0` | Bottom-face center |
 | `topCenterPt` | yes | point | `0 0 100` | Top-face center |
-| `angle` | no | angle | `360` | Sweep angle around the axis (degrees); `360` is equivalent to `cylinder`; editors creating a sector may use `90` |
+| `angle` | no | angle | `360` | Sweep angle around the axis (degrees); `360` is equivalent to `cylinder` |
 
 Angle conventions (aligned with OCC `MakeCylinder`):
 
@@ -341,7 +341,7 @@ The arc lies in the plane with origin `center` and normal `normal`; angular para
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
-| `form` | no | enum | see inference | Parameter form: `angles` or `ends`; if omitted, inferred from attributes; editors / optimize should write it |
+| `form` | no | enum | see inference | Parameter form: `angles` or `ends`; if omitted, inferred from attributes; authors and optimize output should write an explicit `form` |
 | `center` | yes | point | `0 0 0` | Arc center |
 | `normal` | yes | vector | `0 0 1` | Arc-plane normal |
 | `radius` | conditional | number | `100` | Radius; may be omitted under `form="ends"` and checked against chord length |
@@ -403,7 +403,7 @@ Segment continuity: each segment’s start must equal the previous end (suggeste
 
 #### 3.2.4 Constructed solids (extrude / revolve / loft / sweep)
 
-Correspond to the common swept-family constructors across STEP / IFC / SolidWorks / PDMS; prefer composing these for industry specials rather than adding dedicated primitives.
+Correspond to the common swept-family constructors across STEP / IFC / SolidWorks / PDMS; prefer composing these for industry specials rather than defining dedicated primitives.
 
 Correspondence (non-normative; see Appendix §12.4):
 
@@ -483,8 +483,6 @@ Children: exactly one `<s3dx:section>` (closed profile → solid).
 </s3dx:extrude>
 ```
 
-**Compatibility alias**: `s3dx:polylinestretch` is treated as the old name of `extrude`; new files should write `extrude`. If `polylinestretch` is still used, the profile must likewise be a child `<s3dx:section>` (the `stretchFace` attribute is no longer supported).
-
 ##### `s3dx:revolve` (Revolve)
 
 Aligned with STEP `revolved_area_solid` / OCC `MakeRevol` / AutoCAD `REVOLVE` / Blender Spin.
@@ -497,7 +495,7 @@ Aligned with STEP `revolved_area_solid` / OCC `MakeRevol` / AutoCAD `REVOLVE` / 
   i.e. section-local \((u,v,0) \mapsto (u,0,v)\) (body-local XOZ; \(u\)=radial, \(v\)=axial). For offsets, keep that 3×3 and change only the translation.
 - **Sense**: positive `angle` is **counterclockwise** about +Z (right-hand rule).
 
-Editors must show, and only allow, a single child `<s3dx:section>` under revolve; profile complexity lives inside that section.
+Profile complexity lives inside the `section`.
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
@@ -622,7 +620,7 @@ When that ratio is \(\le\) `miterLimit`, keep the miter; otherwise join that ver
 Path shaping vs profile joining:
 
 - When resolved **outer = inner = `round`**: fillet the centerline (common equal-sides case); centerline radius prefers `outerR`, else `innerR` / implementation default.
-- When the two sides **differ**, or either is `bevel` / `miter`: keep the trajectory kink; join each profile-ring vertex by the type of the side it lies on. When only one side is `round`, implementations should round that side in profile space; if the current kernel does not yet support one-sided rounds, it may join as `bevel` and warn.
+- When the two sides **differ**, or either is `bevel` / `miter`: keep the trajectory kink; join each profile-ring vertex by the type of the side it lies on. When only one side is `round`, implementations should round that side in profile space; if one-sided rounds are unsupported, they may join as `bevel` and warn.
 - Corner joining applies only at kinks whose deflection meets the implementation threshold.
 - When a radius exceeds available adjacent edge length, shrink to fit and warn.
 - Where the trajectory segment is already a smooth curve (e.g. interior samples of a path-child `arc`), tangent stays continuous and the path remains smooth; corner joining applies only at kink vertices with discontinuous tangent.
@@ -712,19 +710,19 @@ Constraints:
 
 ##### `s3dx:triangles` (Triangle-mesh shorthand)
 
-Kept as a convenience subset of `mesh` (compatible with existing samples).
+`triangles` is a convenience subset of `mesh`.
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
 | `point` | yes | point list | — | Same as `mesh/@position` |
 | `normal` | yes | vector list | — | Same as `mesh/@normal` (required in this shorthand) |
-| `index` | yes | index list | — | Triangle indices; **fixed 1-based** (historical compatibility) |
+| `index` | yes | index list | — | Triangle indices; **fixed 1-based** |
 
 Semantically equivalent to:
 
 `mesh mode="triangles" indexBase="1" position={point} normal={normal} index={index}`.
 
-Prefer `mesh` for new content; implementations must still support `triangles`.
+Implementations must support `triangles`.
 
 #### 3.2.6 Core-layer quick reference
 
@@ -742,7 +740,7 @@ Prefer `mesh` for new content; implementations must still support `triangles`.
 | `line` | to | from |
 | `arc` | center, normal | form=`angles`\|`ends`; angles: radius, xDir, startAngle, angle; ends: from, to (optional radius) |
 | `path` | one side per form | form=`polyline` (points) \| `segments` (children: `line` / `arc`) |
-| `extrude` | length | origin, normal, xDir, dir; exactly 1 × `<s3dx:section>`; old name `polylinestretch` |
+| `extrude` | length | origin, normal, xDir, dir; exactly 1 × `<s3dx:section>` |
 | `revolve` | — | angle, solid; exactly 1 × `<s3dx:section>` (plane must ∥ body +Z; pose/offset on section; CCW about body +Z) |
 | `loft` | — | solid, blend; ≥2 × `<s3dx:section>` (each carries pose; no sweep corners) |
 | `sweep` | — | orient, refDir, solid, outerCorner, innerCorner, outerCornerRadius, innerCornerRadius, miterLimit; 1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
@@ -769,17 +767,34 @@ Prefer `mesh` for new content; implementations must still support `triangles`.
 ### 3.4 3D transform (`s3dx:transform`)
 
 - 3D transforms are written on the namespaced attribute **`s3dx:transform`**, **not** the SVG standard attribute `transform`. This keeps 2D 6-number `transform` and 3D 12-number matrices from competing for the same name.
-- Value syntax is a 12-number matrix:
+- The value supports two **persistent forms**, distinguished by syntax. Both evaluate to the same 12-number affine matrix (3×3 linear + translation):
 
-  `matrix(a b c  d e f  g h i  tx ty tz)`
+  1. **Matrix form**:
 
-  The first 9 numbers are a 3×3 linear transform; the last 3 are translation.
-- **Number separators**: the normative form is **space-separated** (newlines allowed), consistent with this format’s point lists / vectors (e.g. `lengthVec="1 0 0"`) and SVG number-list habit, and convenient for embedding vectors such as `var(--loop-value)` into the translation components. Implementations may treat commas as optional separators equivalent to spaces (aligned with SVG `comma-wsp`), but documents and samples should use the space form.
-- Identity with translation example: `s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)"`.
-- Values may contain `var(--*)` / `calc(...)` (parsed by the svg3dx evaluator).
+     `matrix(a b c  d e f  g h i  tx ty tz)`
+
+     The first 9 numbers are a 3×3 linear transform (column vectors: `(a,b,c)` / `(d,e,f)` / `(g,h,i)` are the X/Y/Z axes); the last 3 are translation.
+
+  2. **TRS form** (translate / rotate / scale):
+
+     `translate(tx ty tz) rotate(rx ry rz) scale(sx sy sz)`
+
+     - Each function may be omitted; defaults are `translate(0 0 0)`, `rotate(0 0 0)`, `scale(1 1 1)`. A subset is allowed (e.g. only `translate(...)`).
+     - Functions are recognized **by name**, independent of written order; documents and samples should prefer `translate` → `rotate` → `scale`.
+     - **Rotation**: Euler **XYZ**, angles in **degrees**.
+     - **Composition (column vectors)**: `M = T · R · S` (scale first, then rotate, then translate), matching common local object matrices and transform-gizmo semantics.
+     - Must **not** mix `matrix(...)` with TRS functions in the same attribute value; if mixed, implementations should warn and attempt to parse by the **first recognizable form**, falling back to identity on failure.
+
+- **Number separators**: the normative form is **space-separated** (newlines allowed), consistent with this format’s point lists / vectors (e.g. `lengthVec="1 0 0"`) and SVG number-list habit, and convenient for embedding vectors such as `var(--loop-value)` into components. Implementations may treat commas as optional separators equivalent to spaces (aligned with SVG `comma-wsp`), but documents and samples should use the space form.
+- Examples:
+  - `s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)"`
+  - `s3dx:transform="translate(100 200 300) rotate(0 45 0) scale(1 1 1)"`
+  - `s3dx:transform="translate(var(--x) 0 calc(var(--h) / 2))"`
+- Values may contain `var(--*)` / `calc(...)` (parsed by the svg3dx evaluator) on matrix components or TRS function components.
+- Both forms are valid persistence syntax and evaluate equivalently. Representing the same affine transform in the other form is not necessarily unique or lossless (shear, non-unique Euler angles, expression structure, floating-point precision, etc.).
 - Scope: 3D-related SVG host elements (e.g. `<g>`) and `s3dx:*` elements (including `<s3dx:use>`, `<s3dx:model>`, primitives on loop/boolean containers, etc.).
-- The unprefixed SVG attribute `transform` is always interpreted with **SVG / CSS 2D** semantics (typically 6-number `matrix`, etc.) and does **not** carry this format’s 12-number 3D matrix.
-- Standard SVG/CSS `matrix()` is 6 parameters and `matrix3d()` is 16; the 12-number `matrix(...)` on `s3dx:transform` is an **svg3dx extension**, evaluated by this format and not required to be natively supported by browsers.
+- The unprefixed SVG attribute `transform` is always interpreted with **SVG / CSS 2D** semantics (typically 6-number `matrix`, etc.) and does **not** carry this format’s 3D transform.
+- Standard SVG/CSS `matrix()` is 6 parameters and `matrix3d()` is 16; the 12-number `matrix(...)` and the TRS function list on `s3dx:transform` are **svg3dx extensions**, evaluated by this format and not required to be natively supported by browsers.
 - Accumulation order: in-group `s3dx:transform` → instance `s3dx:transform` → parent `s3dx:transform`.
 
 ## 4. Combination and booleans
@@ -972,7 +987,7 @@ Authors associate metadata with objects using one or more of the SVG mechanisms 
 ### 9.3 Vendor property tables and registry
 
 - **Introducing a property table**: Declare `xmlns:prefix="namespaceURI"` on the root `<svg>`. Document-level `<metadata>` may carry that namespace’s profile declaration (for example a property-table document path or product line).
-- **Where tables live**: Vendor property tables are **machine-readable XML definitions** under [`namespaces/`](../namespaces/), in a folder named by the vendor id (e.g. `acme/`), with filenames such as `vendor.topic.version.xml` (e.g. `acme.equipment.1.0.xml`). The definition lists elements and attributes in that namespace (e.g. `acme:nozzle`, `tag`, `nominalSize`) for editor validation and host parsing.
+- **Where tables live**: Vendor property tables are **machine-readable XML definitions** under [`namespaces/`](../namespaces/), in a folder named by the vendor id (e.g. `acme/`), with filenames such as `vendor.topic.version.xml` (e.g. `acme.equipment.1.0.xml`). The definition lists elements and attributes in that namespace (e.g. `acme:nozzle`, `tag`, `nominalSize`) for implementation validation and host parsing.
 - **Registry (index)**: [`namespaces/registry.xml`](../namespaces/registry.xml) indexes entries by `namespace` URI with `vendor`, `status`, `spec` (path relative to `namespaces/`), `prefix`, `title`, and related fields for discovery and interface naming.
 - **Core implementations**: Geometry evaluation must retain the foreign nodes above and may treat foreign-namespace elements as opaque subtrees. A host that interprets fields for a given URI must validate and read elements/attributes according to the property-table definition referenced in the registry.
 
@@ -1021,7 +1036,7 @@ Key point: geometry evaluates once and is shared across models. The evaluation s
 
 ### 12.1 Open items
 
-1. Core attribute tables have been revised around “basic solids + curves (line/arc/path) + extrude/revolve/loft/sweep/pipe + mesh” (see §3.2); still open:
+1. Beyond the core primitives (see §3.2), still open:
    - Whether `path` gains spline / helix child segments (`spline` / `helix`).
    - Whether `arc` major-arc ambiguity (`major`) and three-point arcs (start / on-arc / end, aligned with IFC `IfcArcIndex`) enter the core.
    - Compliance level for `A`/`C`/`Q` in `<path d>` inside `section`.
@@ -1034,10 +1049,8 @@ Key point: geometry evaluates once and is shared across models. The evaluation s
 2. Whether the display `mode` set is enough (need `points`, `shaded-edges`, curve-specific `wire`, etc.).
 3. Whether the file extension becomes `.svg3dx`.
 4. Final form of the formal-release namespace URI.
-5. ~~Vector component access~~ → settled as `--loop-value-x` / `-y` / `-z`; whether arbitrary vector parameters also get component splitting [TBD].
-6. ~~Conditionals hung on `<g>`~~ → changed to independent elements `s3dx:if` / `s3dx:if-not` (attribute `test`).
-7. ~~Materials / shading~~ → incorporated in §8 (`s3dx:materials`, `fill` × material, built-in presets); textures and fuller PBR channels [TBD].
-8. ~~Metadata~~ → incorporated in §9 (SVG `<metadata>` + foreign-namespace property tables + optional registry).
+5. Whether arbitrary vector parameters also get component splitting (loop vectors are `--loop-value-x` / `-y` / `-z`) [TBD].
+6. Textures and fuller PBR channels [TBD] (materials basics are in §8).
 
 ### 12.2 Samples
 

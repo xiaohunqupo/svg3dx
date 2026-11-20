@@ -9,8 +9,8 @@
 - 本规范为初版草案，命名空间 URI `urn:s3dx:draft:0.1` 为临时值，正式发布时将更换。
 - 项目/格式名：`svg3dx`。命名空间前缀：`s3dx`。Logo 标识为 `s3dx`，全称标题为 `svg 3dx`。
 - 本草案文件不保证在正式版中可解析。实现应按 URI 识别三维命名空间，不依赖前缀字面量（推荐前缀 `s3dx`）。
-- 文件扩展名：沿用 `.svg`，通过根属性 `svg3d="true"` 区分三维内容。正式版可考虑 `.svg3dx`【待定】。
-- **双语与名词**：规范同时维护中文版与英文版；文件内属性名 / 元素名 / 材质关键词保持英文标识符，中文版正文与编辑器 UI 使用官方中文名（见名词表）。
+- 文件扩展名使用 `.svg`，通过根属性 `svg3d="true"` 区分三维内容。正式版可考虑 `.svg3dx`【待定】。
+- **双语与名词**：规范同时维护中文版与英文版；文件内属性名 / 元素名 / 材质关键词为英文标识符，中文版正文使用官方中文名（见名词表）。
 
 ## 1. 文档模型
 
@@ -19,12 +19,12 @@
 - 根元素为 SVG `<svg>`，可包含本格式定义的扩展属性 `svg3d`（无命名空间前缀，挂在 SVG 根上）。
 - `svg3d="true"` 启用三维语义；缺省或 `svg3d="false"` 时，所有 `s3dx:*` 元素及其子树按 SVG 未知命名空间元素处理：保留在 DOM 中，不参与求值，不渲染，不影响二维内容。
 - `svg3d` 是总开关，优先级高于命名空间：`false` 时即使命名空间正确也忽略。
-- 属性名保持 `svg3d`，不随项目名改为 `svg3dx`。语义是“本 SVG 是否包含三维内容”，与项目名解耦。标准 SVG 用户代理会忽略未知属性，不影响二维渲染。
+- 属性名为 `svg3d`。语义是“本 SVG 是否包含三维内容”，与项目名解耦。标准 SVG 用户代理会忽略未知属性，不影响二维渲染。
 
 ### 1.2 命名空间
 
 - 三维元素使用命名空间 `urn:s3dx:draft:0.1`，推荐前缀 `s3dx`。
-- 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`line`、`arc`、`path`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`mesh`、`triangles`，以及兼容别名 `polylinestretch`→`extrude`、`cutcylinder`→`sector-cylinder`）；子元 `<s3dx:section>`（以及作为轨迹容器时的 `<s3dx:path>`）；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`、`<s3dx:materials>`、`<s3dx:material>`。可机读元素/属性目录见 [`namespaces/svg3dx/svg3dx.draft.0.1.xml`](../namespaces/svg3dx/svg3dx.draft.0.1.xml)，并在 [`namespaces/registry.xml`](../namespaces/registry.xml) 登记；**求值与语义仍以本文为准**。
+- 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`line`、`arc`、`path`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`mesh`、`triangles`）；子元 `<s3dx:section>`（以及作为轨迹容器时的 `<s3dx:path>`）；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`、`<s3dx:materials>`、`<s3dx:material>`。可机读元素/属性目录见 [`namespaces/svg3dx/svg3dx.draft.0.1.xml`](../namespaces/svg3dx/svg3dx.draft.0.1.xml)，并在 [`namespaces/registry.xml`](../namespaces/registry.xml) 登记；**求值与语义仍以本文为准**。
 - **无前缀属性**（null 命名空间）：图元几何属性（lowerCamelCase，见 3.2）、以及 `href`、`mode`、`test`、`points`、`start`、`end`、`step`、`active`、`svg3d`、三维着色相关的 `fill` / `material` / `opacity`（见第 8 节）等。
 - **带命名空间的属性**：三维变换使用 `s3dx:transform`（见 3.4），**不**占用 SVG 标准的 `transform` 表现属性，以免与二维 6 数 `matrix` 冲突。
 - 标准 SVG 解析器对未知命名空间元素的处理：包含在 DOM 中，不渲染，不进一步处理。本格式依赖此行为实现二维兼容。
@@ -151,7 +151,7 @@
 - 局部坐标 → 父级变换 → 世界坐标的累积规则：图元属性定义的局部几何，先应用图元自身 `s3dx:transform`，再应用父级 `<g>` / `<s3dx:use>` 上的 `s3dx:transform`。
 - **分层原则**：核心层只收各厂商都能映射的通用体元、曲线与网格；行业专用形体（风管配件、封头等）不进核心，见附录 10.3（可用 `loft` / `revolve` / 布尔组合表达）。
 
-### 3.2 图元属性表（草案 0.1 · 修订）
+### 3.2 图元属性表（草案 0.1）
 
 属性名与 [`samples/draft-0.1-example.svg3dx`](../samples/draft-0.1-example.svg3dx) 对齐；几何语义对齐 AutoCAD 实体图元、Open CASCADE 构造算子（`MakePrism` / `MakeRevol` / `ThruSections`）、以及 glTF / OpenGL 风格的索引网格。
 
@@ -181,8 +181,8 @@
 
 **尺寸量级与推荐默认**：
 
-- 图元主尺寸（边长、直径、高度、路径跨度等）宜取约 **`100`** 的量级（与文档用户单位一致），便于样例、编辑器新建与互操作对齐。
-- 下表「默认」列：对**可选**属性表示省略时的求值默认；对**必选**属性给出的数表示**推荐默认**（编辑器插入模板 / 占位提示），文档仍应写出该属性。球体等以直径约 `100` 为参照时，半径推荐 `50`。
+- 图元主尺寸（边长、直径、高度、路径跨度等）宜取约 **`100`** 的量级（与文档用户单位一致），便于样例与互操作对齐。
+- 下表「默认」列：对**可选**属性表示省略时的求值默认；对**必选**属性给出的数表示**推荐默认**，文档仍应写出该属性。球体等以直径约 `100` 为参照时，半径推荐 `50`。
 
 **局部坐标系通则**：
 
@@ -279,14 +279,14 @@
 
 ##### `s3dx:sector-cylinder`（扇形柱）
 
-对齐 OCC `MakeCylinder(r, h, angle)`。多词元素名用连字符，避免 `cutcylinder` 被误读为布尔裁剪。兼容别名：`cutcylinder`（读入时等同本元素；写出应使用 `sector-cylinder`）。
+对齐 OCC `MakeCylinder(r, h, angle)`。
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
 | `diameter` | 是 | 数字 | `100` | 直径 |
 | `bottomCenterPt` | 是 | 点 | `0 0 0` | 底面圆心 |
 | `topCenterPt` | 是 | 点 | `0 0 100` | 顶面圆心 |
-| `angle` | 否 | 角度 | `360` | 绕轴扫掠角（度）；`360` 等价于 `cylinder`；编辑器新建扇形柱可用 `90` |
+| `angle` | 否 | 角度 | `360` | 绕轴扫掠角（度）；`360` 等价于 `cylinder` |
 
 角参数约定（对齐 OCC `MakeCylinder`）：
 
@@ -341,7 +341,7 @@
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
-| `form` | 否 | 枚举 | 见推断 | 参数形式：`angles`（角参数）或 `ends`（起终点）；缺省由属性推断，编辑器 / 优化应写出 |
+| `form` | 否 | 枚举 | 见推断 | 参数形式：`angles`（角参数）或 `ends`（起终点）；缺省由属性推断；写出与 optimize 输出宜写明 `form` |
 | `center` | 是 | 点 | `0 0 0` | 圆心 |
 | `normal` | 是 | 向量 | `0 0 1` | 圆弧平面法向 |
 | `radius` | 条件 | 数字 | `100` | 半径；`form="ends"` 时可省略并由弦长校核 |
@@ -403,7 +403,7 @@
 
 #### 3.2.4 构造体元（拉伸体 / 旋转体 / 放样体 / 扫掠体）
 
-对应 STEP / IFC / SolidWorks / PDMS 等共通的扫掠族构造；行业异形件优先用它们组合，而不是新增专用图元。
+对应 STEP / IFC / SolidWorks / PDMS 等共通的扫掠族构造；行业异形件优先用它们组合，而不是定义专用图元。
 
 对照关系（非规范性，详见附录 10.4）：
 
@@ -483,8 +483,6 @@
 </s3dx:extrude>
 ```
 
-**兼容别名**：`s3dx:polylinestretch` 视为 `extrude` 的旧名；新文件应写 `extrude`。若仍使用 `polylinestretch`，轮廓同样须为子元素 `<s3dx:section>`（不再支持 `stretchFace` 属性）。
-
 ##### `s3dx:revolve`（旋转体）
 
 对齐 STEP `revolved_area_solid` / OCC `MakeRevol` / AutoCAD `REVOLVE` / Blender Spin。
@@ -497,7 +495,7 @@
   即将 section 局部 \((u,v,0) \mapsto (u,0,v)\)（体局部 XOZ；\(u\)=径向，\(v\)=轴向）。相对偏移时保留该 3×3，只改平移项。
 - **转向**：`angle` 正值为绕 +Z **逆时针**（右手系）。
 
-编辑器须展示且仅允许一个子节点 `<s3dx:section>`；轮廓复杂度放在 `section` 内部。
+轮廓复杂度放在 `section` 内部。
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
@@ -622,7 +620,7 @@ innerR = innerCornerRadius
 路径整形与剖面衔接：
 
 - 当解析后 **外角 = 内角 = `round`**：在中心线上做圆角（两侧同型时的常见写法）；中心线半径优先 `outerR`，否则 `innerR` / 实现默认。
-- 当两侧类型**不同**，或任一侧为 `bevel` / `miter`：保持轨迹折点；对截面环上落在外 / 内侧的顶点分别按该侧类型衔接。单侧为 `round` 时，实现宜在该侧生成圆角补面；若当前内核尚未支持单侧圆角，可暂按 `bevel` 衔接并警告。
+- 当两侧类型**不同**，或任一侧为 `bevel` / `miter`：保持轨迹折点；对截面环上落在外 / 内侧的顶点分别按该侧类型衔接。单侧为 `round` 时，实现宜在该侧生成圆角补面；若不支持单侧圆角，可按 `bevel` 衔接并警告。
 - 仅对偏转角达到实现阈值的折点生成转角衔接。
 - 当半径超过邻边可用长度时，实现缩小到可放得下的值，并警告。
 - 轨迹段本身已是光滑曲线（例如 path 子段 `arc` 内部采样点）时切向连续，保持光滑；转角衔接仅作用于切向不连续的折角顶点。
@@ -712,19 +710,19 @@ innerR = innerCornerRadius
 
 ##### `s3dx:triangles`（三角网格简写）
 
-保留为 `mesh` 的便捷子集（与现有示例兼容）。
+`triangles` 是 `mesh` 的便捷子集。
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
 | `point` | 是 | 点列 | — | 同 `mesh/@position` |
 | `normal` | 是 | 向量列 | — | 同 `mesh/@normal`（本简写中为必选） |
-| `index` | 是 | 索引列 | — | 三角面索引；**固定 1-based**（历史兼容） |
+| `index` | 是 | 索引列 | — | 三角面索引；**固定 1-based** |
 
 语义等价于：
 
 `mesh mode="triangles" indexBase="1" position={point} normal={normal} index={index}`。
 
-新内容优先写 `mesh`；`triangles` 仍须被实现支持。
+实现须支持 `triangles`。
 
 #### 3.2.6 核心层总览速查
 
@@ -742,7 +740,7 @@ innerR = innerCornerRadius
 | `line` | to | from |
 | `arc` | center, normal | form=`angles`\|`ends`；angles：radius, xDir, startAngle, angle；ends：from, to（可选 radius） |
 | `path` | form 决定一侧 | form=`polyline`（points）\|`segments`（子：`line` / `arc`） |
-| `extrude` | length | origin, normal, xDir, dir；恰好 1 × `<s3dx:section>`；旧名 `polylinestretch` |
+| `extrude` | length | origin, normal, xDir, dir；恰好 1 × `<s3dx:section>` |
 | `revolve` | — | angle, solid；恰好 1 × `<s3dx:section>`（平面须 ∥ 体 +Z；位姿/偏移在 section；绕体 +Z 逆时针） |
 | `loft` | — | solid, blend；≥2 × `<s3dx:section>`（各位姿自带；无扫掠体转角） |
 | `sweep` | — | orient, refDir, solid, outerCorner, innerCorner, outerCornerRadius, innerCornerRadius, miterLimit；1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
@@ -769,17 +767,34 @@ innerR = innerCornerRadius
 ### 3.4 三维变换（`s3dx:transform`）
 
 - 三维变换写在命名空间属性 **`s3dx:transform`** 上，**不**使用 SVG 标准属性 `transform`。这样二维 6 数 `transform` 与三维 12 数矩阵互不抢占同一属性名。
-- 值语法为 12 数矩阵：
+- 值支持两种**持久化形态**，由属性值的写法区分；求值后均得到同一 12 数仿射矩阵（3×3 线性 + 平移）：
 
-  `matrix(a b c  d e f  g h i  tx ty tz)`
+  1. **矩阵形态**：
 
-  前 9 个为 3×3 线性变换，后 3 个为平移。
-- **数的分隔**：规范写法为**空格分隔**（可含换行），与本格式点列 / 向量（如 `lengthVec="1 0 0"`）及 SVG 数字列表习惯一致，也便于 `var(--loop-value)` 这类向量直接嵌入平移分量。实现可将逗号视为与空格等价的可选分隔符（对齐 SVG `comma-wsp`），但文档与示例应写空格形式。
-- 单位矩阵平移示例：`s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)"`。
-- 值中允许 `var(--*)` / `calc(...)`（由 svg3dx 求值器解析）。
+     `matrix(a b c  d e f  g h i  tx ty tz)`
+
+     前 9 个为 3×3 线性变换（列向量：`(a,b,c)` / `(d,e,f)` / `(g,h,i)` 为 X/Y/Z 轴方向），后 3 个为平移。
+
+  2. **TRS 形态**（平移 / 旋转 / 缩放）：
+
+     `translate(tx ty tz) rotate(rx ry rz) scale(sx sy sz)`
+
+     - 各函数可省略；缺省为 `translate(0 0 0)`、`rotate(0 0 0)`、`scale(1 1 1)`。允许只写子集（如仅 `translate(...)`）。
+     - 函数按**名称**识别，不依赖书写顺序；文档与示例建议顺序为 `translate` → `rotate` → `scale`。
+     - **旋转**：欧拉角 **XYZ 内禀/外禀按列向量约定与常见 DCC 一致**，单位为**度**。
+     - **合成（列向量）**：`M = T · R · S`（先缩放，再旋转，再平移），与常见 3D 对象局部矩阵及变换手柄语义一致。
+     - 不得与 `matrix(...)` **混写**于同一属性值；若混写，实现应警告并按**首个可识别形态**尝试解析，失败则视为单位变换。
+
+- **数的分隔**：规范写法为**空格分隔**（可含换行），与本格式点列 / 向量（如 `lengthVec="1 0 0"`）及 SVG 数字列表习惯一致，也便于 `var(--loop-value)` 这类向量直接嵌入分量。实现可将逗号视为与空格等价的可选分隔符（对齐 SVG `comma-wsp`），但文档与示例应写空格形式。
+- 示例：
+  - `s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)"`
+  - `s3dx:transform="translate(100 200 300) rotate(0 45 0) scale(1 1 1)"`
+  - `s3dx:transform="translate(var(--x) 0 calc(var(--h) / 2))"`
+- 值中允许 `var(--*)` / `calc(...)`（由 svg3dx 求值器解析）；可落在矩阵各分量或 TRS 各函数分量上。
+- 两种形态均为合法的持久化写法，求值结果等价。同一仿射变换用另一种形态表示时，不保证唯一或无损（剪切分量、欧拉角不唯一、表达式结构、浮点精度等）。
 - 适用范围：三维相关的 SVG 宿主元素（如 `<g>`）以及 `s3dx:*` 元素（含 `<s3dx:use>`、`<s3dx:model>`、循环/布尔容器上的图元等）。
-- 标准 SVG 属性 `transform`（无前缀）始终按 **SVG / CSS 二维**语义解释（通常为 6 数 `matrix` 等），**不**承载本格式的 12 数三维矩阵。
-- 标准 SVG/CSS 的 `matrix()` 为 6 参数、`matrix3d()` 为 16 参数；本格式 `s3dx:transform` 上的 12 数 `matrix(...)` 为 **svg3dx 扩展**，由本格式求值，不要求浏览器原生支持。
+- 标准 SVG 属性 `transform`（无前缀）始终按 **SVG / CSS 二维**语义解释（通常为 6 数 `matrix` 等），**不**承载本格式的三维变换。
+- 标准 SVG/CSS 的 `matrix()` 为 6 参数、`matrix3d()` 为 16 参数；本格式 `s3dx:transform` 上的 12 数 `matrix(...)` 与 TRS 函数列表均为 **svg3dx 扩展**，由本格式求值，不要求浏览器原生支持。
 - 累积顺序：组内 `s3dx:transform` → 实例化 `s3dx:transform` → 父级 `s3dx:transform`。
 
 ## 4. 组合与布尔
@@ -972,7 +987,7 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 ### 9.3 厂商属性表与注册表
 
 - **引入属性表**：在根 `<svg>` 上声明 `xmlns:前缀="命名空间URI"`。可在文档级 `<metadata>` 中书写该命名空间约定的剖面声明元素（例如属性表文档路径、产品系列）。
-- **属性表存放**：厂商属性表以**可机读 XML 定义**放在 [`namespaces/`](../namespaces/) 下：目录名为厂商标识（如 `acme/`），文件名建议 `厂商.主题.版本.xml`（如 `acme.equipment.1.0.xml`）。定义文件声明该命名空间下的元素与属性（如 `acme:nozzle`、`tag`、`nominalSize`），供编辑器校验与宿主解析。
+- **属性表存放**：厂商属性表以**可机读 XML 定义**放在 [`namespaces/`](../namespaces/) 下：目录名为厂商标识（如 `acme/`），文件名建议 `厂商.主题.版本.xml`（如 `acme.equipment.1.0.xml`）。定义文件声明该命名空间下的元素与属性（如 `acme:nozzle`、`tag`、`nominalSize`），供实现校验与宿主解析。
 - **注册表（索引）**：[`namespaces/registry.xml`](../namespaces/registry.xml) 按 `namespace` URI 索引 `vendor`、`status`、`spec`（相对 `namespaces/` 的定义文件路径）、`prefix`、`title` 等，供发现与对接点名。
 - **核心实现**：几何求值须完整保留上述外挂节点；对外国命名空间元素按不透明子树处理即可。若某宿主需解释某一 URI 的字段语义，须按注册表所指向的属性表定义校验与读取元素/属性。
 
@@ -1021,7 +1036,7 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 
 ### 12.1 待定项汇总
 
-1. 核心属性表已按「基本体 + 曲线（line/arc/path）+ 拉伸体/旋转体/放样体/扫掠体/圆管 + mesh」修订（见 3.2）；仍待定：
+1. 核心图元（见 3.2）之外仍待定：
    - `path` 是否增加样条 / 螺旋子段（`spline` / `helix`）。
    - `arc` 优弧歧义（`major`）与三点弧（起/弧上点/终，对齐 IFC `IfcArcIndex`）是否纳入。
    - `section` 内 `<path d>` 对 `A`/`C`/`Q` 的合规要求级别。
@@ -1034,10 +1049,8 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 2. `mode`（显示）取值集是否够（是否需 `points`、`shaded-edges`、曲线专用 `wire` 等）。
 3. 文件扩展名是否用 `.svg3dx`。
 4. 正式版命名空间 URI 的最终形式。
-5. ~~向量分量访问~~ → 已定为 `--loop-value-x` / `-y` / `-z`；是否还需对任意向量参数提供分量拆分【待定】。
-6. ~~条件挂在 `<g>` 上~~ → 已改为独立元素 `s3dx:if` / `s3dx:if-not`（属性 `test`）。
-7. ~~材质 / 着色~~ → 已纳入第 8 节（`s3dx:materials`、`fill` × 材质、内置预设）；贴图与更完整的 PBR 通道【待定】。
-8. ~~元数据~~ → 已纳入第 9 节（SVG `<metadata>` + 外挂命名空间属性表 + 可选注册表）。
+5. 是否还需对任意向量参数提供分量拆分（循环向量为 `--loop-value-x` / `-y` / `-z`）【待定】。
+6. 贴图与更完整的 PBR 通道【待定】（材质基础见第 8 节）。
 
 ### 12.2 示例
 
