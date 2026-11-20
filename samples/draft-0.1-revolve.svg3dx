@@ -11,17 +11,18 @@
 
   <defs>
     <g id="main">
+      <!-- Section XY→XOZ via default orientation matrix; spin CCW about body +Z -->
       <!-- solid=true: partial turn is capped -->
-      <s3dx:revolve solid="true" axisOrigin="0 0 0" axisDir="0 1 0" angle="var(--angle)">
-        <s3dx:section>
+      <s3dx:revolve solid="true" angle="var(--angle)">
+        <s3dx:section s3dx:transform="matrix(1 0 0 0 0 1 0 -1 0 0 0 0)">
           <path d="M 40 0 L 80 0 L 80 60 L 40 40 Z"/>
         </s3dx:section>
       </s3dx:revolve>
 
-      <!-- solid=false: revolved side only -->
-      <s3dx:revolve solid="false" axisOrigin="0 0 0" axisDir="0 1 0" angle="var(--angle)"
+      <!-- solid=false: revolved side only; body offset via revolve transform -->
+      <s3dx:revolve solid="false" angle="var(--angle)"
                     s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 var(--gap) 0 0)">
-        <s3dx:section>
+        <s3dx:section s3dx:transform="matrix(1 0 0 0 0 1 0 -1 0 0 0 0)">
           <path d="M 40 0 L 80 0 L 80 60 L 40 40 Z"/>
         </s3dx:section>
       </s3dx:revolve>

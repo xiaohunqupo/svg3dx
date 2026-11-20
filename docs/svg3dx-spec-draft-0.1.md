@@ -419,29 +419,34 @@
 
 | 角色 | 元素 | 内容 |
 |---|---|---|
-| 位姿 | 父体（`extrude` / `revolve` / `sweep`）或每个 `section`（`loft`）上的 `origin` / `normal` / `xDir` | 截面落在哪、朝哪 |
-| 二维轮廓 | `<s3dx:section>` 内的 SVG 几何子元素（`path` / `circle` / `polygon` / `rect` / `ellipse`） | 局部 2D；可含直线与圆弧 |
+| 位姿 | `extrude` / `sweep` 的 `origin` / `normal` / `xDir`；`loft` / `revolve` 各 `section` 自带（`revolve` 还可用 section 的 `s3dx:transform` 做相对偏移）；旋转体整体位姿用父元素 `s3dx:transform` | 截面落在哪、朝哪 |
+| 二维轮廓 | `<s3dx:section>` 内的二维体元（可多个） | 截面局部 2D |
 | 三维轨迹 | `<s3dx:path>`（`points` 或 `line`/`arc` 子段） | 中心线**路径几何**（线段 / 圆弧等组成轨迹本身） |
 | 扫掠体转角 | `sweep` / `pipe` 的 `corner`（+ `cornerRadius`） | 轨迹折角处**各面如何衔接**；求值时自动生成，不写入 path |
 
-截面局部坐标 → 世界坐标：
+截面局部坐标 → 父局部 / 世界坐标（`extrude` / `loft` / `sweep` / `revolve`）：
 
 - 局部 \(u\) 轴：将 `xDir` 投影到垂直于 `normal` 的平面并归一化（记为 \(\hat{X}\)）。
 - 局部 \(v\) 轴：\(\hat{Y} = \hat{N} \times \hat{X}\)（右手系；\(\hat{N}\) 为归一化 `normal`）。
 - 点映射：\(P = \mathrm{origin} + u\,\hat{X} + v\,\hat{Y}\)。
 - 缺省：`origin="0 0 0"`、`normal="0 0 1"`、`xDir="1 0 0"`。
+- 若 section 带 `s3dx:transform`：在上述点映射之后、相对**父构造体局部**再乘该变换（用于相对旋转体的偏移等）。
+- `revolve` 在未写 transform / pose 时另有缺省取向矩阵（见 `s3dx:revolve`），把 XY 映到体局部 XOZ。
+
+`revolve` 约束：截面平面必须与旋转体局部 **+Z 平行**（变换后的截面法向 \(\hat{N}'\) 满足 \(\lvert \hat{N}' \cdot \hat{Z}\rvert \approx 0\)）；否则该 section **无效**，不生成几何。单位变换 + 缺省 XY = 垂直于体 Z → 无效。
 
 ##### `<s3dx:section>`（截面，非独立图元）
 
-仅作为 `extrude` / `revolve` / `loft` / `sweep` 的子元素。截面形状由**子级 SVG 几何**给出（无 `s3dx` 前缀，落在 SVG 命名空间），坐标为截面局部 2D。
+仅作为 `extrude` / `revolve` / `loft` / `sweep` 的子元素。为与造型体元树形结构一致，各构造体元通过恰好一个（`loft` 为多个）`<s3dx:section>` 挂接轮廓，而不是把二维子节点直接写在父体下。
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
-| `origin` | 否 | 点 | 见说明 | 截面原点；`loft` 各截面通常自带；`extrude` / `revolve` / `sweep` 缺省继承父元素位姿 |
-| `normal` | 否 | 向量 | 见说明 | 截面平面法向 |
+| `origin` | 否 | 点 | 见说明 | 截面原点；`loft` / `revolve` 各截面可自带；`extrude` / `sweep` 缺省继承父元素位姿 |
+| `normal` | 否 | 向量 | 见说明 | 截面平面法向；`revolve` 下变换后须 ⊥ 体 Z |
 | `xDir` | 否 | 向量 | 见说明 | 截面局部 +X 参考方向 |
+| `s3dx:transform` | 否 | 12 数矩阵 | 单位 | 相对父构造体的附加变换（`revolve` 上常用于截面相对旋转体的偏移） |
 
-草案 0.1 允许的子元素（至少一个）：
+草案 0.1 允许的子元素（至少一个；**仅二维体元**，布尔 / 逻辑 / 循环暂不支持）：
 
 | 子元素 | 说明 |
 |---|---|
@@ -449,9 +454,10 @@
 | `<circle cx cy r>` | 圆 |
 | `<ellipse cx cy rx ry>` | 椭圆 |
 | `<polygon points="x1 y1 …">` | 封闭折线（二维点列） |
+| `<polyline points="…">` | 折线（可开放） |
 | `<rect x y width height>` | 轴对齐矩形 |
 
-多个子形状时：实现可将外轮廓取并集，或仅取第一个并警告；须在文档中说明。
+多个二维体元时：**各自独立参与**父构造（对 `revolve` 即同时旋转），不做并集 / 布尔；求值按文档顺序处理每一个。
 
 轨迹用 `<s3dx:path>`（见 3.2.3）：折线 `points` 或 `line`/`arc` 子段。`sweep` / `pipe` 的折角面衔接另见 `corner`，与路径段定义分层。
 
@@ -483,28 +489,31 @@
 
 对齐 STEP `revolved_area_solid` / OCC `MakeRevol` / AutoCAD `REVOLVE` / Blender Spin。
 
+- **旋转轴**：旋转体局部 **+Z**，过体原点；整体位姿只由父元素 `s3dx:transform`（及宿主变换链）给出。
+- **截面**：截面二维仍在 section 局部 **XY**；用 `origin` / `normal` / `xDir` 与 `s3dx:transform` 相对旋转体定位；求值得到体局部轮廓后再绕体 +Z 旋转。
+- **有效性**：变换后的截面平面须与体 +Z **平行**；否则 section 无效，不生成几何。单位变换会把缺省 XY 截面留在与体 Z **垂直**的平面上，因而无效。
+- **缺省取向**（未写 pose、也未写 `s3dx:transform` 时）：注入  
+  `s3dx:transform="matrix(1 0 0 0 0 1 0 -1 0 0 0 0)"`  
+  即将 section 局部 \((u,v,0) \mapsto (u,0,v)\)（体局部 XOZ；\(u\)=径向，\(v\)=轴向）。相对偏移时保留该 3×3，只改平移项。
+- **转向**：`angle` 正值为绕 +Z **逆时针**（右手系）。
+
+编辑器须展示且仅允许一个子节点 `<s3dx:section>`；轮廓复杂度放在 `section` 内部。
+
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
-| `origin` | 否 | 点 | `0 0 0` | 截面原点 |
-| `normal` | 否 | 向量 | `0 0 1` | 截面法向 |
-| `xDir` | 否 | 向量 | `1 0 0` | 截面局部 +X |
-| `axisOrigin` | 是 | 点 | `0 0 0` | 旋转轴上一点 |
-| `axisDir` | 是 | 向量 | `0 1 0` | 旋转轴方向 |
-| `angle` | 否 | 角度 | `360` | 旋转角 |
-| `solid` | 否 | 布尔 | `true` | 是否封成实体。旋转角小于 360° 时，`true` 为封闭轮廓补起止端面；`false` 只保留旋转侧面 |
+| `angle` | 否 | 角度 | `360` | 旋转角（正=逆时针） |
+| `solid` | 否 | 布尔 | `true` | 是否尝试封成实体。旋转角小于 360° 时，对**闭合 path**（`d` 含 `Z`）与**闭合圆**（`<circle>`）用三角面片补起止端面（盖板）；其它二维体元或开放轮廓即使 `solid="true"` 也不封盖，只保留旋转侧面 |
 
-子元素：恰好一个 `<s3dx:section>`（母线轮廓）。整周旋转时封闭轮廓的侧面已经闭合；不足一整周时由 `solid` 决定是否补端面。开放轮廓生成薄壳，由内核决定，实现应文档化。
+子元素：恰好一个 `<s3dx:section>`（母线轮廓；其内可有多个二维体元，各自同时旋转）。整周旋转时侧面已经闭合，无需盖板。
 
 ```xml
-<!-- 截面在缺省 XY 面（normal +Z）；u=半径，v=沿轴高度；绕 Y 旋转 -->
-<s3dx:revolve solid="true" axisOrigin="0 0 0" axisDir="0 1 0" angle="360">
-  <s3dx:section>
+<!-- 缺省取向：XY→XOZ；绕体 +Z 逆时针。偏移时改平移，勿改回单位旋转 -->
+<s3dx:revolve solid="true" angle="270">
+  <s3dx:section s3dx:transform="matrix(1 0 0 0 0 1 0 -1 0 0 0 0)">
     <path d="M 40 0 L 100 0 L 100 100 L 40 60 Z"/>
   </s3dx:section>
 </s3dx:revolve>
 ```
-
-若轴为 `+Z`、截面放在 `XZ` 面，右手系下 `normal` 应为 `0 -1 0`（使局部 \(v\) 指向 `+Z`）；写 `0 1 0` 会使高度反向。
 
 ##### `s3dx:loft`（放样体）
 
@@ -691,7 +700,7 @@
 | `arc` | center, normal | form=`angles`\|`ends`；angles：radius, xDir, startAngle, angle；ends：from, to（可选 radius） |
 | `path` | form 决定一侧 | form=`polyline`（points）\|`segments`（子：`line` / `arc`） |
 | `extrude` | length | origin, normal, xDir, dir；恰好 1 × `<s3dx:section>`；旧名 `polylinestretch` |
-| `revolve` | axisOrigin, axisDir | origin, normal, xDir, angle, solid；恰好 1 × `<s3dx:section>` |
+| `revolve` | — | angle, solid；恰好 1 × `<s3dx:section>`（平面须 ∥ 体 +Z；位姿/偏移在 section；绕体 +Z 逆时针） |
 | `loft` | — | solid, blend；≥2 × `<s3dx:section>`（各位姿自带；无扫掠体转角） |
 | `sweep` | — | orient, refDir, solid, corner, cornerRadius；1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
 | `pipe` | radius + 轨迹 | form=`inline`\|`child`；innerRadius, corner, cornerRadius；path / `<s3dx:path>` |
@@ -930,9 +939,10 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 
 ## 10. `<s3dx:use>`
 
-- 属性：`href`（必选，引用 `<g id="...">`）、`s3dx:transform`（可选，12 数三维矩阵）。
+- 属性：`href`（必选，引用定义目标的 `id`）、`s3dx:transform`（可选，12 数三维矩阵）。
 - 不设 `x`/`y`；三维平移用 `s3dx:transform` 的 `tx/ty/tz`。
 - 仅用于三维上下文；标准 `<use>` 仅用于二维内容，两者不得混用。
+- **引用范围（强制）**：`href` 仅允许引用定义集（`<defs>`）中的**第一层节点**（`<defs>` 的直接子元素，且带 `id`）。不得引用更深层嵌套的节点；也不得引用该 `<s3dx:use>` **自身的父节点**。违反上述任一约束时，该引用无效，**忽略**该 `<s3dx:use>` 节点并警告。
 - `<s3dx:use>` 引用纯二维 `<g>`（只含二维元素）时：跳过 + 警告。
 - 变换累积：被引用组自身 `s3dx:transform` → `<s3dx:use>` 的 `s3dx:transform` → 父级 `s3dx:transform`。
 

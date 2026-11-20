@@ -96,8 +96,6 @@
 | `startAngle` | 起始角 | startAngle |
 | `origin` | 原点 | origin |
 | `dir` | 方向 | dir |
-| `axisOrigin` | 轴原点 | axisOrigin |
-| `axisDir` | 轴方向 | axisDir |
 | `solid` | 实体 | solid |
 | `blend` | 混合 | blend |
 | `orient` | 姿态 | orient |

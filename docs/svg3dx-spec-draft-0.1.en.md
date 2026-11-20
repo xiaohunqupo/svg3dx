@@ -419,29 +419,34 @@ Correspondence (non-normative; see Appendix §12.4):
 
 | Role | Element | Content |
 |---|---|---|
-| Pose | Parent (`extrude` / `revolve` / `sweep`) or each `section` (`loft`) via `origin` / `normal` / `xDir` | Where the section sits and which way it faces |
-| 2D profile | SVG geometry children inside `<s3dx:section>` (`path` / `circle` / `polygon` / `rect` / `ellipse`) | Local 2D; may include lines and arcs |
+| Pose | `origin` / `normal` / `xDir` on `extrude` / `sweep`; each `loft` / `revolve` `section` carries its own (`revolve` may also use the section’s `s3dx:transform` for relative offset); revolve body pose via parent `s3dx:transform` | Where the section sits and which way it faces |
+| 2D profile | 2D shapes inside `<s3dx:section>` (may be multiple) | Section-local 2D |
 | 3D trajectory | `<s3dx:path>` (`points` or `line`/`arc` segments) | Centerline **path geometry** (segments that compose the trajectory itself) |
 | Sweep corner | `corner` (+ `cornerRadius`) on `sweep` / `pipe` | How faces join at trajectory corners; generated at evaluation time, not written into path |
 
-Section local → world:
+Section local → parent-local / world (`extrude` / `loft` / `sweep` / `revolve`):
 
 - Local \(u\) axis: project `xDir` onto the plane perpendicular to `normal` and normalize (denoted \(\hat{X}\)).
 - Local \(v\) axis: \(\hat{Y} = \hat{N} \times \hat{X}\) (right-handed; \(\hat{N}\) is normalized `normal`).
 - Point map: \(P = \mathrm{origin} + u\,\hat{X} + v\,\hat{Y}\).
 - Defaults: `origin="0 0 0"`, `normal="0 0 1"`, `xDir="1 0 0"`.
+- If the section has `s3dx:transform`: after the point map, multiply by that transform in **parent-construct local** space (e.g. offset relative to the revolve body).
+- For `revolve`, when transform / pose are unset, a default orientation matrix maps XY → body-local XOZ (see `s3dx:revolve`).
+
+`revolve` constraint: the section plane must be **parallel to the revolve body’s +Z** (after transform, section normal \(\hat{N}'\) satisfies \(\lvert \hat{N}' \cdot \hat{Z}\rvert \approx 0\)); otherwise the section is **invalid** and yields no geometry. Identity transform + default XY = perpendicular to body Z → invalid.
 
 ##### `<s3dx:section>` (Section; not a standalone primitive)
 
-Only a child of `extrude` / `revolve` / `loft` / `sweep`. Section shape is given by **child SVG geometry** (no `s3dx` prefix; SVG namespace), in section-local 2D.
+Only a child of `extrude` / `revolve` / `loft` / `sweep`. Constructed solids hang profiles under exactly one `<s3dx:section>` (`loft`: several) so the tree stays consistent; profile complexity lives inside the section.
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
-| `origin` | no | point | see notes | Section origin; `loft` sections usually carry their own; `extrude` / `revolve` / `sweep` default to inheriting parent pose |
-| `normal` | no | vector | see notes | Section-plane normal |
+| `origin` | no | point | see notes | Section origin; `loft` / `revolve` sections may carry their own; `extrude` / `sweep` default to inheriting parent pose |
+| `normal` | no | vector | see notes | Section-plane normal; under `revolve`, must be ⊥ body Z after transform |
 | `xDir` | no | vector | see notes | Section-local +X reference |
+| `s3dx:transform` | no | 12-number matrix | identity | Extra transform relative to the parent construct (often an offset for `revolve`) |
 
-Allowed children in draft 0.1 (at least one):
+Allowed children in draft 0.1 (at least one; **2D shapes only** — bool / conditional / loop not supported yet):
 
 | Child | Notes |
 |---|---|
@@ -449,9 +454,10 @@ Allowed children in draft 0.1 (at least one):
 | `<circle cx cy r>` | Circle |
 | `<ellipse cx cy rx ry>` | Ellipse |
 | `<polygon points="x1 y1 …">` | Closed polyline (2D point list) |
+| `<polyline points="…">` | Polyline (may be open) |
 | `<rect x y width height>` | Axis-aligned rectangle |
 
-With multiple child shapes: implementations may union outer contours, or take only the first and warn; document the choice.
+With multiple 2D shapes: each participates **independently** in the parent construct (for `revolve`, all are revolved together). Do not union / boolean them; evaluate each in document order.
 
 Trajectory uses `<s3dx:path>` (see §3.2.3): polyline `points` or `line`/`arc` segments. Face joining at `sweep` / `pipe` corners is separate — see `corner`.
 
@@ -483,28 +489,31 @@ Children: exactly one `<s3dx:section>` (closed profile → solid).
 
 Aligned with STEP `revolved_area_solid` / OCC `MakeRevol` / AutoCAD `REVOLVE` / Blender Spin.
 
+- **Axis**: revolve-body local **+Z** through the body origin; body pose only via parent `s3dx:transform` (and the host transform chain).
+- **Section**: 2D profile stays in section-local **XY**; locate it relative to the body with `origin` / `normal` / `xDir` and `s3dx:transform`; evaluate in body-local space, then spin about body +Z.
+- **Validity**: after transform, the section plane must be **parallel to body +Z**; otherwise invalid. An identity transform leaves the default XY section **perpendicular** to body Z → invalid.
+- **Default orientation** (no pose attrs and no `s3dx:transform`): inject  
+  `s3dx:transform="matrix(1 0 0 0 0 1 0 -1 0 0 0 0)"`  
+  i.e. section-local \((u,v,0) \mapsto (u,0,v)\) (body-local XOZ; \(u\)=radial, \(v\)=axial). For offsets, keep that 3×3 and change only the translation.
+- **Sense**: positive `angle` is **counterclockwise** about +Z (right-hand rule).
+
+Editors must show, and only allow, a single child `<s3dx:section>` under revolve; profile complexity lives inside that section.
+
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
-| `origin` | no | point | `0 0 0` | Section origin |
-| `normal` | no | vector | `0 0 1` | Section normal |
-| `xDir` | no | vector | `1 0 0` | Section-local +X |
-| `axisOrigin` | yes | point | `0 0 0` | A point on the revolution axis |
-| `axisDir` | yes | vector | `0 1 0` | Axis direction |
-| `angle` | no | angle | `360` | Revolution angle |
-| `solid` | no | boolean | `true` | Whether to close as a solid. When the angle is less than 360°, `true` caps a closed profile with the two end faces; `false` keeps only the revolved side |
+| `angle` | no | angle | `360` | Revolution angle (positive = CCW) |
+| `solid` | no | boolean | `true` | Whether to attempt a solid. When the angle is less than 360°, **closed path** (`d` includes `Z`) and **closed circle** (`<circle>`) get triangulated end-face caps; other 2D shapes or open profiles do not get caps even if `solid="true"`, only the revolved side |
 
-Children: exactly one `<s3dx:section>` (generatrix profile). A full turn of a closed profile is already closed by the side surface; a partial turn uses `solid` to decide whether to add the end faces. An open profile produces a thin shell as decided by the kernel — implementations should document.
+Children: exactly one `<s3dx:section>` (generatrix profile; may contain multiple 2D shapes, each revolved). A full turn is already closed by the side surface, so no caps are needed.
 
 ```xml
-<!-- Section on default XY (normal +Z); u = radius, v = height along axis; revolved about Y -->
-<s3dx:revolve solid="true" axisOrigin="0 0 0" axisDir="0 1 0" angle="360">
-  <s3dx:section>
+<!-- Default orientation: XY→XOZ; spin CCW about body +Z. Offset via translation only -->
+<s3dx:revolve solid="true" angle="270">
+  <s3dx:section s3dx:transform="matrix(1 0 0 0 0 1 0 -1 0 0 0 0)">
     <path d="M 40 0 L 100 0 L 100 100 L 40 60 Z"/>
   </s3dx:section>
 </s3dx:revolve>
 ```
-
-If the axis is `+Z` and the section lies in the `XZ` plane, right-handed `normal` should be `0 -1 0` (so local \(v\) points `+Z`); writing `0 1 0` reverses height.
 
 ##### `s3dx:loft` (Loft)
 
@@ -691,7 +700,7 @@ Prefer `mesh` for new content; implementations must still support `triangles`.
 | `arc` | center, normal | form=`angles`\|`ends`; angles: radius, xDir, startAngle, angle; ends: from, to (optional radius) |
 | `path` | one side per form | form=`polyline` (points) \| `segments` (children: `line` / `arc`) |
 | `extrude` | length | origin, normal, xDir, dir; exactly 1 × `<s3dx:section>`; old name `polylinestretch` |
-| `revolve` | axisOrigin, axisDir | origin, normal, xDir, angle, solid; exactly 1 × `<s3dx:section>` |
+| `revolve` | — | angle, solid; exactly 1 × `<s3dx:section>` (plane must ∥ body +Z; pose/offset on section; CCW about body +Z) |
 | `loft` | — | solid, blend; ≥2 × `<s3dx:section>` (each carries pose; no sweep corners) |
 | `sweep` | — | orient, refDir, solid, corner, cornerRadius; 1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
 | `pipe` | radius + trajectory | form=`inline`\|`child`; innerRadius, corner, cornerRadius; path / `<s3dx:path>` |
@@ -930,9 +939,10 @@ Shell cylinder + side nozzle with in-place `<metadata>` and a vendor namespace: 
 
 ## 10. `<s3dx:use>`
 
-- Attributes: `href` (required, references `<g id="...">`), `s3dx:transform` (optional, 12-number 3D matrix).
+- Attributes: `href` (required, references a definition target by `id`), `s3dx:transform` (optional, 12-number 3D matrix).
 - No `x`/`y`; 3D translation uses `tx/ty/tz` of `s3dx:transform`.
 - Used only in 3D context; standard `<use>` is only for 2D content — the two must not be mixed.
+- **Reference scope (normative)**: `href` may only reference a **first-level node** in the definition set (`<defs>`), i.e. a direct child of `<defs>` that has an `id`. Nested descendants are not allowed; referencing the **parent of the `<s3dx:use>` itself** is also not allowed. If either constraint is violated, the reference is invalid: **ignore** that `<s3dx:use>` node **and warn**.
 - If `<s3dx:use>` references a pure-2D `<g>` (only 2D elements): skip + warning.
 - Transform accumulation: referenced group’s own `s3dx:transform` → `<s3dx:use>`’s `s3dx:transform` → parent `s3dx:transform`.
 

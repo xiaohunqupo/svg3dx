@@ -131,11 +131,6 @@
   </element>
 
   <element name="revolve" title="Revolve" title-zh="旋转体" extends="drawable">
-    <attr name="origin" type="point" use="optional" title-zh="原点"/>
-    <attr name="xDir" type="vector" use="optional" title-zh="X 方向"/>
-    <attr name="normal" type="vector" use="optional" title-zh="法向"/>
-    <attr name="axisOrigin" type="point" use="optional" title-zh="轴原点"/>
-    <attr name="axisDir" type="vector" use="optional" title-zh="轴方向"/>
     <attr name="angle" type="number" use="optional" title-zh="角度"/>
     <attr name="solid" type="boolean" use="optional" title-zh="实体"/>
   </element>
