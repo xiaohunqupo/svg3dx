@@ -1,1 +1,3 @@
 .cursor/
+# Cached Stanford Bunny download used by scripts/gen-gltf-samples.mjs
+samples/assets/_bunny_src.glb

@@ -105,9 +105,8 @@
           <path d="M 0 100 L 100 100 L 100 0 L 0 0 Z"/>
         </s3dx:section>
       </s3dx:extrude>
-      <s3dx:triangles point="0 100 0 100 100 0 100 0 0 0 0 0"
-                      normal="0 0 1 0 0 1 0 0 1 0 0 1"
-                      index="1 2 3 1 3 4"/>
+      <s3dx:gltf href="assets/quad.glb"
+                 s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 0 0 0)"/>
     </g>
   </defs>
 

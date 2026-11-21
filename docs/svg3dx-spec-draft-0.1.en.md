@@ -24,7 +24,7 @@
 ### 1.2 Namespace
 
 - 3D elements use namespace `urn:s3dx:draft:0.1`, recommended prefix `s3dx`.
-- 3D **elements** enter the namespace: core primitives are listed in §3.2 (`box`, `cylinder`, `sphere`, `cone`, `torus`, `wedge`, `pyramid`, `prism`, `sector-cylinder`, `line`, `arc`, `path`, `extrude`, `revolve`, `loft`, `sweep`, `pipe`, `mesh`, `triangles`); child `<s3dx:section>` (and `<s3dx:path>` when used as a trajectory container); plus `<s3dx:if>`, `<s3dx:if-not>`, `<s3dx:loop-points>`, `<s3dx:loop-range>`, `<s3dx:bool-union>`, `<s3dx:bool-subtract>`, `<s3dx:bool-intersect>`, `<s3dx:use>`, `<s3dx:model>`, `<s3dx:exp>`, `<s3dx:materials>`, `<s3dx:material>`. A machine-readable element/attribute catalog is [`namespaces/svg3dx/svg3dx.draft.0.1.xml`](../namespaces/svg3dx/svg3dx.draft.0.1.xml), registered in [`namespaces/registry.xml`](../namespaces/registry.xml); **evaluation and semantics remain defined by this document**.
+- 3D **elements** enter the namespace: core primitives are listed in §3.2 (`box`, `cylinder`, `sphere`, `cone`, `torus`, `wedge`, `pyramid`, `prism`, `sector-cylinder`, `line`, `arc`, `path`, `extrude`, `revolve`, `loft`, `sweep`, `pipe`, `gltf`); child `<s3dx:section>` (and `<s3dx:path>` when used as a trajectory container); plus `<s3dx:if>`, `<s3dx:if-not>`, `<s3dx:loop-points>`, `<s3dx:loop-range>`, `<s3dx:bool-union>`, `<s3dx:bool-subtract>`, `<s3dx:bool-intersect>`, `<s3dx:use>`, `<s3dx:model>`, `<s3dx:exp>`, `<s3dx:materials>`, `<s3dx:material>`. A machine-readable element/attribute catalog is [`namespaces/svg3dx/svg3dx.draft.0.1.xml`](../namespaces/svg3dx/svg3dx.draft.0.1.xml), registered in [`namespaces/registry.xml`](../namespaces/registry.xml); **evaluation and semantics remain defined by this document**.
 - **Unprefixed attributes** (null namespace): geometry attrs (lowerCamelCase, see §3.2), plus `href`, `mode`, `test`, `points`, `start`, `end`, `step`, `active`, `svg3d`, and appearance `fill` / `material` / `opacity` (§8).
 - **Namespaced attributes**: 3D transform uses `s3dx:transform` (see §3.4), **not** the SVG presentation attribute `transform`, to avoid clashing with the 2D 6-number `matrix`.
 - Standard SVG parsers keep unknown-namespace elements in the DOM without rendering or further processing. This format relies on that behavior for 2D compatibility.
@@ -149,11 +149,11 @@ Layered convention (stay close to CSS; comparison / logic are filled in by this 
   - **Exception**: `<s3dx:path>` may directly contain `<s3dx:line>` / `<s3dx:arc>` as curve segments (aligned with STEP `composite_curve` / OCC `Wire`)
 - Primitive attribute tables are maintained in this section and the appendix; adding rows does not change document syntax. Attributes not listed must be ignored with a warning.
 - Local → parent → world accumulation: local geometry defined by primitive attributes first applies the element’s own `s3dx:transform`, then parent `<g>` / `<s3dx:use>` `s3dx:transform` values.
-- **Layering principle**: the core layer only accepts generic solids, curves, and meshes that vendors can map; industry-specific shapes (duct fittings, heads, etc.) stay out of the core — see Appendix §12.3 (expressible via `loft` / `revolve` / boolean combinations).
+- **Layering principle**: the core layer only accepts generic solids, curves, and referenced triangle assets (via `gltf`) that vendors can map; industry-specific shapes (duct fittings, heads, etc.) stay out of the core — see Appendix §12.3 (expressible via `loft` / `revolve` / boolean combinations).
 
 ### 3.2 Primitive attribute tables (draft 0.1)
 
-Attribute names align with [`samples/draft-0.1-example.svg3dx`](../samples/draft-0.1-example.svg3dx); geometry semantics align with AutoCAD solid primitives, Open CASCADE constructors (`MakePrism` / `MakeRevol` / `ThruSections`), and glTF / OpenGL-style indexed meshes.
+Attribute names align with [`samples/draft-0.1-example.svg3dx`](../samples/draft-0.1-example.svg3dx); geometry semantics align with AutoCAD solid primitives, Open CASCADE constructors (`MakePrism` / `MakeRevol` / `ThruSections`), and glTF 2.0 assets referenced by `s3dx:gltf`.
 
 **Attribute naming**: Primitive attribute names use SVG-common **lowerCamelCase** (leading lowercase, e.g. `length`, `lengthVec`, `bottomCenterPt`). Element names stay lowercase; multi-word names use hyphens (`sector-cylinder`, `if-not`, `loop-points`, `bool-union`). XML attribute names are case-sensitive; implementations must not treat `Length` as an alias of `length`.
 
@@ -170,8 +170,8 @@ Attribute names align with [`samples/draft-0.1-example.svg3dx`](../samples/draft
 | angle | Degrees (°), counterclockwise positive | `90`, `var(--A)`, `calc(var(--A) * 2)` |
 | point list | Sequence of points | `x1 y1 z1 x2 y2 z2 …` (length must be a multiple of 3) |
 | vector list | Sequence of vectors | Same as point list (3 numbers per vector) |
-| number list | Sequence of scalars | `u0 v0 u1 v1 …` (e.g. 2 numbers per vertex for UV) |
-| index list | Sequence of integers | `0 1 2 0 2 3` (base per `indexBase`) |
+| number list | Sequence of scalars | `u0 v0 u1 v1 …` |
+| IRI | Resource reference | Same resolution rules as SVG external resources (relative to the document base URL) |
 
 **Common optional attribute** (applies to all 3D primitives; not repeated row-by-row below):
 
@@ -678,51 +678,63 @@ Children: under **`form="child"`**, a `<s3dx:path>` is required (polyline or `li
 
 Semantically equivalent to `sweep` + circular `<s3dx:section>` (plus an inner circle when hollow), but implementations should prefer a swept-disk algorithm (section always perpendicular to path tangent). Trajectory vs outer / inner corner joining is the same split as `sweep`.
 
-#### 3.2.5 Mesh (OpenGL / glTF style)
+#### 3.2.5 External triangle asset (`s3dx:gltf`)
 
-##### `s3dx:mesh` (General indexed mesh)
+##### `s3dx:gltf` (Referenced glTF 2.0 asset)
 
-Aligned with OpenGL draw calls / glTF `mesh.primitive`: separate vertex-attribute arrays + optional indices. Easy to wire to GPUs, exporters, and most viewers.
+svg3dx documents are self-describing **parametric assembly recipes**: constructors, parameters, conditionals, booleans, and poses. Triangle meshes are referenced via `s3dx:gltf` as external glTF/GLB assets (kept in glTF’s native format)—the same external-resource model as SVG `<image href>` / CSS `url()`.
 
 | Attribute | Required | Type | Default | Notes |
 |---|---|---|---|---|
-| `mode` | no | enum | `triangles` | `triangles` \| `triangle-strip` \| `triangle-fan` \| `lines` \| `line-strip` \| `points` (GL topology; solid evaluators may only support `triangles`) |
-| `position` | yes | point list | — | Vertex positions, 3 numbers each (≡ glTF `POSITION` / GL attribute) |
-| `normal` | no | vector list | — | Per-vertex normals, 3 numbers; length must match vertex count |
-| `texcoord` | no | number list | — | Per-vertex UV, **2** numbers each; length = vertex count × 2 |
-| `color` | no | number list | — | Per-vertex RGB or RGBA (3 or 4 numbers each, per `colorSize`) |
-| `colorSize` | no | number | `3` | `3` = RGB, `4` = RGBA; components recommended ∈ [0,1] |
-| `index` | no | index list | — | Element indices; omit for non-indexed draw in `mode` order |
-| `indexBase` | no | number | `0` | Index base: `0` = OpenGL/glTF; `1` = traditional CAD habit |
+| `href` | yes | IRI | — | Reference to a glTF 2.0 resource (`.glb` or `.gltf`). Relative references resolve against the **document base URL**. Must **not** be a bare fragment `#id` (that is `s3dx:use` semantics). Must **not** be a `data:` URI in this draft |
 
-Constraints:
+Constraints and resolution:
 
-- `position` vertex count \(N \ge 1\); if `normal`/`texcoord`/`color` are present, their vertex counts must equal \(N\).
-- With `index`, indices must lie in \([indexBase,\ indexBase+N)\); illegal index → skip that primitive element + warning.
-- For `mode=triangles` with indices, the index count must be a multiple of 3.
+- **Authoring recommendation**: relative paths in the same delivery tree as the document (same directory or a subdirectory such as `assets/…`).
+- **Absolute / remote** `https://…` IRIs are syntactically allowed; whether the host fetches them (CORS, offline, sandbox) is host-defined. Core compliance requires resolving and loading **relative** same-tree references against the document base.
+- **Required media**: `.glb`. Implementations **should** also support `.gltf` plus buffers/textures referenced relatively from that `.gltf` URL (glTF’s own rules).
+- Load failure (missing, CORS, corrupt) → skip that `s3dx:gltf` instance + warning.
+- This draft does **not** embed glTF bytes in the XML.
 
 ```xml
-<s3dx:mesh mode="triangles" indexBase="0"
-           position="0 0 0  1 0 0  0 1 0  0 0 1"
-           normal="0 0 1  0 0 1  0 0 1  1 0 0"
-           index="0 1 2  0 2 3"/>
+<s3dx:gltf href="assets/bunny.glb"/>
 ```
 
-##### `s3dx:triangles` (Triangle-mesh shorthand)
+**Axis conversion (normative).** glTF 2.0 is Y-up; svg3dx is Z-up (§1.4). Implementations MUST treat referenced assets as glTF Y-up and MUST apply the following basis conversion \(C\) **once** at the `s3dx:gltf` instance root, **before** the element’s `s3dx:transform` (do not write \(C\) into authored `s3dx:transform`):
 
-`triangles` is a convenience subset of `mesh`.
+\[
+(x,y,z)_{\mathrm{glTF}} \mapsto (x,\ -z,\ y)_{\mathrm{svg3dx}}
+\]
 
-| Attribute | Required | Type | Default | Notes |
-|---|---|---|---|---|
-| `point` | yes | point list | — | Same as `mesh/@position` |
-| `normal` | yes | vector list | — | Same as `mesh/@normal` (required in this shorthand) |
-| `index` | yes | index list | — | Triangle indices; **fixed 1-based** |
+Column-major 4×4 (same layout as common GPU / Three.js `Matrix4`):
 
-Semantically equivalent to:
+```
+1  0  0  0
+0  0 -1  0
+0  1  0  0
+0  0  0  1
+```
 
-`mesh mode="triangles" indexBase="1" position={point} normal={normal} index={index}`.
+World composition:
 
-Implementations must support `triangles`.
+\[
+M_{\mathrm{world}} = M_{\mathrm{parents}} \cdot M_{\mathrm{element}} \cdot C \cdot M_{\mathrm{gltfLocal}}
+\]
+
+Authored transforms are interpreted in **svg3dx space after** \(C\) (asset stands on XY with height along +Z when `s3dx:transform` is identity).
+
+**Appearance.** Primary shading comes from the glTF asset’s materials. Element `fill` / `material` (§8), when present, MAY multiply into base color; hosts that cannot composite MUST keep glTF materials and MAY warn.
+
+**Assembly with conditionals.** Prefer pairing `gltf` with `s3dx:if` / `s3dx:if-not` when one logical product maps to multiple non-uniform tessellated variants (e.g. mesh LODs):
+
+```xml
+<s3dx:if test="var(--LOD) = 0">
+  <s3dx:gltf href="assets/bunny-lod0.glb"/>
+</s3dx:if>
+<s3dx:if test="var(--LOD) = 1">
+  <s3dx:gltf href="assets/bunny.glb"/>
+</s3dx:if>
+```
 
 #### 3.2.6 Core-layer quick reference
 
@@ -745,8 +757,7 @@ Implementations must support `triangles`.
 | `loft` | — | solid, blend; ≥2 × `<s3dx:section>` (each carries pose; no sweep corners) |
 | `sweep` | — | orient, refDir, solid, outerCorner, innerCorner, outerCornerRadius, innerCornerRadius, miterLimit; 1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
 | `pipe` | radius + trajectory | form=`inline`\|`child`; innerRadius, outerCorner, innerCorner, outerCornerRadius, innerCornerRadius, miterLimit; path / `<s3dx:path>` |
-| `mesh` | position | mode, normal, texcoord, color, colorSize, index, indexBase |
-| `triangles` | point, normal, index | (≡ mesh shorthand, 1-based) |
+| `gltf` | href | (drawable: fill, material, opacity, s3dx:transform) |
 
 #### 3.2.7 Reference sources (non-normative)
 
@@ -755,14 +766,15 @@ Implementations must support `triangles`.
 - SolidWorks: Extrude / Revolve / Sweep / Loft.
 - PDMS / AVEVA E3D: BOX, CYLI, CONE, PYRA, CTOR, EXTR, REVO and related equipment primitives.
 - AutoCAD / OCC: solid primitives and `MakePrism` / `MakeRevol` / `MakePipeShell` / `ThruSections`; curves `Edge` / `Wire`.
-- Blender / 3ds Max: Extrude, Spin, Curve Bevel / Sweep modifiers, meshes.
-- Mesh: OpenGL topology; glTF 2.0 `POSITION` / `NORMAL` / `TEXCOORD_0` / `COLOR_0` / `indices`.
+- Blender / 3ds Max: Extrude, Spin, Curve Bevel / Sweep modifiers; triangle assets via glTF/GLB.
+- Triangle assets: glTF 2.0 (referenced by `s3dx:gltf`), aligned with SVG external resource references.
 
-### 3.3 Mesh notes
+### 3.3 glTF notes
 
-- Solid evaluation path: `mesh` / `triangles` enter display (or optionally convert to a shell) as already-discretized geometry; they need not go through parametric CAD-kernel evaluation again.
-- Boolean operands may be `mesh` if the kernel supports mesh booleans; otherwise skip + warning.
-- Illegal indices or inconsistent attribute lengths → skip that primitive + warning.
+- Evaluation emits a `gltf` primitive instruction with resolved `href` (and styles / transform). Loading and decoding the asset is a **host / render-stage** concern; the core evaluator does not meshing-decode glTF.
+- Boolean operands may be `gltf` if the kernel supports mesh booleans on the loaded triangles; otherwise skip + warning.
+- Recommended pattern for product families with non-uniform tessellated variants: `s3dx:if` + multiple `s3dx:gltf` hrefs (see §3.2.5).
+- **Package format `.svg3dxz`**: a ZIP (store / deflate). The package root MUST contain entry file **`main.svg3dx`** (XML recipe); sidecar assets (e.g. `.glb` / `.gltf`) live in the same package. Relative `href`s resolve against the package root (i.e. relative to `main.svg3dx`). Implementations SHOULD provide **byte-level** open / write for packages (`&[u8]` ↔ `{ main.svg3dx text, path→bytes sidecars }`); the host obtains and persists those bytes. glTF mesh decode remains a render-host concern. Standalone `.svg3dx` files remain valid.
 
 ### 3.4 3D transform (`s3dx:transform`)
 
@@ -890,7 +902,7 @@ Conditionals are independent control-flow elements, alongside booleans and loops
 
 ## 8. Materials and shading
 
-Shading is a **render-stage** concern (same layer as `<s3dx:model mode>`), not part of geometry evaluation. Final 3D color is the **component-wise product** of element fill and material color (sRGB), optionally times mesh vertex color.
+Shading is a **render-stage** concern (same layer as `<s3dx:model mode>`), not part of geometry evaluation. Final 3D color is the **component-wise product** of element fill and material color (sRGB), optionally times glTF vertex / base color when compositing against a `gltf` asset (§3.2.5).
 
 ### 8.1 `<s3dx:materials>` / `<s3dx:material>`
 
@@ -938,7 +950,7 @@ outRGB = fill.rgb * material.color.rgb
 outA   = fill.a   * material.color.a   [* opacity if present]
 ```
 
-If mesh vertex colors exist, then `out *= vertexColor` (aligned with glTF). Translucent depth composition is host-defined.
+For `s3dx:gltf`, primary appearance is the asset’s PBR materials; if the host applies element `fill` / `material`, then `out *= fill × material` on base color (and vertex color when present). Translucent depth composition is host-defined.
 
 Boolean results use the `fill` / `material` resolved on the **boolean container** itself; child operands’ individual appearance is not retained on the result.
 
@@ -1044,10 +1056,9 @@ Key point: geometry evaluates once and is shared across models. The evaluation s
    - Whether sector-torus sweep start orientation gains `refDir`.
    - Whether open `revolve` profiles produce a shell or auto-cap.
    - Whether `loft` supports pointed sections (apex instead of `section`).
-   - Whether `mesh` allows external binary buffers (like glTF buffers).
    - Whether Fillet / Chamfer / Shell “feature modifiers” enter as optional operators (SolidWorks has them; STEP/IFC exchange less often as parametric recipes).
 2. Whether the display `mode` set is enough (need `points`, `shaded-edges`, curve-specific `wire`, etc.).
-3. Whether the file extension becomes `.svg3dx`.
+3. File extensions: document `.svg3dx`; distribution package `.svg3dxz` (ZIP, entry `main.svg3dx`, see §3.3).
 4. Final form of the formal-release namespace URI.
 5. Whether arbitrary vector parameters also get component splitting (loop vectors are `--loop-value-x` / `-y` / `-z`) [TBD].
 6. Textures and fuller PBR channels [TBD] (materials basics are in §8).
@@ -1066,7 +1077,11 @@ Key point: geometry evaluates once and is shared across models. The evaluation s
 | [draft-0.1-materials-custom.svg3dx](../samples/draft-0.1-materials-custom.svg3dx) | Custom `<s3dx:materials>` + box |
 | [draft-0.1-color.svg3dx](../samples/draft-0.1-color.svg3dx) | Element `fill` color (attribute / CSS) |
 | [draft-0.1-metadata-oem-nozzle.svg3dx](../samples/draft-0.1-metadata-oem-nozzle.svg3dx) | SVG `<metadata>` + vendor NS: shell cylinder and side nozzle |
-| Other `draft-0.1-*.svg3dx` | Basic solids, mesh, conditionals and loops |
+| [draft-0.1-gltf.svg3dx](../samples/draft-0.1-gltf.svg3dx) | `s3dx:gltf` + Stanford Bunny `.glb` |
+| [draft-0.1-gltf-if.svg3dx](../samples/draft-0.1-gltf-if.svg3dx) | `if` + Bunny LOD variants (`--LOD`) |
+| [draft-0.1-gltf.svg3dxz](../samples/draft-0.1-gltf.svg3dxz) | `.svg3dxz` package: `main.svg3dx` + `assets/bunny.glb` |
+| [draft-0.1-gltf-if.svg3dxz](../samples/draft-0.1-gltf-if.svg3dxz) | `.svg3dxz` package: `main.svg3dx` + Bunny LOD `.glb`s |
+| Other `draft-0.1-*.svg3dx` | Basic solids, conditionals and loops |
 
 ### 12.3 Domain extensions (non-core; not required)
 
@@ -1079,7 +1094,7 @@ The following names lean toward industry short names or vendor primitives and ar
 | `saddle` (saddle tee) | `cylinder` + boolean | |
 | `ellipsehead` / PDMS `DISH` | `revolve` generatrix | |
 | `squarering` / PDMS `RTOR` | `sweep` rectangular section + arc/polyline path, or approximate with `torus` | |
-| `obliquecylinder` / PDMS `SLCY` | `cylinder` + boolean cut, or `mesh` | |
+| `obliquecylinder` / PDMS `SLCY` | `cylinder` + boolean cut, or `gltf` | |
 | `recsection` | `extrude` / `sweep` | |
 
 If extension elements appear: core implementations should skip and warn; opening a general file must not depend on extensions.
@@ -1100,9 +1115,9 @@ Survey scope: STEP ISO 10303-42, IFC 4.x, SolidWorks, AVEVA PDMS/E3D, Smart 3D (
 | Sweep (section + path) | yes | STEP surface_curve_swept, IFC FixedReferenceSwept, SW, Max Sweep |
 | Swept disk | yes (`pipe`) | First-class in STEP/IFC; pipe centerline + radius |
 | Boolean union/subtract/intersect | yes | STEP CSG, IFC BooleanResult, SW Combine |
-| Triangle / indexed mesh | yes (`mesh`) | IFC Tessellated, glTF, Blender/Max meshes |
+| Triangle / indexed mesh | yes (`gltf` references glTF/GLB) | IFC Tessellated, glTF, Blender/Max meshes |
 | Half-space | no | Present in IFC; rarely used in generic recipes |
 | Boundary / Class-A dual-guide surfaces | no | Advanced SW surfacing; high exchange cost |
-| Fillet / Chamfer / Shell | no (TBD) | Feature modifiers; approximate with boolean or mesh |
+| Fillet / Chamfer / Shell | no (TBD) | Feature modifiers; approximate with boolean or `gltf` |
 | Tapered extrude | no (TBD) | IFC has subtypes; approximate with `loft` |
 | Equipment short names DISH/SNOU/RTOR/SLCY | no | See §12.3; map to constructors |

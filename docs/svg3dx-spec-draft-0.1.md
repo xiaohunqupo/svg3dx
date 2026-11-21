@@ -24,7 +24,7 @@
 ### 1.2 命名空间
 
 - 三维元素使用命名空间 `urn:s3dx:draft:0.1`，推荐前缀 `s3dx`。
-- 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`line`、`arc`、`path`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`mesh`、`triangles`）；子元 `<s3dx:section>`（以及作为轨迹容器时的 `<s3dx:path>`）；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`、`<s3dx:materials>`、`<s3dx:material>`。可机读元素/属性目录见 [`namespaces/svg3dx/svg3dx.draft.0.1.xml`](../namespaces/svg3dx/svg3dx.draft.0.1.xml)，并在 [`namespaces/registry.xml`](../namespaces/registry.xml) 登记；**求值与语义仍以本文为准**。
+- 三维**元素**进命名空间：核心图元见 3.2（`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`line`、`arc`、`path`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`gltf`）；子元 `<s3dx:section>`（以及作为轨迹容器时的 `<s3dx:path>`）；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`、`<s3dx:materials>`、`<s3dx:material>`。可机读元素/属性目录见 [`namespaces/svg3dx/svg3dx.draft.0.1.xml`](../namespaces/svg3dx/svg3dx.draft.0.1.xml)，并在 [`namespaces/registry.xml`](../namespaces/registry.xml) 登记；**求值与语义仍以本文为准**。
 - **无前缀属性**（null 命名空间）：图元几何属性（lowerCamelCase，见 3.2）、以及 `href`、`mode`、`test`、`points`、`start`、`end`、`step`、`active`、`svg3d`、三维着色相关的 `fill` / `material` / `opacity`（见第 8 节）等。
 - **带命名空间的属性**：三维变换使用 `s3dx:transform`（见 3.4），**不**占用 SVG 标准的 `transform` 表现属性，以免与二维 6 数 `matrix` 冲突。
 - 标准 SVG 解析器对未知命名空间元素的处理：包含在 DOM 中，不渲染，不进一步处理。本格式依赖此行为实现二维兼容。
@@ -149,11 +149,11 @@
   - **例外**：`<s3dx:path>` 可直接包含 `<s3dx:line>` / `<s3dx:arc>` 作为曲线段（对齐 STEP `composite_curve` / OCC `Wire`）
 - 图元属性表以本节与附录维护；属性表增补不改变文档格式语法。未在表中列出的属性，实现应忽略并警告。
 - 局部坐标 → 父级变换 → 世界坐标的累积规则：图元属性定义的局部几何，先应用图元自身 `s3dx:transform`，再应用父级 `<g>` / `<s3dx:use>` 上的 `s3dx:transform`。
-- **分层原则**：核心层只收各厂商都能映射的通用体元、曲线与网格；行业专用形体（风管配件、封头等）不进核心，见附录 10.3（可用 `loft` / `revolve` / 布尔组合表达）。
+- **分层原则**：核心层只收各厂商都能映射的通用体元、曲线与经 `gltf` 引用的三角资产；行业专用形体（风管配件、封头等）不进核心，见附录 10.3（可用 `loft` / `revolve` / 布尔组合表达）。
 
 ### 3.2 图元属性表（草案 0.1）
 
-属性名与 [`samples/draft-0.1-example.svg3dx`](../samples/draft-0.1-example.svg3dx) 对齐；几何语义对齐 AutoCAD 实体图元、Open CASCADE 构造算子（`MakePrism` / `MakeRevol` / `ThruSections`）、以及 glTF / OpenGL 风格的索引网格。
+属性名与 [`samples/draft-0.1-example.svg3dx`](../samples/draft-0.1-example.svg3dx) 对齐；几何语义对齐 AutoCAD 实体图元、Open CASCADE 构造算子（`MakePrism` / `MakeRevol` / `ThruSections`）、以及由 `s3dx:gltf` 引用的 glTF 2.0 资产。
 
 **属性命名**：图元属性名采用 SVG 常见的 **lowerCamelCase**（全小写开头，如 `length`、`lengthVec`、`bottomCenterPt`）。元素名保持小写；多词时用连字符（如 `sector-cylinder`、`if-not`、`loop-points`、`bool-union`）。XML 属性名大小写敏感；实现不得把 `Length` 当作 `length` 的别名。
 
@@ -170,8 +170,8 @@
 | 角度 | 度（°），逆时针为正 | `90`、`var(--A)`、`calc(var(--A) * 2)` |
 | 点列 | 点序列 | `x1 y1 z1 x2 y2 z2 …`（长度须为 3 的倍数） |
 | 向量列 | 向量序列 | 同点列（每向量 3 数） |
-| 数列 | 标量序列 | `u0 v0 u1 v1 …`（如 UV 每顶点 2 数） |
-| 索引列 | 整数序列 | `0 1 2 0 2 3`（基准见 `indexBase`） |
+| 数列 | 标量序列 | `u0 v0 u1 v1 …` |
+| IRI | 资源引用 | 与 SVG 外部资源相同的解析规则（相对**文档基 URL**） |
 
 **通用可选属性**（适用于所有三维图元，不在下表逐行重复）：
 
@@ -678,51 +678,63 @@ innerR = innerCornerRadius
 
 语义上等价于 `sweep` + 圆形 `<s3dx:section>`（及空心时的内侧圆），但实现应优先按 swept-disk 算法求值（截面始终垂直于路径切向）。轨迹与外角 / 内角转角衔接的分工与 `sweep` 相同。
 
-#### 3.2.5 网格（OpenGL / glTF 风格）
+#### 3.2.5 外部三角资产（`s3dx:gltf`）
 
-##### `s3dx:mesh`（通用索引网格）
+##### `s3dx:gltf`（引用 glTF 2.0 资产）
 
-对齐 OpenGL 绘制调用 / glTF `mesh.primitive`：分离的顶点属性数组 + 可选索引。便于直接对接 GPU、导出器与多数查看器。
+svg3dx 文档以**参数化组装配方**自描述：构造算子、参数、条件、布尔与位姿。三角网格经 `s3dx:gltf` 引用外部 glTF/GLB 资产（保持 glTF 原格式）——与 SVG `<image href>` / CSS `url()` 同类的外部资源模型。
 
 | 属性 | 必选 | 类型 | 默认 | 说明 |
 |---|---|---|---|---|
-| `mode` | 否 | 枚举 | `triangles` | `triangles` \| `triangle-strip` \| `triangle-fan` \| `lines` \| `line-strip` \| `points`（对应 GL 拓扑；实体求值器可只支持 `triangles`） |
-| `position` | 是 | 点列 | — | 顶点位置，每顶点 3 数（≡ glTF `POSITION` / GL attribute） |
-| `normal` | 否 | 向量列 | — | 每顶点法线，3 数；长度须与顶点数一致 |
-| `texcoord` | 否 | 数列 | — | 每顶点 UV，**2** 数一组；长度 = 顶点数 × 2 |
-| `color` | 否 | 数列 | — | 每顶点 RGB 或 RGBA（3 或 4 数一组，由 `colorSize` 指定） |
-| `colorSize` | 否 | 数字 | `3` | `3` = RGB，`4` = RGBA；分量建议 ∈ [0,1] |
-| `index` | 否 | 索引列 | — | 元素索引；缺省则按 `mode` 非索引绘制（依次取顶点） |
-| `indexBase` | 否 | 数字 | `0` | 索引基准：`0` = OpenGL/glTF；`1` = 传统 CAD 习惯 |
+| `href` | 是 | IRI | — | 指向 glTF 2.0 资源（`.glb` 或 `.gltf`）。相对引用相对**文档基 URL**解析。不得为仅片段 `#id`（那是 `s3dx:use` 语义）。本草案不得使用 `data:` URI |
 
-约束：
+约束与解析：
 
-- `position` 顶点数 \(N \ge 1\)；若有 `normal`/`texcoord`/`color`，其顶点计数必须等于 \(N\)。
-- 有 `index` 时，索引须落在 \([indexBase,\ indexBase+N)\)；非法索引 → 跳过该图元元素 + 警告。
-- `mode=triangles` 且有索引时，索引个数须为 3 的倍数。
+- **写作推荐**：相对路径，与文档处于同一交付树（同目录或如 `assets/…` 的子目录）。
+- **绝对 / 远端** `https://…` IRI 语法上允许；宿主是否拉取（CORS、离线、沙箱）由宿主决定。核心合规要求：相对同树引用须能按文档基解析并加载。
+- **必选媒体**：`.glb`。实现**宜**同时支持 `.gltf` 及其相对该 `.gltf` URL 引用的 buffer/贴图（遵循 glTF 自身规则）。
+- 加载失败（缺失、CORS、损坏）→ 跳过该 `s3dx:gltf` 实例 + 警告。
+- 本草案**不**将 glTF 字节嵌入 XML。
 
 ```xml
-<s3dx:mesh mode="triangles" indexBase="0"
-           position="0 0 0  1 0 0  0 1 0  0 0 1"
-           normal="0 0 1  0 0 1  0 0 1  1 0 0"
-           index="0 1 2  0 2 3"/>
+<s3dx:gltf href="assets/bunny.glb"/>
 ```
 
-##### `s3dx:triangles`（三角网格简写）
+**轴向转换（强制）。** glTF 2.0 为 Y-up；svg3dx 为 Z-up（§1.4）。实现必须将引用资产按 glTF Y-up 解释，并在 `s3dx:gltf` 实例根上**恰好一次**施加下列基变换 \(C\)，且**先于**元素自身的 `s3dx:transform`（不得把 \(C\) 写入作者的 `s3dx:transform`）：
 
-`triangles` 是 `mesh` 的便捷子集。
+\[
+(x,y,z)_{\mathrm{glTF}} \mapsto (x,\ -z,\ y)_{\mathrm{svg3dx}}
+\]
 
-| 属性 | 必选 | 类型 | 默认 | 说明 |
-|---|---|---|---|---|
-| `point` | 是 | 点列 | — | 同 `mesh/@position` |
-| `normal` | 是 | 向量列 | — | 同 `mesh/@normal`（本简写中为必选） |
-| `index` | 是 | 索引列 | — | 三角面索引；**固定 1-based** |
+列主序 4×4（与常见 GPU / Three.js `Matrix4` 布局一致）：
 
-语义等价于：
+```
+1  0  0  0
+0  0 -1  0
+0  1  0  0
+0  0  0  1
+```
 
-`mesh mode="triangles" indexBase="1" position={point} normal={normal} index={index}`。
+世界合成：
 
-实现须支持 `triangles`。
+\[
+M_{\mathrm{world}} = M_{\mathrm{parents}} \cdot M_{\mathrm{element}} \cdot C \cdot M_{\mathrm{gltfLocal}}
+\]
+
+作者变换一律在 **\(C\) 之后的 svg3dx 空间**中解释（`s3dx:transform` 为单位阵时，资产立于 XY、高度沿 +Z）。
+
+**外观。** 着色以 glTF 资产自带材质为主。若存在元素 `fill` / `material`（§8），宿主可将二者乘入 base color；无法合成时须保留 glTF 材质，并可警告。
+
+**与条件组装。** 当同一逻辑产品对应多套非等比面片变体（如不同 LOD / 规格网格）时，宜将 `gltf` 与 `s3dx:if` / `s3dx:if-not` 组合：
+
+```xml
+<s3dx:if test="var(--LOD) = 0">
+  <s3dx:gltf href="assets/bunny-lod0.glb"/>
+</s3dx:if>
+<s3dx:if test="var(--LOD) = 1">
+  <s3dx:gltf href="assets/bunny.glb"/>
+</s3dx:if>
+```
 
 #### 3.2.6 核心层总览速查
 
@@ -745,8 +757,7 @@ innerR = innerCornerRadius
 | `loft` | — | solid, blend；≥2 × `<s3dx:section>`（各位姿自带；无扫掠体转角） |
 | `sweep` | — | orient, refDir, solid, outerCorner, innerCorner, outerCornerRadius, innerCornerRadius, miterLimit；1 × `<s3dx:section>` + 1 × `<s3dx:path>` |
 | `pipe` | radius + 轨迹 | form=`inline`\|`child`；innerRadius, outerCorner, innerCorner, outerCornerRadius, innerCornerRadius, miterLimit；path / `<s3dx:path>` |
-| `mesh` | position | mode, normal, texcoord, color, colorSize, index, indexBase |
-| `triangles` | point, normal, index | （≡ mesh 简写，1-based） |
+| `gltf` | href | （drawable：fill、material、opacity、s3dx:transform） |
 
 #### 3.2.7 参考来源（非规范性）
 
@@ -755,14 +766,15 @@ innerR = innerCornerRadius
 - SolidWorks：Extrude / Revolve / Sweep / Loft。
 - PDMS / AVEVA E3D：BOX、CYLI、CONE、PYRA、CTOR、EXTR、REVO 等设备图元。
 - AutoCAD / OCC：实体图元与 `MakePrism` / `MakeRevol` / `MakePipeShell` / `ThruSections`；曲线 `Edge` / `Wire`。
-- Blender / 3ds Max：Extrude、Spin、Curve Bevel / Sweep 修改器、网格。
-- 网格：OpenGL 拓扑；glTF 2.0 `POSITION` / `NORMAL` / `TEXCOORD_0` / `COLOR_0` / `indices`。
+- Blender / 3ds Max：Extrude、Spin、Curve Bevel / Sweep 修改器；三角资产经 glTF/GLB。
+- 三角资产：glTF 2.0（由 `s3dx:gltf` 引用），对齐 SVG 外部资源引用。
 
-### 3.3 网格补充说明
+### 3.3 glTF 补充说明
 
-- 实体求值路径：`mesh` / `triangles` 作为已离散几何直接进入显示或可选地转为外壳；不要求再经 CAD 内核参数化求值。
-- 布尔运算操作数可以是 `mesh`（若内核支持网格布尔）；不支持时跳过 + 警告。
-- 非法索引或属性长度不一致 → 跳过该图元 + 警告。
+- 求值产出带已解析 `href`（以及样式 / 变换）的 `gltf` 图元指令。加载与解码资产属**宿主 / 渲染阶段**；核心求值器不对 glTF 做网格解码。
+- 布尔操作数可以是 `gltf`（若内核支持对已加载三角做网格布尔）；不支持时跳过 + 警告。
+- 非等比面片产品族的推荐写法：`s3dx:if` + 多个 `s3dx:gltf` href（见 §3.2.5）。
+- **包格式 `.svg3dxz`**：ZIP（store / deflate）。包根必须含入口文件 **`main.svg3dx`**（XML 配方）；旁路资源（如 `.glb` / `.gltf`）与入口同包存放。相对 `href` 相对包根（即相对 `main.svg3dx`）解析。实现库应提供**字节级**打开 / 写出包的能力（`&[u8]` ↔ `{ main.svg3dx 文本, 旁路路径→字节 }`）；宿主负责获取与保存这些字节。glTF 网格解码仍属渲染宿主。单文件 `.svg3dx` 仍合法。
 
 ### 3.4 三维变换（`s3dx:transform`）
 
@@ -890,7 +902,7 @@ innerR = innerCornerRadius
 
 ## 8. 材质与着色
 
-材质属**渲染阶段**语义（与 `<s3dx:model mode>` 同层），不参与几何求值。三维最终色为图元色与材质色的**分量乘算**（sRGB），可选再乘 mesh 顶点色。
+材质属**渲染阶段**语义（与 `<s3dx:model mode>` 同层），不参与几何求值。三维最终色为图元色与材质色的**分量乘算**（sRGB）；与 `gltf` 资产合成时，可选再乘 glTF 顶点色 / base color（§3.2.5）。
 
 ### 8.1 `<s3dx:materials>` / `<s3dx:material>`
 
@@ -938,7 +950,7 @@ outRGB = fill.rgb * material.color.rgb
 outA   = fill.a   * material.color.a   [* opacity 若有]
 ```
 
-若存在 `mesh` 顶点色，再 `out *= vertexColor`（对齐 glTF）。半透明深度合成由宿主决定。
+对 `s3dx:gltf`，外观以资产自带 PBR 材质为主；若宿主应用元素 `fill` / `material`，则对 base color（及存在的顶点色）再 `out *= fill × material`。半透明深度合成由宿主决定。
 
 布尔运算结果使用**布尔容器**自身解析到的 `fill` / `material`；子操作数各自外观不保留到结果上。
 
@@ -1044,10 +1056,9 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
    - `torus` 扇环扫掠起始方位是否增加 `refDir`。
    - `revolve` 开放轮廓是生成壳还是自动封盖。
    - `loft` 是否支持尖点截面（顶点代替 `section`）。
-   - `mesh` 是否允许外部二进制缓冲（类似 glTF buffer）。
    - Fillet / Chamfer / Shell 等“修饰特征”是否以可选算子进入（SolidWorks 有，STEP/IFC 交换中较少作为参数配方）。
 2. `mode`（显示）取值集是否够（是否需 `points`、`shaded-edges`、曲线专用 `wire` 等）。
-3. 文件扩展名是否用 `.svg3dx`。
+3. 文件扩展名：文档用 `.svg3dx`；分发包用 `.svg3dxz`（ZIP，入口 `main.svg3dx`，见 §3.3）。
 4. 正式版命名空间 URI 的最终形式。
 5. 是否还需对任意向量参数提供分量拆分（循环向量为 `--loop-value-x` / `-y` / `-z`）【待定】。
 6. 贴图与更完整的 PBR 通道【待定】（材质基础见第 8 节）。
@@ -1066,7 +1077,11 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 | [draft-0.1-materials-custom.svg3dx](../samples/draft-0.1-materials-custom.svg3dx) | `<s3dx:materials>` 自定义材质 + box |
 | [draft-0.1-color.svg3dx](../samples/draft-0.1-color.svg3dx) | 图元 `fill` 颜色（属性 / CSS） |
 | [draft-0.1-metadata-oem-nozzle.svg3dx](../samples/draft-0.1-metadata-oem-nozzle.svg3dx) | SVG `<metadata>` + 厂商 NS：壳体圆柱与侧面管嘴 |
-| 其余 `draft-0.1-*.svg3dx` | 基本体、网格、条件与循环 |
+| [draft-0.1-gltf.svg3dx](../samples/draft-0.1-gltf.svg3dx) | `s3dx:gltf` + Stanford Bunny `.glb` |
+| [draft-0.1-gltf-if.svg3dx](../samples/draft-0.1-gltf-if.svg3dx) | `if` + Bunny LOD 变体（`--LOD`） |
+| [draft-0.1-gltf.svg3dxz](../samples/draft-0.1-gltf.svg3dxz) | `.svg3dxz` 包：`main.svg3dx` + `assets/bunny.glb` |
+| [draft-0.1-gltf-if.svg3dxz](../samples/draft-0.1-gltf-if.svg3dxz) | `.svg3dxz` 包：`main.svg3dx` + Bunny LOD `.glb` |
+| 其余 `draft-0.1-*.svg3dx` | 基本体、条件与循环 |
 
 ### 12.3 领域扩展（非核心，不要求实现）
 
@@ -1079,7 +1094,7 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 | `saddle`（马鞍三通） | `cylinder` + 布尔 | |
 | `ellipsehead` / PDMS `DISH` | `revolve` 母线 | |
 | `squarering` / PDMS `RTOR` | `sweep` 矩形截面 + 圆弧/折线路径，或 `torus` 近似 | |
-| `obliquecylinder` / PDMS `SLCY` | `cylinder` + 布尔裁剪，或 `mesh` | |
+| `obliquecylinder` / PDMS `SLCY` | `cylinder` + 布尔裁剪，或 `gltf` | |
 | `recsection` | `extrude` / `sweep` | |
 
 扩展元素若出现：核心实现应跳过并警告；不得依赖扩展才能打开通用文件。
@@ -1100,9 +1115,9 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 | 扫掠体 Sweep（截面+路径） | 是 | STEP surface_curve_swept、IFC FixedReferenceSwept、SW、Max Sweep |
 | 圆盘扫掠 Swept disk | 是（`pipe`） | STEP/IFC 一等公民；管道中心线+半径 |
 | 布尔并/差/交 | 是 | STEP CSG、IFC BooleanResult、SW Combine |
-| 三角/索引网格 | 是（`mesh`） | IFC Tessellated、glTF、Blender/Max 网格 |
+| 三角/索引网格 | 是（`gltf` 引用 glTF/GLB） | IFC Tessellated、glTF、Blender/Max 网格 |
 | 半空间 Half-space | 否 | IFC 有，通用配方少用 |
 | Boundary / Class-A 双导曲线 | 否 | SW 高级曲面，交换成本高 |
-| Fillet / Chamfer / Shell | 否（待定） | 修饰特征；可用布尔或网格近似 |
+| Fillet / Chamfer / Shell | 否（待定） | 修饰特征；可用布尔或 `gltf` 近似 |
 | 变径拉伸体 Tapered extrude | 否（待定） | IFC 有子类型；可用 `loft` 近似 |
 | 设备短名 DISH/SNOU/RTOR/SLCY | 否 | 见 12.3，映射到构造算子 |

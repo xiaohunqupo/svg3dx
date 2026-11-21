@@ -163,21 +163,8 @@
     <attr name="path" type="string" use="optional" title-zh="路径"/>
   </element>
 
-  <element name="mesh" title="Mesh" title-zh="网格" extends="drawable">
-    <attr name="mode" type="string" use="optional" title-zh="模式"/>
-    <attr name="position" type="string" use="optional" title-zh="顶点"/>
-    <attr name="normal" type="string" use="optional" title-zh="法向"/>
-    <attr name="texcoord" type="string" use="optional" title-zh="纹理坐标"/>
-    <attr name="color" type="string" use="optional" title-zh="颜色"/>
-    <attr name="colorSize" type="integer" use="optional" title-zh="颜色分量数"/>
-    <attr name="index" type="string" use="optional" title-zh="索引"/>
-    <attr name="indexBase" type="integer" use="optional" title-zh="索引基"/>
-  </element>
-
-  <element name="triangles" title="Triangles" title-zh="三角面" extends="drawable">
-    <attr name="point" type="string" use="optional" title-zh="顶点"/>
-    <attr name="normal" type="string" use="optional" title-zh="法向"/>
-    <attr name="index" type="string" use="optional" title-zh="索引"/>
+  <element name="gltf" title="glTF" title-zh="glTF 引用" extends="drawable">
+    <attr name="href" type="string" use="required" title-zh="引用"/>
   </element>
 
   <!-- ===== Booleans / control / document ===== -->

@@ -26,8 +26,7 @@
 | `loft` | 放样体 | Loft |
 | `sweep` | 扫掠体 | Sweep |
 | `pipe` | 圆管 | Pipe |
-| `mesh` | 网格 | Mesh |
-| `triangles` | 三角面 | Triangles |
+| `gltf` | glTF 引用 | glTF |
 | `section` | 截面 | Section |
 | `bool-union` | 并集 | Union |
 | `bool-subtract` | 差集 | Subtract |
