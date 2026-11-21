@@ -148,7 +148,7 @@ Layered convention (stay close to CSS; comparison / logic are filled in by this 
   - `<s3dx:path>` (trajectory container for sweep / pipe; may also be a standalone composite curve; see §3.2.3)
   - **Exception**: `<s3dx:path>` may directly contain `<s3dx:line>` / `<s3dx:arc>` as curve segments (aligned with STEP `composite_curve` / OCC `Wire`)
 - Primitive attribute tables are maintained in this section and the appendix; adding rows does not change document syntax. Attributes not listed must be ignored with a warning.
-- Local → parent → world accumulation: local geometry defined by primitive attributes first applies the element’s own `s3dx:transform`, then parent `<g>` / `<s3dx:use>` `s3dx:transform` values.
+- Local → parent → world accumulation: local geometry defined by primitive attributes first applies the element’s own `s3dx:transform`, then accumulates `s3dx:transform` along ancestor **3D assembly containers** (`<g>`, `<s3dx:use>`, `<s3dx:if>` / `<s3dx:if-not>`, `<s3dx:loop-*>`, `<s3dx:bool-*>`, etc.). 2D profile children inside `<s3dx:section>` belong to section composition and do not enter that 3D transform chain.
 - **Layering principle**: the core layer only accepts generic solids, curves, and referenced triangle assets (via `gltf`) that vendors can map; industry-specific shapes (duct fittings, heads, etc.) stay out of the core — see Appendix §12.3 (expressible via `loft` / `revolve` / boolean combinations).
 
 ### 3.2 Primitive attribute tables (draft 0.1)
@@ -186,7 +186,7 @@ Attribute names align with [`samples/draft-0.1-example.svg3dx`](../samples/draft
 
 **Local-frame conventions**:
 
-- Primitive attributes define geometry in local coordinates; then apply the element’s `s3dx:transform`, then accumulate parent `<g>` / `<s3dx:use>` `s3dx:transform`.
+- Primitive attributes define geometry in local coordinates; then apply the element’s `s3dx:transform`, then accumulate ancestor 3D assembly-container `s3dx:transform` values (see §3.1).
 - For primitives with `lengthVec` / `widthVec`: height direction is `normalize(lengthVec × widthVec)` (right-handed). When omitted, defaults are `lengthVec="1 0 0"`, `widthVec="0 1 0"`, height along `+Z`.
 - For solids of revolution with bottom/top centers: axis is `topCenterPt − bottomCenterPt`; length is its magnitude. Coincident centers are an error.
 - When angle is omitted, closed solids of revolution use a full turn `360`.
@@ -841,7 +841,7 @@ Conditionals are independent control-flow elements, alongside booleans and loops
 - Attribute `test` is required; values support expressions (see §2.6).
 - May appear inside `<g>`, `<defs>`, `<s3dx:model>`, `<s3dx:loop-*>`, `<s3dx:bool-*>`, and nested `s3dx:if` / `s3dx:if-not`.
 - Allowed children match `<g>` under 3D evaluation: primitives, `<s3dx:use>`, nested `if` / `if-not` / `loop-*` / `bool-*`, and inner `<g>`.
-- May optionally carry `s3dx:transform` (like other `s3dx:*` containers); does not own naming/grouping (reusable named groups still use `<g id="...">`).
+- As a 3D assembly container, may optionally carry `s3dx:transform` (applied to the subtree when evaluated, same as `<g>` / `loop-*` / `bool-*`); does not own naming/grouping (reusable named groups still use `<g id="...">`).
 - Failed condition evaluation (undefined parameter, syntax error, type mismatch): treat as false + warning.
 - No `else`; exclusive branches use a pair of `s3dx:if` + `s3dx:if-not` with the same `test`.
 - Do not hang `if` / `ifnot` attributes on standard SVG elements; older spellings are not compliant with this draft.
@@ -875,6 +875,7 @@ Conditionals are independent control-flow elements, alongside booleans and loops
 - Iteration variable names are fixed to the dashed-idents above; custom iteration names are not supported.
 - Nested loops: same-named inner variables shadow outer ones; nearest wins.
 - Expansion timing: after parameter evaluation, before condition evaluation.
+- As a 3D assembly container, may optionally carry `s3dx:transform`; applied to the subtree of each iteration when evaluated.
 - Unknown `s3dx:loop-*` elements: skip the whole subtree as an unknown element; no error.
 - Extensibility: `loop-*` is an open namespace; later versions may add modes; implementations that meet an unrecognized `loop-*` should skip rather than error.
 - Expanded copies participate independently in boolean accumulation in document order.

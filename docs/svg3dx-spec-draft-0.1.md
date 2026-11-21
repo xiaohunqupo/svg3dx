@@ -148,7 +148,7 @@
   - `<s3dx:path>`（扫掠体 / 圆管的轨迹容器；亦可作独立复合曲线，见 3.2.3）
   - **例外**：`<s3dx:path>` 可直接包含 `<s3dx:line>` / `<s3dx:arc>` 作为曲线段（对齐 STEP `composite_curve` / OCC `Wire`）
 - 图元属性表以本节与附录维护；属性表增补不改变文档格式语法。未在表中列出的属性，实现应忽略并警告。
-- 局部坐标 → 父级变换 → 世界坐标的累积规则：图元属性定义的局部几何，先应用图元自身 `s3dx:transform`，再应用父级 `<g>` / `<s3dx:use>` 上的 `s3dx:transform`。
+- 局部坐标 → 父级变换 → 世界坐标的累积规则：图元属性定义的局部几何，先应用图元自身 `s3dx:transform`，再沿祖先**三维组装容器**累积 `s3dx:transform`（`<g>`、`<s3dx:use>`、`<s3dx:if>` / `<s3dx:if-not>`、`<s3dx:loop-*>`、`<s3dx:bool-*>` 等）。`<s3dx:section>` 内的二维轮廓子节点属于截面组成，不进入该三维变换链。
 - **分层原则**：核心层只收各厂商都能映射的通用体元、曲线与经 `gltf` 引用的三角资产；行业专用形体（风管配件、封头等）不进核心，见附录 10.3（可用 `loft` / `revolve` / 布尔组合表达）。
 
 ### 3.2 图元属性表（草案 0.1）
@@ -186,7 +186,7 @@
 
 **局部坐标系通则**：
 
-- 图元属性在局部坐标中定义几何；再应用自身 `s3dx:transform`，再累积父级 `<g>` / `<s3dx:use>` 上的 `s3dx:transform`。
+- 图元属性在局部坐标中定义几何；再应用自身 `s3dx:transform`，再累积祖先三维组装容器上的 `s3dx:transform`（见 3.1）。
 - 对带 `lengthVec` / `widthVec` 的图元：高度方向为 `normalize(lengthVec × widthVec)`（右手系）。未给出时默认 `lengthVec="1 0 0"`、`widthVec="0 1 0"`，高度沿 `+Z`。
 - 对带底/顶中心的回转体：轴线为 `topCenterPt − bottomCenterPt`；长度为其模长。两端中心重合视为错误。
 - 角度未给出时，闭合回转体按整圈 `360` 处理。
@@ -841,7 +841,7 @@ M_{\mathrm{world}} = M_{\mathrm{parents}} \cdot M_{\mathrm{element}} \cdot C \cd
 - 属性 `test` 必选；值支持表达式（见 2.6）。
 - 可出现在 `<g>`、`<defs>`、`<s3dx:model>`、`<s3dx:loop-*>`、`<s3dx:bool-*>`、以及嵌套的 `s3dx:if` / `s3dx:if-not` 内。
 - 允许的子元素与 `<g>` 在三维求值中相同：图元、`<s3dx:use>`、嵌套的 `if` / `if-not` / `loop-*` / `bool-*`、以及内层 `<g>`。
-- 可选携带 `s3dx:transform`（与其他 `s3dx:*` 容器一致）；不承担命名分组职责（可复用的命名组仍用带 `id` 的 `<g>`）。
+- 作为三维组装容器，可选携带 `s3dx:transform`（求值时作用于子树，与 `<g>` / `loop-*` / `bool-*` 相同）；不承担命名分组职责（可复用的命名组仍用带 `id` 的 `<g>`）。
 - 条件求值失败（未定义参数、语法错误、类型不匹配）：视为假 + 警告。
 - 不支持 `else`；互斥分支用一对 `s3dx:if` + `s3dx:if-not`（同一 `test`）表达。
 - 不在标准 SVG 元素上挂 `if` / `ifnot` 属性；旧写法不属于本草案合规文档。
@@ -875,6 +875,7 @@ M_{\mathrm{world}} = M_{\mathrm{parents}} \cdot M_{\mathrm{element}} \cdot C \cd
 - 迭代变量名固定为上述 dashed-ident，不支持自定义迭代变量名。
 - 嵌套循环：内层同名变量遮蔽外层，最近一层优先。
 - 展开时机：参数求值之后、条件求值之前。
+- 作为三维组装容器，可选携带 `s3dx:transform`；求值时作用于每一次迭代的子树。
 - 未知 `s3dx:loop-*` 元素：按未知元素跳过整个子树，不报错。
 - 可扩展性：`loop-*` 是开放命名空间，后续版本可增加新模式，实现遇到不认识的 `loop-*` 应跳过而非报错。
 - 展开后的多个副本，在布尔累积中按文档顺序独立参与。

@@ -172,16 +172,17 @@
   <element name="bool-subtract" title="Subtract" title-zh="差集" extends="drawable"/>
   <element name="bool-intersect" title="Intersect" title-zh="交集" extends="drawable"/>
 
-  <element name="if" title="If" title-zh="如果">
+  <!-- Assembly containers: participate in the 3D transform chain (extends drawable). -->
+  <element name="if" title="If" title-zh="如果" extends="drawable">
     <attr name="test" type="string" use="required" title-zh="条件"/>
   </element>
-  <element name="if-not" title="If not" title-zh="如果非">
+  <element name="if-not" title="If not" title-zh="如果非" extends="drawable">
     <attr name="test" type="string" use="required" title-zh="条件"/>
   </element>
-  <element name="loop-points" title="Loop points" title-zh="点列循环">
+  <element name="loop-points" title="Loop points" title-zh="点列循环" extends="drawable">
     <attr name="points" type="string" use="required" title-zh="点列"/>
   </element>
-  <element name="loop-range" title="Loop range" title-zh="范围循环">
+  <element name="loop-range" title="Loop range" title-zh="范围循环" extends="drawable">
     <attr name="start" type="number" use="required" title-zh="起点值"/>
     <attr name="end" type="number" use="required" title-zh="终点值"/>
     <attr name="step" type="number" use="optional" title-zh="步长"/>
