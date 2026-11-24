@@ -33,24 +33,23 @@ Existing parametric CAD formats (Revit families, Glodon component editors, vendo
 
 ## Status
 
-Draft 0.1, internal. Namespace URI `urn:s3dx:draft:0.1` is provisional. Per-primitive attribute tables are being filled in incrementally and do not affect the core syntax.
+- **Draft 0.1 (stable)**: `urn:s3dx:draft:0.1` — existing samples and viewers keep working.
+- **Draft 0.2 (evolution)**: `urn:s3dx:draft:0.2` — positioning point `s3dx:point` and live `ref(#id)`. Implementations must accept both.
 
 ## Repository layout
 
 ```
 svg3dx/
 ├── assets/                 # Logo and title artwork
-├── docs/                   # Format specification
+├── docs/                   # Specs (0.1 stable / 0.2 evolution)
+│   ├── svg3dx-spec-draft-0.2.md
 │   └── svg3dx-spec-draft-0.1.md
 ├── namespaces/             # Namespace defs + registry index
 │   ├── registry.xml
+│   ├── svg3dx/svg3dx.draft.0.2.xml
 │   ├── svg3dx/svg3dx.draft.0.1.xml
 │   └── acme/acme.equipment.1.0.xml
-├── samples/                # Draft 0.1 samples (solids / curves / constructs / control)
-│   ├── draft-0.1-example.svg3dx
-│   ├── draft-0.1-line / arc / path / curves
-│   ├── draft-0.1-extrude / revolve / loft / sweep / pipe
-│   └── …
+├── samples/                # draft-0.1-* (stable) and draft-0.2-* (new)
 ├── LICENSE-MIT             # MIT (choose either)
 ├── LICENSE-MulanPSL-2.0    # 木兰宽松许可证第2版
 ├── README.md
@@ -59,9 +58,11 @@ svg3dx/
 
 ## Documentation
 
-- Format specification (draft 0.1): [`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
+- Format specification (draft 0.2): [`docs/svg3dx-spec-draft-0.2.md`](docs/svg3dx-spec-draft-0.2.md)
+- Format specification (draft 0.1 stable): [`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
 - Metadata namespace registry: [`namespaces/registry.xml`](namespaces/registry.xml)
-- Full sample: [`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
+- Positioning points + refs: [`draft-0.2-point-ref.svg3dx`](samples/draft-0.2-point-ref.svg3dx)
+- Full sample (0.1): [`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
 - Curves: [`line`](samples/draft-0.1-line.svg3dx) / [`arc`](samples/draft-0.1-arc.svg3dx) / [`path`](samples/draft-0.1-path.svg3dx) / [`curves`](samples/draft-0.1-curves.svg3dx)
 - Constructs: [`extrude`](samples/draft-0.1-extrude.svg3dx) / [`revolve`](samples/draft-0.1-revolve.svg3dx) / [`loft`](samples/draft-0.1-loft.svg3dx) / [`sweep`](samples/draft-0.1-sweep.svg3dx) / [`pipe`](samples/draft-0.1-pipe.svg3dx)
 - Metadata (SVG `<metadata>` + vendor NS): [`metadata-oem-nozzle`](samples/draft-0.1-metadata-oem-nozzle.svg3dx)

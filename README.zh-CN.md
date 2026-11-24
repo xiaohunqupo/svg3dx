@@ -33,24 +33,23 @@
 
 ## 状态
 
-草案 0.1（内部）。命名空间 URI `urn:s3dx:draft:0.1` 为临时值。各图元属性表正逐步补全，不影响核心语法。
+- **草案 0.1（稳定轨）**：`urn:s3dx:draft:0.1` — 现有样例与 viewer 可继续使用。
+- **草案 0.2（演进轨）**：`urn:s3dx:draft:0.2` — 定位点 `s3dx:point` 与活引用 `ref(#id)` 等。实现须兼读两版。
 
 ## 仓库结构
 
 ```
 svg3dx/
 ├── assets/                 # Logo 与标题图
-├── docs/                   # 格式规范
+├── docs/                   # 格式规范（0.1 稳定 / 0.2 演进）
+│   ├── svg3dx-spec-draft-0.2.md
 │   └── svg3dx-spec-draft-0.1.md
 ├── namespaces/             # 命名空间定义与注册表索引
 │   ├── registry.xml
+│   ├── svg3dx/svg3dx.draft.0.2.xml
 │   ├── svg3dx/svg3dx.draft.0.1.xml
 │   └── acme/acme.equipment.1.0.xml
-├── samples/                # 草案 0.1 示例（基本体 / 曲线 / 构造体 / 控制流）
-│   ├── draft-0.1-example.svg3dx
-│   ├── draft-0.1-line.svg3dx / arc / path / curves
-│   ├── draft-0.1-extrude / revolve / loft / sweep / pipe
-│   └── …
+├── samples/                # draft-0.1-*（稳定）与 draft-0.2-*（新能力）
 ├── LICENSE-MIT             # MIT（任选其一）
 ├── LICENSE-MulanPSL-2.0    # 木兰宽松许可证第2版
 ├── README.md
@@ -59,9 +58,11 @@ svg3dx/
 
 ## 文档
 
-- 格式规范（草案 0.1）：[`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
+- 格式规范（草案 0.2）：[`docs/svg3dx-spec-draft-0.2.md`](docs/svg3dx-spec-draft-0.2.md)
+- 格式规范（草案 0.1 稳定）：[`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
 - 元数据命名空间注册表：[`namespaces/registry.xml`](namespaces/registry.xml)
-- 综合示例：[`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
+- 定位点与引用：[`draft-0.2-point-ref.svg3dx`](samples/draft-0.2-point-ref.svg3dx)
+- 综合示例（0.1）：[`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
 - 曲线图元：[`line`](samples/draft-0.1-line.svg3dx) / [`arc`](samples/draft-0.1-arc.svg3dx) / [`path`](samples/draft-0.1-path.svg3dx) / [`curves`](samples/draft-0.1-curves.svg3dx)
 - 构造体：[`extrude`](samples/draft-0.1-extrude.svg3dx) / [`revolve`](samples/draft-0.1-revolve.svg3dx) / [`loft`](samples/draft-0.1-loft.svg3dx) / [`sweep`](samples/draft-0.1-sweep.svg3dx) / [`pipe`](samples/draft-0.1-pipe.svg3dx)
 - 元数据（SVG `<metadata>` + 厂商 NS）：[`metadata-oem-nozzle`](samples/draft-0.1-metadata-oem-nozzle.svg3dx)

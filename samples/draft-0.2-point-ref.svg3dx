@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.2">
+
+  <defs>
+    <g id="main">
+      <s3dx:point id="A" at="0 0 0"/>
+      <s3dx:point id="B" at="100 0 0"/>
+      <s3dx:point id="C" at="100 0 100"/>
+
+      <s3dx:line from="ref(#A)" to="ref(#B)" fill="#3366cc"/>
+      <s3dx:line from="ref(#B)" to="ref(#C)" fill="#3366cc"/>
+      <s3dx:cylinder diameter="20"
+                    bottomCenterPt="ref(#A)"
+                    topCenterPt="ref(#B)"
+                    fill="#88aacc"/>
+      <s3dx:path form="polyline" points="ref(#A)  ref(#B)  ref(#C)" fill="#cc6633"/>
+
+      <g s3dx:transform="translate(0 150 0)">
+        <s3dx:point id="D" at="0 0 0"/>
+        <s3dx:point id="E" at="80 0 40"/>
+        <s3dx:line from="ref(#D)" to="ref(#E)" fill="#228822"/>
+      </g>
+    </g>
+  </defs>
+
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <s3dx:use href="#main"/>
+  </s3dx:model>
+</svg>

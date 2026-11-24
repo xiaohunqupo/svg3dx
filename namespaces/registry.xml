@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   svg3dx namespace registry (index).
-  Spec: docs/svg3dx-spec-draft-0.1.md §9
+  Spec: docs/svg3dx-spec-draft-0.2.md §9
   Each entry points to a machine-readable nsdef under namespaces/<vendor>/.
 -->
-<registry version="0.1">
-  <entry namespace="urn:s3dx:draft:0.1"
+<registry version="0.2">
+  <entry namespace="urn:s3dx:draft:0.2"
          vendor="svg3dx"
          title="svg3dx core"
          status="draft"
+         spec="svg3dx/svg3dx.draft.0.2.xml"
+         prefix="s3dx"
+         normativeSpec="docs/svg3dx-spec-draft-0.2.md"/>
+
+  <entry namespace="urn:s3dx:draft:0.1"
+         vendor="svg3dx"
+         title="svg3dx core (stable 0.1)"
+         status="stable"
          spec="svg3dx/svg3dx.draft.0.1.xml"
          prefix="s3dx"
          normativeSpec="docs/svg3dx-spec-draft-0.1.md"/>

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Machine-readable vocabulary for urn:s3dx:draft:0.2 (prefix s3dx).
+  Normative evaluation / semantics: docs/svg3dx-spec-draft-0.2.md
+  This file lists elements and attributes for editors, validation, and discovery.
+  Attribute sets follow svg3dx-core known_attrs (draft 0.2); expand as the spec grows.
+-->
+<nsdef xmlns="urn:s3dx:nsdef:0.1"
+       uri="urn:s3dx:draft:0.2"
+       prefix="s3dx"
+       version="0.2"
+       title="svg3dx core"
+       title-zh="svg3dx 核心"
+       status="draft"
+       normativeSpec="docs/svg3dx-spec-draft-0.2.md">
+
+  <!-- Host / appearance attrs common to drawable s3dx geometry and many containers -->
+  <shared name="drawable">
+    <attr name="id" type="string" use="optional" title="id" title-zh="标识"/>
+    <attr name="class" type="string" use="optional" title="class" title-zh="分类"/>
+    <attr name="fill" type="string" use="optional" title="fill" title-zh="填充"/>
+    <attr name="material" type="string" use="optional" title="material" title-zh="材质"/>
+    <attr name="opacity" type="number" use="optional" title="opacity" title-zh="不透明度"/>
+    <attr name="s3dx:transform" type="matrix12" use="optional"
+          title="transform" title-zh="变换"/>
+  </shared>
+
+  <!-- ===== Solids ===== -->
+  <element name="box" title="Box" title-zh="长方体" extends="drawable">
+    <attr name="length" type="number" use="required" title-zh="长度"/>
+    <attr name="width" type="number" use="required" title-zh="宽度"/>
+    <attr name="height" type="number" use="required" title-zh="高度"/>
+    <attr name="lengthVec" type="vector" use="optional" title-zh="长度方向"/>
+    <attr name="widthVec" type="vector" use="optional" title-zh="宽度方向"/>
+  </element>
+
+  <element name="cylinder" title="Cylinder" title-zh="圆柱" extends="drawable">
+    <attr name="diameter" type="number" use="required" title-zh="直径"/>
+    <attr name="bottomCenterPt" type="point" use="required" title-zh="底面圆心"/>
+    <attr name="topCenterPt" type="point" use="required" title-zh="顶面圆心"/>
+  </element>
+
+  <element name="sphere" title="Sphere" title-zh="球体" extends="drawable">
+    <attr name="radius" type="number" use="required" title-zh="半径"/>
+    <attr name="center" type="point" use="optional" title-zh="中心"/>
+  </element>
+
+  <element name="cone" title="Cone" title-zh="圆锥" extends="drawable">
+    <attr name="bottomDiameter" type="number" use="required" title-zh="底面直径"/>
+    <attr name="topDiameter" type="number" use="optional" title-zh="顶面直径"/>
+    <attr name="bottomCenterPt" type="point" use="required" title-zh="底面圆心"/>
+    <attr name="topCenterPt" type="point" use="required" title-zh="顶面圆心"/>
+  </element>
+
+  <element name="torus" title="Torus" title-zh="圆环" extends="drawable">
+    <attr name="diameter1" type="number" use="required" title-zh="主直径"/>
+    <attr name="diameter2" type="number" use="required" title-zh="圆管直径"/>
+    <attr name="angle" type="number" use="optional" title-zh="角度"/>
+    <attr name="torusCenterPt" type="point" use="optional" title-zh="环心"/>
+    <attr name="normal" type="vector" use="optional" title-zh="法向"/>
+  </element>
+
+  <element name="wedge" title="Wedge" title-zh="楔体" extends="drawable">
+    <attr name="length" type="number" use="required" title-zh="长度"/>
+    <attr name="width" type="number" use="required" title-zh="宽度"/>
+    <attr name="height" type="number" use="required" title-zh="高度"/>
+    <attr name="lengthVec" type="vector" use="optional" title-zh="长度方向"/>
+    <attr name="widthVec" type="vector" use="optional" title-zh="宽度方向"/>
+    <attr name="topLength" type="number" use="optional" title-zh="顶边长度"/>
+  </element>
+
+  <element name="pyramid" title="Pyramid" title-zh="棱锥" extends="drawable">
+    <attr name="length" type="number" use="required" title-zh="长度"/>
+    <attr name="width" type="number" use="required" title-zh="宽度"/>
+    <attr name="height" type="number" use="required" title-zh="高度"/>
+    <attr name="lengthVec" type="vector" use="optional" title-zh="长度方向"/>
+    <attr name="widthVec" type="vector" use="optional" title-zh="宽度方向"/>
+    <attr name="topLength" type="number" use="optional" title-zh="顶边长度"/>
+    <attr name="topWidth" type="number" use="optional" title-zh="顶边宽度"/>
+  </element>
+
+  <element name="prism" title="Prism" title-zh="棱柱" extends="drawable">
+    <attr name="points" type="string" use="required" title-zh="点列"/>
+    <attr name="height" type="number" use="required" title-zh="高度"/>
+    <attr name="normal" type="vector" use="optional" title-zh="法向"/>
+  </element>
+
+  <element name="sector-cylinder" title="Sector cylinder" title-zh="扇形柱" extends="drawable">
+    <attr name="diameter" type="number" use="required" title-zh="直径"/>
+    <attr name="bottomCenterPt" type="point" use="required" title-zh="底面圆心"/>
+    <attr name="topCenterPt" type="point" use="required" title-zh="顶面圆心"/>
+    <attr name="angle" type="number" use="required" title-zh="角度"/>
+  </element>
+
+  <!-- ===== Positioning point ===== -->
+  <element name="point" title="Positioning point" title-zh="定位点" extends="drawable">
+    <attr name="at" type="point" use="optional" title-zh="位置"/>
+  </element>
+
+  <!-- ===== Curves ===== -->
+  <element name="line" title="Line" title-zh="直线" extends="drawable">
+    <attr name="from" type="point" use="required" title-zh="起点"/>
+    <attr name="to" type="point" use="required" title-zh="终点"/>
+  </element>
+
+  <element name="arc" title="Arc" title-zh="圆弧" extends="drawable">
+    <attr name="form" type="enum" use="optional" enum="angles ends" title-zh="形式"/>
+    <attr name="center" type="point" use="optional" title-zh="中心"/>
+    <attr name="normal" type="vector" use="optional" title-zh="法向"/>
+    <attr name="radius" type="number" use="optional" title-zh="半径"/>
+    <attr name="xDir" type="vector" use="optional" title-zh="X 方向"/>
+    <attr name="startAngle" type="number" use="optional" title-zh="起始角"/>
+    <attr name="angle" type="number" use="optional" title-zh="角度"/>
+    <attr name="from" type="point" use="optional" title-zh="起点"/>
+    <attr name="to" type="point" use="optional" title-zh="终点"/>
+  </element>
+
+  <element name="path" title="Path" title-zh="路径" extends="drawable">
+    <attr name="form" type="enum" use="optional" enum="polyline segments" title-zh="形式"/>
+    <attr name="points" type="string" use="optional" title-zh="点列"/>
+  </element>
+
+  <!-- ===== Constructs ===== -->
+  <element name="section" title="Section" title-zh="截面" extends="drawable">
+    <attr name="origin" type="point" use="optional" title-zh="原点"/>
+    <attr name="xDir" type="vector" use="optional" title-zh="X 方向"/>
+    <attr name="normal" type="vector" use="optional" title-zh="法向"/>
+  </element>
+
+  <element name="extrude" title="Extrude" title-zh="拉伸体" extends="drawable">
+    <attr name="origin" type="point" use="optional" title-zh="原点"/>
+    <attr name="xDir" type="vector" use="optional" title-zh="X 方向"/>
+    <attr name="normal" type="vector" use="optional" title-zh="法向"/>
+    <attr name="dir" type="vector" use="optional" title-zh="方向"/>
+    <attr name="length" type="number" use="optional" title-zh="长度"/>
+  </element>
+
+  <element name="revolve" title="Revolve" title-zh="旋转体" extends="drawable">
+    <attr name="angle" type="number" use="optional" title-zh="角度"/>
+    <attr name="solid" type="boolean" use="optional" title-zh="实体"/>
+  </element>
+
+  <element name="loft" title="Loft" title-zh="放样体" extends="drawable">
+    <attr name="solid" type="boolean" use="optional" title-zh="实体"/>
+    <attr name="blend" type="string" use="optional" title-zh="混合"/>
+  </element>
+
+  <element name="sweep" title="Sweep" title-zh="扫掠体" extends="drawable">
+    <attr name="orient" type="string" use="optional" title-zh="姿态"/>
+    <attr name="refDir" type="vector" use="optional" title-zh="参考方向"/>
+    <attr name="solid" type="boolean" use="optional" title-zh="实体"/>
+    <attr name="outerCorner" type="string" use="optional" title-zh="外角"/>
+    <attr name="innerCorner" type="string" use="optional" title-zh="内角"/>
+    <attr name="outerCornerRadius" type="number" use="optional" title-zh="外角半径"/>
+    <attr name="innerCornerRadius" type="number" use="optional" title-zh="内角半径"/>
+    <attr name="miterLimit" type="number" use="optional" title-zh="斜接极限"/>
+  </element>
+
+  <element name="pipe" title="Pipe" title-zh="圆管" extends="drawable">
+    <attr name="form" type="enum" use="optional" enum="inline child" title-zh="形式"/>
+    <attr name="radius" type="number" use="optional" title-zh="半径"/>
+    <attr name="innerRadius" type="number" use="optional" title-zh="内半径"/>
+    <attr name="outerCorner" type="string" use="optional" title-zh="外角"/>
+    <attr name="innerCorner" type="string" use="optional" title-zh="内角"/>
+    <attr name="outerCornerRadius" type="number" use="optional" title-zh="外角半径"/>
+    <attr name="innerCornerRadius" type="number" use="optional" title-zh="内角半径"/>
+    <attr name="miterLimit" type="number" use="optional" title-zh="斜接极限"/>
+    <attr name="path" type="string" use="optional" title-zh="路径"/>
+  </element>
+
+  <element name="gltf" title="glTF" title-zh="glTF 引用" extends="drawable">
+    <attr name="href" type="string" use="required" title-zh="引用"/>
+  </element>
+
+  <!-- ===== Booleans / control / document ===== -->
+  <element name="bool-union" title="Union" title-zh="并集" extends="drawable"/>
+  <element name="bool-subtract" title="Subtract" title-zh="差集" extends="drawable"/>
+  <element name="bool-intersect" title="Intersect" title-zh="交集" extends="drawable"/>
+
+  <!-- Assembly containers: participate in the 3D transform chain (extends drawable). -->
+  <element name="if" title="If" title-zh="如果" extends="drawable">
+    <attr name="test" type="string" use="required" title-zh="条件"/>
+  </element>
+  <element name="if-not" title="If not" title-zh="如果非" extends="drawable">
+    <attr name="test" type="string" use="required" title-zh="条件"/>
+  </element>
+  <element name="loop-points" title="Loop points" title-zh="点列循环" extends="drawable">
+    <attr name="points" type="string" use="required" title-zh="点列"/>
+  </element>
+  <element name="loop-range" title="Loop range" title-zh="范围循环" extends="drawable">
+    <attr name="start" type="number" use="required" title-zh="起点值"/>
+    <attr name="end" type="number" use="required" title-zh="终点值"/>
+    <attr name="step" type="number" use="optional" title-zh="步长"/>
+  </element>
+
+  <element name="exp" title="Expression" title-zh="表达式"/>
+  <element name="use" title="Use" title-zh="引用" extends="drawable">
+    <attr name="href" type="string" use="required" title-zh="引用"/>
+  </element>
+  <element name="model" title="Model" title-zh="模型">
+    <attr name="id" type="string" use="required" title-zh="标识"/>
+    <attr name="mode" type="enum" use="required" enum="solid wireframe hidden-line" title-zh="模式"/>
+    <attr name="active" type="boolean" use="optional" title-zh="激活"/>
+    <attr name="s3dx:transform" type="matrix12" use="optional" title-zh="变换"/>
+  </element>
+  <element name="materials" title="Materials" title-zh="材质集"/>
+  <element name="material" title="Material" title-zh="材质">
+    <attr name="id" type="string" use="required" title-zh="标识"/>
+    <attr name="color" type="string" use="optional" title-zh="颜色"/>
+    <attr name="metalness" type="number" use="optional" title-zh="金属度"/>
+    <attr name="roughness" type="number" use="optional" title-zh="粗糙度"/>
+  </element>
+
+</nsdef>
