@@ -6,11 +6,12 @@
 
 ## 0. Document status
 
-- Draft specification. Namespace URI `urn:s3dx:draft:0.1` is temporary and will change for a formal release.
+- This specification is the **frozen stable Draft 0.1** (release tag `v0.1.0`, maintenance branch `release/0.1`). Namespace URI `urn:s3dx:draft:0.1` is the stable identifier for this line; a formal (non-draft) release may change the URI.
 - Format name: `svg3dx`. Recommended namespace prefix: `s3dx`. Logo mark: `s3dx`; full title: `svg 3dx`.
-- This draft file is not guaranteed to parse in a formal release. Implementations must recognize the 3D namespace by URI, not by the prefix literal (recommended prefix `s3dx`).
-- The file extension is `.svg`, with root attribute `svg3d="true"` marking 3D content. A dedicated `.svg3dx` extension is under consideration for a formal release.
+- Implementations must recognize the 3D namespace by URI, not by the prefix literal (recommended prefix `s3dx`).
+- The file extension is `.svg`, with root attribute `svg3d="true"` marking 3D content; `.svg3dx` / `.svg3dxz` are also used in practice.
 - **Bilingual editions**: Chinese and English are maintained in parallel. XML element names, attribute names, and material keywords are English identifiers in both editions; the Chinese edition uses the official Chinese nouns from the vocabulary.
+- **Evolution**: New primitives and breaking semantics move to later draft lines (e.g. 0.2); this file accepts errata and clarifications only.
 
 ## 1. Document model
 

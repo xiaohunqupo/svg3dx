@@ -33,7 +33,7 @@ Existing parametric CAD formats (Revit families, Glodon component editors, vendo
 
 ## Status
 
-Draft 0.1, internal. Namespace URI `urn:s3dx:draft:0.1` is provisional. Per-primitive attribute tables are being filled in incrementally and do not affect the core syntax.
+**Draft 0.1 is frozen** (`v0.1.0`, branch `release/0.1`). Namespace URI `urn:s3dx:draft:0.1` is the stable identifier for this line. Further format evolution continues on newer draft lines (e.g. 0.2); do not add new primitives to 0.1.
 
 ## Repository layout
 
