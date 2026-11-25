@@ -41,6 +41,8 @@
 | `material` | 材质 | Material |
 | `materials` | 材质集 | Materials |
 | `exp` | 表达式 | Expression |
+| `animate` | 动画 | Animate |
+| `animateTransform` | 变换动画 | Animate transform |
 | `group` | 组 | Group |
 | `metadata` | 元数据 | Metadata |
 
@@ -60,6 +62,11 @@
 | `active` | 激活 | active |
 | `svg3d` | 三维开关 | svg3d |
 | `fill` | 填充 | fill |
+| `attributeName` | 参数 | attributeName |
+| `dur` | 时长 | dur |
+| `repeat` | 重复 | repeat |
+| `begin` | 开始时间 | begin |
+| `calcMode` | 计算模式 | calcMode |
 | `material` | 材质 | material |
 | `opacity` | 不透明度 | opacity |
 | `color` | 颜色 | color |
@@ -111,6 +118,11 @@
 | `start` | 起点值 | start |
 | `end` | 终点值 | end |
 | `step` | 步长 | step |
+
+> **`fill` 同名异义**：在图元 / 着色上下文为填充色；在 `<s3dx:animate>` / `<s3dx:animateTransform>` 上取值 `freeze` / `remove`（动画结束后是否保持末值），见规范第 10 节。  
+> **`from` / `to`**：在曲线图元上为几何起终点（显示名：起点 / 终点）；在动画元素上为插值起止值（显示名：起始值 / 终止值）。  
+> **时间轴**：动画用 `begin`（开始时间）+ `dur`（单次时长），不是 `start` / `end`；`loop-range` 的 `start` / `end` 是数值区间，与动画时钟无关。  
+> **`type`**：在动画变换上取 `translate` / `rotate` / `scale`。
 
 ## 2.1 `form` 枚举值 · Form enum values（§3.2）
 

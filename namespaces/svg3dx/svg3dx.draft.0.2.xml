@@ -211,4 +211,29 @@
     <attr name="roughness" type="number" use="optional" title-zh="粗糙度"/>
   </element>
 
+  <!-- Animation (SMIL-shaped subset); not part of geometry evaluation -->
+  <shared name="animTiming">
+    <attr name="from" type="string" use="required" title="from" title-zh="起始值"/>
+    <attr name="to" type="string" use="required" title="to" title-zh="终止值"/>
+    <attr name="dur" type="string" use="required" title="dur" title-zh="时长"/>
+    <attr name="repeat" type="string" use="optional" title="repeat" title-zh="重复"/>
+    <attr name="fill" type="enum" use="optional" enum="freeze remove"
+          title="fill" title-zh="结束后"/>
+    <attr name="begin" type="string" use="optional" title="begin" title-zh="开始时间"/>
+    <attr name="calcMode" type="enum" use="optional" enum="linear"
+          title="calcMode" title-zh="计算模式"/>
+  </shared>
+
+  <element name="animate" title="Animate" title-zh="动画" extends="animTiming">
+    <attr name="attributeName" type="string" use="required"
+          title="attributeName" title-zh="属性名"/>
+  </element>
+  <element name="animateTransform" title="Animate transform" title-zh="变换动画"
+           extends="animTiming">
+    <attr name="attributeName" type="string" use="optional"
+          title="attributeName" title-zh="属性名"/>
+    <attr name="type" type="enum" use="required"
+          enum="translate rotate scale" title="type" title-zh="类型"/>
+  </element>
+
 </nsdef>

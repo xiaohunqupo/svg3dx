@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.2">
+
+  <defs>
+    <g id="main">
+      <!-- 基座 -->
+      <s3dx:box length="120" width="40" height="20"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="#556677"
+                s3dx:transform="translate(-60 -20 0)"/>
+
+      <!-- 机构臂：作者基变换 + 子元素 animateTransform 绕 Z 摆动 -->
+      <g id="arm" s3dx:transform="translate(0 0 20)">
+        <s3dx:animateTransform attributeName="transform"
+                               type="rotate"
+                               from="0 0 -45" to="0 0 45"
+                               dur="3s"
+                               repeat="0"/>
+        <s3dx:box length="100" width="16" height="16"
+                  lengthVec="1 0 0" widthVec="0 1 0"
+                  fill="#cc7744"
+                  s3dx:transform="translate(0 -8 0)"/>
+        <s3dx:cylinder diameter="24"
+                       bottomCenterPt="0 0 0"
+                       topCenterPt="0 0 16"
+                       fill="#8899aa"/>
+      </g>
+    </g>
+  </defs>
+
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <s3dx:use href="#main"/>
+  </s3dx:model>
+</svg>

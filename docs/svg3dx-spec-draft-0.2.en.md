@@ -25,11 +25,11 @@
 ### 1.2 Namespace
 
 - 3D elements use namespace `urn:s3dx:draft:0.2`, recommended prefix `s3dx`.
-- 3D **elements** enter the namespace: core primitives are listed in §3.2 (`point`, `box`, `cylinder`, `sphere`, `cone`, `torus`, `wedge`, `pyramid`, `prism`, `sector-cylinder`, `line`, `arc`, `path`, `extrude`, `revolve`, `loft`, `sweep`, `pipe`, `gltf`); child `<s3dx:section>` (and `<s3dx:path>` when used as a trajectory container); plus `<s3dx:if>`, `<s3dx:if-not>`, `<s3dx:loop-points>`, `<s3dx:loop-range>`, `<s3dx:bool-union>`, `<s3dx:bool-subtract>`, `<s3dx:bool-intersect>`, `<s3dx:use>`, `<s3dx:model>`, `<s3dx:exp>`, `<s3dx:materials>`, `<s3dx:material>`. A machine-readable element/attribute catalog is [`namespaces/svg3dx/svg3dx.draft.0.2.xml`](../namespaces/svg3dx/svg3dx.draft.0.2.xml), registered in [`namespaces/registry.xml`](../namespaces/registry.xml); **evaluation and semantics remain defined by this document**.
-- **Unprefixed attributes** (null namespace): geometry attrs (lowerCamelCase, see §3.2), plus `href`, `mode`, `test`, `points`, `start`, `end`, `step`, `active`, `svg3d`, and appearance `fill` / `material` / `opacity` (§8).
+- 3D **elements** enter the namespace: core primitives are listed in §3.2 (`point`, `box`, `cylinder`, `sphere`, `cone`, `torus`, `wedge`, `pyramid`, `prism`, `sector-cylinder`, `line`, `arc`, `path`, `extrude`, `revolve`, `loft`, `sweep`, `pipe`, `gltf`); child `<s3dx:section>` (and `<s3dx:path>` when used as a trajectory container); plus `<s3dx:if>`, `<s3dx:if-not>`, `<s3dx:loop-points>`, `<s3dx:loop-range>`, `<s3dx:bool-union>`, `<s3dx:bool-subtract>`, `<s3dx:bool-intersect>`, `<s3dx:use>`, `<s3dx:model>`, `<s3dx:exp>`, `<s3dx:materials>`, `<s3dx:material>`, `<s3dx:animate>`, `<s3dx:animateTransform>`. A machine-readable element/attribute catalog is [`namespaces/svg3dx/svg3dx.draft.0.2.xml`](../namespaces/svg3dx/svg3dx.draft.0.2.xml), registered in [`namespaces/registry.xml`](../namespaces/registry.xml); **evaluation and semantics remain defined by this document**.
+- **Unprefixed attributes** (null namespace): geometry attrs (lowerCamelCase, see §3.2), plus `href`, `mode`, `test`, `points`, `start`, `end`, `step`, `active`, `svg3d`, appearance `fill` / `material` / `opacity` (§8), and animation `attributeName` / `from` / `to` / `dur` / `repeat` / `begin` / `calcMode` / `type` plus `fill` on animation elements (§10).
 - **Namespaced attributes**: 3D transform uses `s3dx:transform` (see §3.4), **not** the SVG presentation attribute `transform`, to avoid clashing with the 2D 6-number `matrix`.
 - Standard SVG parsers keep unknown-namespace elements in the DOM without rendering or further processing. This format relies on that behavior for 2D compatibility.
-- **Foreign namespaces and metadata (mandatory)**: When parsing, implementations must place foreign-namespace elements/attributes fully into the DOM; official round-trips and optimize must keep those nodes intact. Geometry evaluation covers only this format’s `s3dx` semantics plus SVG grouping/style scope (see §11); foreign namespaces and the standard SVG [`<metadata>`](https://www.w3.org/TR/SVG11/metadata.html) subtree remain in the DOM for hosts and domain tools (see §9).
+- **Foreign namespaces and metadata (mandatory)**: When parsing, implementations must place foreign-namespace elements/attributes fully into the DOM; official round-trips and optimize must keep those nodes intact. Geometry evaluation covers only this format’s `s3dx` semantics plus SVG grouping/style scope (see §12); foreign namespaces and the standard SVG [`<metadata>`](https://www.w3.org/TR/SVG11/metadata.html) subtree remain in the DOM for hosts and domain tools (see §9). Animation elements remain in the DOM and are interpreted by hosts that implement an animation clock (see §10).
 
 ### 1.3 2D compatibility
 
@@ -70,11 +70,12 @@ Parameters are CSS custom properties. Supported declaration sites (nearest decla
 Walk the DOM ancestor chain upward; nearest declaration wins; stop when found:
 
 1. External parameters (highest priority)
-2. Parent primitive attributes of a local `<s3dx:exp>`
-3. Nearest ancestor `<g>` class rules or inline `style`
-4. Farther ancestors’ class rules or inline `style`
-5. Document-root scope: root-element inline `style`, then `:root` rules
-6. Defaults
+2. Animation sample overrides (see §10; injected only by hosts that implement an animation clock)
+3. Parent primitive attributes of a local `<s3dx:exp>`
+4. Nearest ancestor `<g>` class rules or inline `style`
+5. Farther ancestors’ class rules or inline `style`
+6. Document-root scope: root-element inline `style`, then `:root` rules
+7. Defaults
 
 When `s3dx:loop-*` elements nest, inner iteration variables shadow outer ones.
 
@@ -94,6 +95,8 @@ When `s3dx:loop-*` elements nest, inner iteration variables shadow outer ones.
 - Missing external parameters fall back to DOM declarations; if the DOM has none either → evaluation error.
 - External keys correspond to custom-property names: `D` or `--D` are both accepted (normalize by stripping an optional leading `--` before lookup).
 - External values are typed by the same rules as §2.4.
+- **Boundary vs parameter UI (clarification)**: **Displaying** `:root` direct literals in a host params chrome does **not** by itself count as supplying external parameters. A key becomes an external override only when the host **explicitly pins** it (user confirms an override, or an API/URL injects it). While unpinned, lookup continues down §2.3 (including animation samples and the DOM).
+- **Same property as an animation**: a pinned external wins (animation does not apply to that key for the frame). Host UI **should** indicate “overriding animation” and offer unpinning to restore animation drive; hosts should not silently promote form edits to external overrides with no affordance.
 
 **Whitelist (mandatory)**: Externals may **only** override custom properties declared as **direct literals** under a `<style>` `:root` rule.
 
@@ -171,9 +174,10 @@ Layered convention (stay close to CSS; comparison / logic and positioning-point 
   - `<s3dx:section>` (profile for extrude / revolve / loft / sweep; see §3.2.4)
   - `<s3dx:path>` (trajectory container for sweep / pipe; may also be a standalone composite curve; see §3.2.3)
   - **Exception**: `<s3dx:path>` may directly contain `<s3dx:line>` / `<s3dx:arc>` as curve segments (aligned with STEP `composite_curve` / OCC `Wire`)
+  - `<s3dx:animateTransform>` (transform animation; not part of the geometry operation graph; see §10)
 - Primitive attribute tables are maintained in this section and the appendix; adding rows does not change document syntax. Attributes not listed must be ignored with a warning.
 - Local → parent → world accumulation: local geometry defined by primitive attributes first applies the element’s own `s3dx:transform`, then accumulates `s3dx:transform` along ancestor **3D assembly containers** (`<g>`, `<s3dx:use>`, `<s3dx:if>` / `<s3dx:if-not>`, `<s3dx:loop-*>`, `<s3dx:bool-*>`, etc.). 2D profile children inside `<s3dx:section>` belong to section composition and do not enter that 3D transform chain.
-- **Layering principle**: the core layer only accepts generic solids, curves, and referenced triangle assets (via `gltf`) that vendors can map; industry-specific shapes (duct fittings, heads, etc.) stay out of the core — see Appendix §12.3 (expressible via `loft` / `revolve` / boolean combinations).
+- **Layering principle**: the core layer only accepts generic solids, curves, and referenced triangle assets (via `gltf`) that vendors can map; industry-specific shapes (duct fittings, heads, etc.) stay out of the core — see Appendix §13.3 (expressible via `loft` / `revolve` / boolean combinations).
 
 ### 3.2 Primitive attribute tables (draft 0.2)
 
@@ -447,7 +451,7 @@ Segment continuity: each segment’s start must equal the previous end (suggeste
 
 Correspond to the common swept-family constructors across STEP / IFC / SolidWorks / PDMS; prefer composing these for industry specials rather than defining dedicated primitives.
 
-Correspondence (non-normative; see Appendix §12.4):
+Correspondence (non-normative; see Appendix §13.4):
 
 | svg3dx | STEP (ISO 10303-42) | IFC | SolidWorks | PDMS/E3D | Blender / 3ds Max |
 |---|---|---|---|---|---|
@@ -1028,7 +1032,7 @@ Application and vendor descriptive data are carried in standard SVG [`<metadata>
 
 - **Container**: Write `<metadata>` in the SVG namespace.
 - **Payload**: Inside `<metadata>`, write elements from other XML namespaces to express vendor or domain property tables. Field names, types, optionality, and versioning are defined by the specification bound to that namespace URI; this core format defines the container, association, and preservation rules.
-- **Implementation duties**: After parsing, keep every `<metadata>` element and its full foreign-namespace subtree in the DOM; official round-trips and optimize must retain those nodes. Geometry evaluation, booleans, and loop expansion process only this format’s geometry semantics (see §11). Hosts and domain tools may read the preserved metadata subtree directly.
+- **Implementation duties**: After parsing, keep every `<metadata>` element and its full foreign-namespace subtree in the DOM; official round-trips and optimize must retain those nodes. Geometry evaluation, booleans, and loop expansion process only this format’s geometry semantics (see §12). Hosts and domain tools may read the preserved metadata subtree directly.
 - **Division of roles with materials**: `<s3dx:materials>` / `material` supply 3D **render** shading; `<metadata>` supplies object **description**. Both may appear in the same document, each for its role.
 
 ### 9.2 Association
@@ -1052,7 +1056,75 @@ Authors associate metadata with objects using one or more of the SVG mechanisms 
 
 Shell cylinder + side nozzle with in-place `<metadata>` and a vendor namespace: [draft-0.1-metadata-oem-nozzle.svg3dx](../samples/draft-0.1-metadata-oem-nozzle.svg3dx).
 
-## 10. `<s3dx:use>`
+## 10. Animation (SMIL-shaped subset)
+
+This format provides a **thin subset** aligned with common SVG SMIL authoring patterns for mechanism demos, parameter sweeps, and product presentation. Elements live in the `s3dx` namespace; browsers are **not** required to run native SMIL on `s3dx:*`. Unprefixed standard SVG `<animate>` / `<animateTransform>` do **not** carry this format’s 3D animation semantics.
+
+Subset capabilities:
+
+- **Parameter timeline**: `<s3dx:animate>` drives CSS custom properties (indirectly driving sizes, conditionals, etc.).
+- **Transform animation**: `<s3dx:animateTransform>` drives a node’s 3D pose (composited onto `s3dx:transform`).
+
+This subset does **not** include: `animateMotion`, event-based `begin`, multi-keyframe `values` / `keyTimes`, or direct animation of primitive geometry attributes (e.g. `length`, `diameter`). Geometric sizes must be driven indirectly through `var(--*)` by parameter animation.
+
+### 10.1 Shared timing attributes
+
+The following unprefixed attributes apply to both `<s3dx:animate>` and `<s3dx:animateTransform>`:
+
+| Attribute | Required | Default | Description |
+|---|---|---|---|
+| `from` | yes | — | Animation start value |
+| `to` | yes | — | Animation end value |
+| `dur` | yes | — | One-shot duration: `Ns` or `Nms` (`N` positive); other forms warn and ignore the animation |
+| `repeat` | no | `1` | Non-negative integer: play count; `0` means indefinite loop; other forms warn and treat as `1` |
+| `fill` | no | `remove` | **End behavior** (same attribute name as appearance `fill`, different meaning): `freeze` keeps the end value; `remove` clears the sample override and falls back to the declaration |
+| `begin` | no | `0s` | Offset from document animation clock zero; same syntax as `dur`; event sync is **not** supported |
+| `calcMode` | no | `linear` | Interpolation **approach law**, same values as loft `blend`: `linear` / `sine` / `cosine` / `tan` / `cotan` (see §3.2); unknown values warn and behave as `linear` |
+
+Interpolation: within the active interval, obtain normalized time \(t \in [0,1]\), then interpolate `from`→`to` (scalar or per-component) with weight \(s = f_{\mathrm{calcMode}}(t)\) (\(f\) matches loft `blend`). Clock source and playback controls are host-defined.
+
+### 10.2 `<s3dx:animate>` (parameter timeline)
+
+- **Sole target**: CSS custom properties (`<dashed-ident>`).
+- **Attributes**:
+  - `attributeName` (required): must include the leading `--` (e.g. `--H`, `--yaw`); omitting `--` is an error — warn and ignore.
+  - `from` / `to`: scalar numbers (parsed per §2.4); other timing attrs per §10.1.
+- **Attachment (normative)**: must be a **direct child** of a **parameter-scope host**; the **parent is the injection point**. This subset provides **no** `href` / remote target.
+  - Under the root `<svg>`: overrides document-root scope (corresponding to `:root` declarations).
+  - Under a `<g>` that declares the custom property (class rule or inline `style`): override is visible only when evaluating that `<g>` subtree (§2.3).
+  - If the parent is not a scope host, or the element is hung on a primitive in hopes of changing document-global parameters: warn and ignore.
+- **Whitelist**: `attributeName` must already have a **direct literal** declaration in the parent scope — under root `<svg>`, a direct `:root` literal (aligned with §2.5); under `<g>`, a name declared on that node’s class or inline style. Undeclared: warn and ignore.
+- **Priority**: animation sample overrides rank below **explicit** external parameters and above DOM declarations (see §2.3, §2.5). A params chrome that only shows `:root` defaults must not block this animation while unpinned.
+- **Host effect**: after sampling into the parameter override, the host **must trigger a full geometry evaluation** (parameter sweeps / size coupling).
+- **Params chrome (recommended)**: for properties driven by this element, show the live sample and mark them as animation-driven; a user edit counts as pinning an external override (clearable).
+
+### 10.3 `<s3dx:animateTransform>` (transform animation)
+
+- Direct child of the **transformed node**; that node must be allowed to carry `s3dx:transform` (a 3D-related `<g>`, or an `s3dx:*` assembly/primitive container).
+- **Attributes**:
+  - `attributeName`: fixed to `transform` (SMIL convention); semantics point at **`s3dx:transform`**, not SVG 2D `transform`. When omitted, treat as `transform`; other values warn and ignore the animation.
+  - `type` (required): `translate` | `rotate` | `scale`.
+  - `from` / `to`: three numbers (space-separated), matching §3.4 TRS components (`rotate` in degrees).
+  - Other timing attributes per §10.1.
+- **Composition**: at time \(t\), the host builds animation matrix \(M_\mathrm{anim}(t)\) from `type`/`from`/`to`, and composes it with the node’s **already evaluated** authored `s3dx:transform` base matrix \(M_\mathrm{base}\) as \(M = M_\mathrm{anim}\cdot M_\mathrm{base}\) (author transform first, then animation; column-vector convention matches §3.4). Do **not** rewrite the `s3dx:transform` string in the DOM.
+- **Host effect**: update scene-instance matrices only; hosts **must not** force a geometry-kernel re-run solely for transform animation.
+
+### 10.4 Static evaluation and hosts without a clock
+
+- `<s3dx:animate>` / `<s3dx:animateTransform>` do **not** participate in the geometry operation graph, booleans, or loop expansion; after parse they must remain in the DOM (official round-trips and optimize keep them intact).
+- Hosts that do not implement an animation clock: ignore animation elements and evaluate the static document; do **not** auto-apply `from`. For a static preview pose, authors must write the rest value into parameter declarations or `s3dx:transform`.
+
+```xml
+<svg svg3d="true" xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.2">
+  <style>:root { --H: 100; }</style>
+  <s3dx:animate attributeName="--H" from="80" to="160"
+                dur="2s" repeat="0"/>
+  <!-- … -->
+</svg>
+```
+
+## 11. `<s3dx:use>`
 
 - Attributes: `href` (required, references a definition target by `id`), `s3dx:transform` (optional, 12-number 3D matrix).
 - No `x`/`y`; 3D translation uses `tx/ty/tz` of `s3dx:transform`.
@@ -1061,37 +1133,38 @@ Shell cylinder + side nozzle with in-place `<metadata>` and a vendor namespace: 
 - If `<s3dx:use>` references a pure-2D `<g>` (only 2D elements): skip + warning.
 - Transform accumulation: referenced group’s own `s3dx:transform` → `<s3dx:use>`’s `s3dx:transform` → parent `s3dx:transform`.
 
-## 11. Evaluation model
+## 12. Evaluation model
 
-### 11.1 Stage order
+### 12.1 Stage order
 
 1. Parse the document tree
 2. Build parameter scopes
 3. Resolve external parameters
-4. Expand `loop-*` (evaluate `loop-range` parameters)
-5. Evaluate `test` on `s3dx:if` / `s3dx:if-not` (each expanded copy judged independently)
-6. Evaluate `<s3dx:exp>` and expressions
-7. Build the geometry operation graph
-8. Kernel evaluation → geometry set
-9. Filter/render by `<s3dx:model>` `mode`, materials / `fill`, and child `<s3dx:use>`
+4. Apply animation sample overrides (if the host implements the §10 clock; otherwise skip)
+5. Expand `loop-*` (evaluate `loop-range` parameters)
+6. Evaluate `test` on `s3dx:if` / `s3dx:if-not` (each expanded copy judged independently)
+7. Evaluate `<s3dx:exp>` and expressions
+8. Build the geometry operation graph
+9. Kernel evaluation → geometry set
+10. Filter/render by `<s3dx:model>` `mode`, materials / `fill`, and child `<s3dx:use>`; then composite `s3dx:animateTransform` scene matrices (if the host implements a clock)
 
-Key point: geometry evaluates once and is shared across models. The evaluation stage processes parameters, control flow, and geometry; `<s3dx:model>` and the material library apply at render time; SVG `<metadata>` and foreign-namespace payloads remain in the DOM for hosts (§9).
+Key point: geometry evaluation is an **instantaneous snapshot** given the current parameter map and each node’s authored `s3dx:transform`; results are shared across models. The evaluation stage processes parameters, control flow, and geometry; `<s3dx:model>` and the material library apply at render time; SVG `<metadata>` and foreign-namespace payloads remain in the DOM for hosts (§9). Parameter animation triggers full re-evaluation via overrides; transform animation only updates scene matrices (§10).
 
-### 11.2 Error handling
+### 12.2 Error handling
 
 - Evaluation-error scope: expression syntax errors, undefined parameter references, type mismatches, `loop-range` parameters that are not numeric after evaluation.
 - Handling: skip the failing element and its subtree; record a warning. Warning form is host-defined; this specification does not bind one.
 - Document-level fatal errors (ill-formed XML, missing root): follow existing XML/SVG rules; outside this format’s “skip” scope.
 - “Skip + warning” is the recommended behavior; implementations may choose stricter error modes, but that is not a compliance requirement.
 
-### 11.3 Determinism and precision
+### 12.3 Determinism and precision
 
 - The same file evaluated on different kernels: topological equivalence is the kernel’s responsibility; this format does not specify numeric precision.
 - Definitions in `<defs>` not reachable from any `<s3dx:model>` instantiation chain are not evaluated.
 
-## 12. Appendix
+## 13. Appendix
 
-### 12.1 Open items
+### 13.1 Open items
 
 1. Beyond the core primitives (see §3.2), still open:
    - Whether `path` gains spline / helix child segments (`spline` / `helix`).
@@ -1107,12 +1180,15 @@ Key point: geometry evaluates once and is shared across models. The evaluation s
 4. Final form of the formal-release namespace URI.
 5. Whether arbitrary vector parameters also get component splitting (loop vectors are `--loop-value-x` / `-y` / `-z`) [TBD].
 6. Textures and fuller PBR channels [TBD] (materials basics are in §8).
+7. Whether animation expands toward fuller SMIL alignment (`values` / `keyTimes`, event `begin`, `animateMotion`, etc.) [TBD].
 
-### 12.2 Samples
+### 13.2 Samples
 
 | File | Content |
 |---|---|
 | [draft-0.2-point-ref.svg3dx](../samples/draft-0.2-point-ref.svg3dx) | `s3dx:point` + `ref(#id)` shared endpoints |
+| [draft-0.2-animate-param.svg3dx](../samples/draft-0.2-animate-param.svg3dx) | `s3dx:animate` driving `--H` |
+| [draft-0.2-animate-transform.svg3dx](../samples/draft-0.2-animate-transform.svg3dx) | `s3dx:animateTransform` rotating a mechanism arm |
 | [draft-0.1-example.svg3dx](../samples/draft-0.1-example.svg3dx) | (0.1 stable sample) Parameters, booleans, conditionals, `loop-*`, multi-model, 2D annotation |
 | [draft-0.1-line.svg3dx](../samples/draft-0.1-line.svg3dx) | `s3dx:line` |
 | [draft-0.1-arc.svg3dx](../samples/draft-0.1-arc.svg3dx) | `s3dx:arc` (angle params / endpoints) |
@@ -1129,7 +1205,7 @@ Key point: geometry evaluates once and is shared across models. The evaluation s
 | [draft-0.1-gltf-if.svg3dxz](../samples/draft-0.1-gltf-if.svg3dxz) | `.svg3dxz` package: `main.svg3dx` + Bunny LOD `.glb`s |
 | Other `draft-0.1-*.svg3dx` | Basic solids, conditionals and loops |
 
-### 12.3 Domain extensions (non-core; not required)
+### 13.3 Domain extensions (non-core; not required)
 
 The following names lean toward industry short names or vendor primitives and are **not** in the core compliance set; express them with core constructors.
 
@@ -1145,7 +1221,7 @@ The following names lean toward industry short names or vendor primitives and ar
 
 If extension elements appear: core implementations should skip and warn; opening a general file must not depend on extensions.
 
-### 12.4 Cross-system construction map (non-normative)
+### 13.4 Cross-system construction map (non-normative)
 
 Survey scope: STEP ISO 10303-42, IFC 4.x, SolidWorks, AVEVA PDMS/E3D, Smart 3D (similar equipment-primitive approach), Blender, 3ds Max.
 
@@ -1167,16 +1243,18 @@ Survey scope: STEP ISO 10303-42, IFC 4.x, SolidWorks, AVEVA PDMS/E3D, Smart 3D (
 | Boundary / Class-A dual-guide surfaces | no | Advanced SW surfacing; high exchange cost |
 | Fillet / Chamfer / Shell | no (TBD) | Feature modifiers; approximate with boolean or `gltf` |
 | Tapered extrude | no (TBD) | IFC has subtypes; approximate with `loft` |
-| Equipment short names DISH/SNOU/RTOR/SLCY | no | See §12.3; map to constructors |
+| Equipment short names DISH/SNOU/RTOR/SLCY | no | See §13.3; map to constructors |
+| Parameter / transform animation (SMIL-shaped subset) | yes (`animate` / `animateTransform`) | See §10; host clock driven |
 
-## 13. Migration
+## 14. Migration
 
-### 13.1 From draft 0.1 to draft 0.2
+### 14.1 From draft 0.1 to draft 0.2
 
 1. **Namespace URI**: change `xmlns:s3dx` (or equivalent binding) from `urn:s3dx:draft:0.1` to `urn:s3dx:draft:0.2`.
-2. **New capabilities** (optional to adopt):
+2. **Optional 0.2 capabilities**:
    - Primitive `<s3dx:point>` (positioning point, attribute `at`)
    - Live reference `ref(#id)` in point / point-list attributes (see §2.9)
+   - Animation subset `<s3dx:animate>` / `<s3dx:animateTransform>` (see §10)
 3. **Files without those constructs**: changing the URI alone yields a conforming 0.2 document; geometry evaluation matches 0.1.
 4. **Implementation duty**: evaluators must accept both `urn:s3dx:draft:0.1` and `urn:s3dx:draft:0.2`. If a 0.1-URI document uses `point` / `ref(#id)`, evaluate and warn that the 0.2 URI is preferred.
-5. **Official optimize**: must not inline `ref(#id)` to numeric literals.
+5. **Official optimize**: must not inline `ref(#id)` to numeric literals; must keep animation elements intact.

@@ -25,11 +25,11 @@
 ### 1.2 命名空间
 
 - 三维元素使用命名空间 `urn:s3dx:draft:0.2`，推荐前缀 `s3dx`。
-- 三维**元素**进命名空间：核心图元见 3.2（`point`、`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`line`、`arc`、`path`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`gltf`）；子元 `<s3dx:section>`（以及作为轨迹容器时的 `<s3dx:path>`）；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`、`<s3dx:materials>`、`<s3dx:material>`。可机读元素/属性目录见 [`namespaces/svg3dx/svg3dx.draft.0.2.xml`](../namespaces/svg3dx/svg3dx.draft.0.2.xml)，并在 [`namespaces/registry.xml`](../namespaces/registry.xml) 登记；**求值与语义仍以本文为准**。
-- **无前缀属性**（null 命名空间）：图元几何属性（lowerCamelCase，见 3.2）、以及 `href`、`mode`、`test`、`points`、`start`、`end`、`step`、`active`、`svg3d`、三维着色相关的 `fill` / `material` / `opacity`（见第 8 节）等。
+- 三维**元素**进命名空间：核心图元见 3.2（`point`、`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`line`、`arc`、`path`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`gltf`）；子元 `<s3dx:section>`（以及作为轨迹容器时的 `<s3dx:path>`）；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`、`<s3dx:materials>`、`<s3dx:material>`、`<s3dx:animate>`、`<s3dx:animateTransform>`。可机读元素/属性目录见 [`namespaces/svg3dx/svg3dx.draft.0.2.xml`](../namespaces/svg3dx/svg3dx.draft.0.2.xml)，并在 [`namespaces/registry.xml`](../namespaces/registry.xml) 登记；**求值与语义仍以本文为准**。
+- **无前缀属性**（null 命名空间）：图元几何属性（lowerCamelCase，见 3.2）、以及 `href`、`mode`、`test`、`points`、`start`、`end`、`step`、`active`、`svg3d`、三维着色相关的 `fill` / `material` / `opacity`（见第 8 节）、动画相关的 `attributeName` / `from` / `to` / `dur` / `repeat` / `begin` / `calcMode` / `type` 以及动画元素上的 `fill`（见第 10 节）等。
 - **带命名空间的属性**：三维变换使用 `s3dx:transform`（见 3.4），**不**占用 SVG 标准的 `transform` 表现属性，以免与二维 6 数 `matrix` 冲突。
 - 标准 SVG 解析器对未知命名空间元素的处理：包含在 DOM 中，不渲染，不进一步处理。本格式依赖此行为实现二维兼容。
-- **外挂命名空间与元数据（强制）**：实现解析时须将外国命名空间元素/属性完整纳入 DOM；官方往返与 optimize 须原样保留这些节点。几何求值范围仅包含本规范定义的 `s3dx` 语义与 SVG 分组/样式作用域（见第 11 节）；外国命名空间与标准 SVG [`<metadata>`](https://www.w3.org/TR/SVG11/metadata.html) 子树留在 DOM 中供宿主/领域工具读取（见第 9 节）。
+- **外挂命名空间与元数据（强制）**：实现解析时须将外国命名空间元素/属性完整纳入 DOM；官方往返与 optimize 须原样保留这些节点。几何求值范围仅包含本规范定义的 `s3dx` 语义与 SVG 分组/样式作用域（见第 12 节）；外国命名空间与标准 SVG [`<metadata>`](https://www.w3.org/TR/SVG11/metadata.html) 子树留在 DOM 中供宿主/领域工具读取（见第 9 节）。动画元素保留在 DOM 中，由实现动画时钟的宿主解释（见第 10 节）。
 
 ### 1.3 二维兼容
 
@@ -70,11 +70,12 @@
 沿 DOM 祖先链向上查找，最近声明者优先，找到即停：
 
 1. 外部传入参数（最高优先级）
-2. 自身 `<s3dx:exp>` 的父图元属性
-3. 最近祖先 `<g>` 的类规则或内联 `style`
-4. 更远祖先的类规则或内联 `style`
-5. 文档根作用域：根元素内联 `style`，其次 `:root` 规则
-6. 默认值
+2. 动画采样覆盖（见第 10 节；仅实现动画时钟的宿主注入）
+3. 自身 `<s3dx:exp>` 的父图元属性
+4. 最近祖先 `<g>` 的类规则或内联 `style`
+5. 更远祖先的类规则或内联 `style`
+6. 文档根作用域：根元素内联 `style`，其次 `:root` 规则
+7. 默认值
 
 嵌套 `s3dx:loop-*` 时，内层迭代变量遮蔽外层。
 
@@ -94,6 +95,8 @@
 - 未提供的外部参数回退到 DOM 声明；DOM 也没有则求值错误。
 - 外部参数键名对应自定义属性名：可传 `D` 或 `--D`（实现应归一化，去掉可选的前导 `--` 再查找）。
 - 外部参数值按 2.4 同规则解析类型。
+- **与参数 UI 的边界（澄清）**：把 `:root` 直接字面量**展示**在宿主参数栏，**不等于**已提供外部传参。仅当宿主**显式钉住**（用户确认覆盖、或 API/URL 注入）时，该键才按本条外部优先级生效。未钉住时仍走 §2.3 后续档（含动画采样与 DOM）。
+- **与动画同时命中同一属性**：外部钉住优先生效（动画对该键本帧不生效）。宿主 UI **宜**标明“已覆盖动画”，并提供取消钉住以恢复动画驱动；不宜在无提示的情况下把表单编辑静默提升为外部覆盖。
 
 **白名单（强制）**：外部**仅允许**覆盖在 `<style>` 的 `:root` 规则中**直接字面量**声明的自定义属性。
 
@@ -171,9 +174,10 @@
   - `<s3dx:section>`（拉伸体 / 旋转体 / 放样体 / 扫掠体的截面，见 3.2.4）
   - `<s3dx:path>`（扫掠体 / 圆管的轨迹容器；亦可作独立复合曲线，见 3.2.3）
   - **例外**：`<s3dx:path>` 可直接包含 `<s3dx:line>` / `<s3dx:arc>` 作为曲线段（对齐 STEP `composite_curve` / OCC `Wire`）
+  - `<s3dx:animateTransform>`（变换动画；不参与几何操作图，见第 10 节）
 - 图元属性表以本节与附录维护；属性表增补不改变文档格式语法。未在表中列出的属性，实现应忽略并警告。
 - 局部坐标 → 父级变换 → 世界坐标的累积规则：图元属性定义的局部几何，先应用图元自身 `s3dx:transform`，再沿祖先**三维组装容器**累积 `s3dx:transform`（`<g>`、`<s3dx:use>`、`<s3dx:if>` / `<s3dx:if-not>`、`<s3dx:loop-*>`、`<s3dx:bool-*>` 等）。`<s3dx:section>` 内的二维轮廓子节点属于截面组成，不进入该三维变换链。
-- **分层原则**：核心层只收各厂商都能映射的通用体元、曲线与经 `gltf` 引用的三角资产；行业专用形体（风管配件、封头等）不进核心，见附录 10.3（可用 `loft` / `revolve` / 布尔组合表达）。
+- **分层原则**：核心层只收各厂商都能映射的通用体元、曲线与经 `gltf` 引用的三角资产；行业专用形体（风管配件、封头等）不进核心，见附录 13.3（可用 `loft` / `revolve` / 布尔组合表达）。
 
 ### 3.2 图元属性表（草案 0.2）
 
@@ -447,7 +451,7 @@
 
 对应 STEP / IFC / SolidWorks / PDMS 等共通的扫掠族构造；行业异形件优先用它们组合，而不是定义专用图元。
 
-对照关系（非规范性，详见附录 10.4）：
+对照关系（非规范性，详见附录 13.4）：
 
 | svg3dx | STEP (ISO 10303-42) | IFC | SolidWorks | PDMS/E3D | Blender / 3ds Max |
 |---|---|---|---|---|---|
@@ -1028,7 +1032,7 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 
 - **容器**：在 SVG 命名空间书写 `<metadata>`。
 - **载荷**：在 `<metadata>` 内书写其它 XML 命名空间的元素，用以表达厂商或领域属性表。属性表的字段名、类型、必选性与版本由该命名空间 URI 所对应的规范定义；本核心规范负责容器、关联与保留语义。
-- **实现义务**：解析后须在 DOM 中保留每个 `<metadata>` 及其全部外国命名空间子树；官方往返与 optimize 须保留这些节点。几何求值、布尔与循环展开仅处理本规范定义的几何语义（见第 11 节）；宿主与领域工具可直接读取保留的元数据子树。
+- **实现义务**：解析后须在 DOM 中保留每个 `<metadata>` 及其全部外国命名空间子树；官方往返与 optimize 须保留这些节点。几何求值、布尔与循环展开仅处理本规范定义的几何语义（见第 12 节）；宿主与领域工具可直接读取保留的元数据子树。
 - **与材质的分工**：`<s3dx:materials>` / `material` 用于三维**渲染**着色；`<metadata>` 用于对象**描述**信息。两者可同时出现在同一文档中，各司其职。
 
 ### 9.2 关联方式
@@ -1052,7 +1056,75 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 
 壳体圆柱 + 侧面管嘴、就地 `<metadata>` 与厂商命名空间的完整示例：[draft-0.1-metadata-oem-nozzle.svg3dx](../samples/draft-0.1-metadata-oem-nozzle.svg3dx)。
 
-## 10. `<s3dx:use>`
+## 10. 动画（SMIL 形子集）
+
+本格式提供对齐 SVG SMIL 常用写法的**薄子集**，用于机构演示、参数扫描与产品展示。元素落在 `s3dx` 命名空间；**不要求**浏览器对 `s3dx:*` 运行原生 SMIL。标准无前缀 SVG `<animate>` / `<animateTransform>` **不**承载本格式的三维动画语义。
+
+本子集能力：
+
+- **参数时间轴**：`<s3dx:animate>` 驱动 CSS 自定义属性（间接带动尺寸与条件等）。
+- **变换动画**：`<s3dx:animateTransform>` 驱动节点三维位姿（合成到 `s3dx:transform`）。
+
+本子集**不**包含：`animateMotion`、事件型 `begin`、`values` / `keyTimes` 多段关键帧、以及对图元几何属性（如 `length`、`diameter`）的直接动画。几何尺寸须通过 `var(--*)` 由参数动画间接驱动。
+
+### 10.1 共用时间属性
+
+下列无前缀属性适用于 `<s3dx:animate>` 与 `<s3dx:animateTransform>`：
+
+| 属性 | 必选 | 默认 | 说明 |
+|---|---|---|---|
+| `from` | 是 | — | 动画起始值 |
+| `to` | 是 | — | 动画终止值 |
+| `dur` | 是 | — | 单次时长：`Ns` 或 `Nms`（`N` 为正数）；其它写法警告并忽略该动画 |
+| `repeat` | 否 | `1` | 非负整数：播放次数；`0` 表示无限循环；其它写法警告并按 `1` |
+| `fill` | 否 | `remove` | **结束后行为**（与图元着色 `fill` 同名异义）：`freeze` 保持终止值；`remove` 取消采样覆盖、回退到声明值 |
+| `begin` | 否 | `0s` | 相对文档动画时钟零点的偏移，写法同 `dur`；**不**支持事件同步 |
+| `calcMode` | 否 | `linear` | 插值**趋近律**，取值与 loft `blend` 相同：`linear` / `sine` / `cosine` / `tan` / `cotan`（见 §3.2）；未知值警告并按 `linear` |
+
+插值：在有效区间内先得归一化时间 \(t \in [0,1]\)，再以 \(s = f_{\mathrm{calcMode}}(t)\) 对 `from`→`to` 做标量或分量插值（\(f\) 同 loft `blend`）。时钟源与播放控制由宿主决定。
+
+### 10.2 `<s3dx:animate>`（参数时间轴）
+
+- **唯一目标**：CSS 自定义属性（`<dashed-ident>`）。
+- **属性**：
+  - `attributeName`（必选）：须为带前导 `--` 的名字（如 `--H`、`--yaw`）；省略 `--` 视为错误，警告并忽略。
+  - `from` / `to`：标量数字（按 §2.4 解析）；其它时间属性见 10.1。
+- **挂载（强制）**：必须是**参数作用域宿主**的**直接子元素**；**父节点即注入点**。本子集**不设** `href` / 远端目标。
+  - 挂在根 `<svg>` 下：覆盖文档根作用域（与 `:root` 声明对应）。
+  - 挂在声明了该自定义属性的 `<g>`（类规则或内联 `style`）下：覆盖仅对该 `<g>` 子树求值可见（§2.3）。
+  - 父级不是作用域宿主、或挂在图元上却指望改文档全局参数：警告并忽略该动画。
+- **白名单**：`attributeName` 必须在父级作用域已有**直接字面量**声明——根 `<svg>` 上对应 `:root` 中的直接量（对齐 §2.5）；`<g>` 上对应该节点类规则或内联已声明的 `--名字`。未声明：警告并忽略。
+- **优先级**：动画采样覆盖低于**显式**外部传参、高于 DOM 声明（见 §2.3、§2.5）。若参数栏仅展示 `:root` 默认值且未钉住，不得阻挡本动画。
+- **宿主效果**：按时钟采样写入参数覆盖后，须**触发完整几何求值**（参数扫描 / 尺寸联动）。
+- **参数栏建议**：对正在由本元素驱动的属性，显示当前采样值并标注由动画驱动；用户编辑即视为钉住外部覆盖（可撤销）。
+
+### 10.3 `<s3dx:animateTransform>`（变换动画）
+
+- 作为**被变换节点**的直接子元素；该节点须可承载 `s3dx:transform`（三维相关的 `<g>`，或 `s3dx:*` 组装/图元容器）。
+- **属性**：
+  - `attributeName`：固定为 `transform`（SMIL 习惯写法）；语义指向 **`s3dx:transform`**，不是 SVG 二维 `transform`。缺省时按 `transform` 处理；其它值警告并忽略该动画。
+  - `type`（必选）：`translate` | `rotate` | `scale`。
+  - `from` / `to`：三数（空格分隔），与 §3.4 TRS 对应分量一致（`rotate` 单位为度）。
+  - 其它时间属性见 10.1。
+- **合成**：在时刻 \(t\)，宿主由 `type`/`from`/`to` 得到动画矩阵 \(M_\mathrm{anim}(t)\)，与该节点**已求值**的作者 `s3dx:transform` 基矩阵 \(M_\mathrm{base}\) 合成为 \(M = M_\mathrm{anim}\cdot M_\mathrm{base}\)（先作者变换，再动画；列向量约定与 §3.4 一致）。**不**改写 DOM 中的 `s3dx:transform` 字符串。
+- **宿主效果**：只更新场景实例矩阵；**不得**仅为变换动画强制重跑几何内核。
+
+### 10.4 与静态求值、未实现时钟的宿主
+
+- `<s3dx:animate>` / `<s3dx:animateTransform>` **不参与**几何操作图、布尔、循环展开；解析后须保留在 DOM（官方往返与 optimize 原样保留）。
+- 未实现动画时钟的宿主：忽略动画元素，按静态文档求值；**不**自动应用 `from`。若需静态预览姿态，作者须把静止值写进参数声明或 `s3dx:transform`。
+
+```xml
+<svg svg3d="true" xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.2">
+  <style>:root { --H: 100; }</style>
+  <s3dx:animate attributeName="--H" from="80" to="160"
+                dur="2s" repeat="0"/>
+  <!-- … -->
+</svg>
+```
+
+## 11. `<s3dx:use>`
 
 - 属性：`href`（必选，引用定义目标的 `id`）、`s3dx:transform`（可选，12 数三维矩阵）。
 - 不设 `x`/`y`；三维平移用 `s3dx:transform` 的 `tx/ty/tz`。
@@ -1061,37 +1133,38 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 - `<s3dx:use>` 引用纯二维 `<g>`（只含二维元素）时：跳过 + 警告。
 - 变换累积：被引用组自身 `s3dx:transform` → `<s3dx:use>` 的 `s3dx:transform` → 父级 `s3dx:transform`。
 
-## 11. 求值模型
+## 12. 求值模型
 
-### 11.1 阶段顺序
+### 12.1 阶段顺序
 
 1. 解析文档树
 2. 建立参数作用域
 3. 解析外部参数
-4. 展开 `loop-*`（求值 `loop-range` 参数）
-5. 求值 `s3dx:if` / `s3dx:if-not` 的 `test`（展开后每个副本独立判断）
-6. 求值 `<s3dx:exp>` 与表达式
-7. 生成几何操作图
-8. 内核求值，得到几何体集合
-9. 按 `<s3dx:model>` 的 `mode`、材质 / `fill` 与子 `<s3dx:use>` 过滤/渲染
+4. 应用动画采样覆盖（若宿主实现第 10 节时钟；否则跳过）
+5. 展开 `loop-*`（求值 `loop-range` 参数）
+6. 求值 `s3dx:if` / `s3dx:if-not` 的 `test`（展开后每个副本独立判断）
+7. 求值 `<s3dx:exp>` 与表达式
+8. 生成几何操作图
+9. 内核求值，得到几何体集合
+10. 按 `<s3dx:model>` 的 `mode`、材质 / `fill` 与子 `<s3dx:use>` 过滤/渲染；再合成 `s3dx:animateTransform` 的场景矩阵（若宿主实现时钟）
 
-关键：几何求值一次、多模型共享。求值阶段处理参数、控制流与几何图元；`<s3dx:model>` 与材质库在渲染阶段生效；SVG `<metadata>` 与外国命名空间载荷保留在 DOM 中供宿主读取（第 9 节）。
+关键：几何求值是给定当前参数映射与各节点作者 `s3dx:transform` 的**瞬时快照**；多模型共享同一次几何结果。求值阶段处理参数、控制流与几何图元；`<s3dx:model>` 与材质库在渲染阶段生效；SVG `<metadata>` 与外国命名空间载荷保留在 DOM 中供宿主读取（第 9 节）。参数类动画通过覆盖触发完整求值；变换类动画只改场景矩阵（第 10 节）。
 
-### 11.2 错误处理
+### 12.2 错误处理
 
 - 求值错误范围：表达式语法错误、未定义参数引用、类型不匹配、`loop-range` 参数求值后非数字。
 - 处理方式：跳过出错元素及其子树，记录警告。警告形式由宿主决定，规范不绑定。
 - 文档级致命错误（XML 不合法、根元素缺失）：按 XML/SVG 既有规则处理，不属于本格式“跳过”范畴。
 - “跳过+警告”是推荐行为，实现可选择更严格的报错模式，但不属于合规要求。
 
-### 11.3 确定性与精度
+### 12.3 确定性与精度
 
 - 同一文件在不同内核上求值，拓扑等价性由内核保证，本格式不规定数值精度。
 - `<defs>` 中未被任何 `<s3dx:model>` 可达的实例化链引用的定义，不求值。
 
-## 12. 附录
+## 13. 附录
 
-### 12.1 待定项汇总
+### 13.1 待定项汇总
 
 1. 核心图元（见 3.2）之外仍待定：
    - `path` 是否增加样条 / 螺旋子段（`spline` / `helix`）。
@@ -1107,12 +1180,15 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 4. 正式版命名空间 URI 的最终形式。
 5. 是否还需对任意向量参数提供分量拆分（循环向量为 `--loop-value-x` / `-y` / `-z`）【待定】。
 6. 贴图与更完整的 PBR 通道【待定】（材质基础见第 8 节）。
+7. 动画是否扩展为更完整的 SMIL 对齐（`values` / `keyTimes`、事件 `begin`、`animateMotion` 等）【待定】。
 
-### 12.2 示例
+### 13.2 示例
 
 | 文件 | 内容 |
 |---|---|
 | [draft-0.2-point-ref.svg3dx](../samples/draft-0.2-point-ref.svg3dx) | `s3dx:point` + `ref(#id)` 共享端点 |
+| [draft-0.2-animate-param.svg3dx](../samples/draft-0.2-animate-param.svg3dx) | `s3dx:animate` 驱动 `--H` |
+| [draft-0.2-animate-transform.svg3dx](../samples/draft-0.2-animate-transform.svg3dx) | `s3dx:animateTransform` 旋转机构臂 |
 | [draft-0.1-example.svg3dx](../samples/draft-0.1-example.svg3dx) | （0.1 稳定样例）参数、布尔、条件、`loop-*`、多模型、二维标注 |
 | [draft-0.1-line.svg3dx](../samples/draft-0.1-line.svg3dx) | `s3dx:line` |
 | [draft-0.1-arc.svg3dx](../samples/draft-0.1-arc.svg3dx) | `s3dx:arc`（角参数 / 起终点） |
@@ -1129,7 +1205,7 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 | [draft-0.1-gltf-if.svg3dxz](../samples/draft-0.1-gltf-if.svg3dxz) | `.svg3dxz` 包：`main.svg3dx` + Bunny LOD `.glb` |
 | 其余 `draft-0.1-*.svg3dx` | 基本体、条件与循环 |
 
-### 12.3 领域扩展（非核心，不要求实现）
+### 13.3 领域扩展（非核心，不要求实现）
 
 下列名称偏行业短名或厂商图元，**不纳入核心合规集**；可用核心构造等价表达。
 
@@ -1145,7 +1221,7 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 
 扩展元素若出现：核心实现应跳过并警告；不得依赖扩展才能打开通用文件。
 
-### 12.4 跨系统构造对照（非规范性）
+### 13.4 跨系统构造对照（非规范性）
 
 调研范围：STEP ISO 10303-42、IFC 4.x、SolidWorks、AVEVA PDMS/E3D、Smart 3D（同类设备图元思路）、Blender、3ds Max。
 
@@ -1167,17 +1243,19 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 | Boundary / Class-A 双导曲线 | 否 | SW 高级曲面，交换成本高 |
 | Fillet / Chamfer / Shell | 否（待定） | 修饰特征；可用布尔或 `gltf` 近似 |
 | 变径拉伸体 Tapered extrude | 否（待定） | IFC 有子类型；可用 `loft` 近似 |
-| 设备短名 DISH/SNOU/RTOR/SLCY | 否 | 见 12.3，映射到构造算子 |
+| 设备短名 DISH/SNOU/RTOR/SLCY | 否 | 见 13.3，映射到构造算子 |
 | 定位点 / 命名构造点 | 是（`point` + `ref(#id)`） | 编辑与共享锚点；非造型实体 |
+| 参数 / 变换动画（SMIL 形子集） | 是（`animate` / `animateTransform`） | 见第 10 节；宿主时钟驱动 |
 
-## 13. 迁移
+## 14. 迁移
 
-### 13.1 从草案 0.1 到草案 0.2
+### 14.1 从草案 0.1 到草案 0.2
 
 1. **命名空间 URI**：将 `xmlns:s3dx`（或等价绑定）从 `urn:s3dx:draft:0.1` 改为 `urn:s3dx:draft:0.2`。
-2. **新增能力**（可选采用）：
+2. **可选采用的 0.2 能力**：
    - 图元 `<s3dx:point>`（定位点，属性 `at`）
    - 点 / 点列属性中的活引用 `ref(#id)`（见 2.9）
-3. **无上述新写法的文件**：仅改 URI 即可成为合规 0.2 文档；几何求值结果与 0.1 一致。
+   - 动画子集 `<s3dx:animate>` / `<s3dx:animateTransform>`（见第 10 节）
+3. **无上述写法的文件**：仅改 URI 即可成为合规 0.2 文档；几何求值结果与 0.1 一致。
 4. **实现义务**：求值器须兼读 `urn:s3dx:draft:0.1` 与 `urn:s3dx:draft:0.2`。若 0.1 URI 文档中出现 `point` / `ref(#id)`，实现须求值并警告宜改用 0.2 URI。
-5. **官方 optimize**：不得将 `ref(#id)` 内联为数字字面量。
+5. **官方 optimize**：不得将 `ref(#id)` 内联为数字字面量；须原样保留动画元素。

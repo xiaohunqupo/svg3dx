@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1"
+     svg3d="true"
+     viewBox="0 0 800 600"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:s3dx="urn:s3dx:draft:0.2">
+
+  <!-- :root 直接字面量；s3dx:animate 挂在根 svg 下驱动自定义属性 H -->
+  <style>
+    :root { --length: 100; --width: 100; --H: 100; }
+  </style>
+
+  <s3dx:animate attributeName="--H"
+                from="80" to="160"
+                dur="2s"
+                repeat="0"
+                fill="freeze"/>
+
+  <defs>
+    <g id="main">
+      <s3dx:box length="var(--length)" width="var(--width)" height="var(--H)"
+                lengthVec="1 0 0" widthVec="0 1 0"
+                fill="#6688aa"/>
+    </g>
+  </defs>
+
+  <s3dx:model id="solid-view" mode="solid" active="true">
+    <s3dx:use href="#main"/>
+  </s3dx:model>
+</svg>

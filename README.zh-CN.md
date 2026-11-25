@@ -30,11 +30,12 @@
 - **用结构表达逻辑，而非塞进语法。** 条件是独立元素（`s3dx:if` / `s3dx:if-not`，属性 `test`）；循环是独立元素（`s3dx:loop-points`、`s3dx:loop-range`）；布尔运算是元素（`s3dx:bool-union` / `subtract` / `intersect`），作用域封闭、按文档顺序求值。`<g>` 只做分组、命名与参数作用域。
 - **与几何内核解耦。** 格式只描述几何操作；求值交给后端（Open CASCADE、Manifold 等）。规范不规定数值精度。
 - **配置显示，不定义相机。** `<s3dx:model>` 声明渲染模式（`solid` / `wireframe` / `hidden-line`）以及要显示的几何；视点与投影留给宿主。
+- **SMIL 形基础动画。** `<s3dx:animate>` 驱动 CSS 自定义属性（参数时间轴）；`<s3dx:animateTransform>` 驱动 `s3dx:transform`（机构演示）。时钟由宿主实现。
 
 ## 状态
 
 - **草案 0.1（稳定轨）**：`urn:s3dx:draft:0.1` — 现有样例与 viewer 可继续使用。
-- **草案 0.2（演进轨）**：`urn:s3dx:draft:0.2` — 定位点 `s3dx:point` 与活引用 `ref(#id)` 等。实现须兼读两版。
+- **草案 0.2（演进轨）**：`urn:s3dx:draft:0.2` — 定位点 `s3dx:point`、活引用 `ref(#id)`、动画子集等。实现须兼读两版。
 
 ## 仓库结构
 
@@ -62,6 +63,7 @@ svg3dx/
 - 格式规范（草案 0.1 稳定）：[`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
 - 元数据命名空间注册表：[`namespaces/registry.xml`](namespaces/registry.xml)
 - 定位点与引用：[`draft-0.2-point-ref.svg3dx`](samples/draft-0.2-point-ref.svg3dx)
+- 动画：[`animate-param`](samples/draft-0.2-animate-param.svg3dx) / [`animate-transform`](samples/draft-0.2-animate-transform.svg3dx)
 - 综合示例（0.1）：[`samples/draft-0.1-example.svg3dx`](samples/draft-0.1-example.svg3dx)
 - 曲线图元：[`line`](samples/draft-0.1-line.svg3dx) / [`arc`](samples/draft-0.1-arc.svg3dx) / [`path`](samples/draft-0.1-path.svg3dx) / [`curves`](samples/draft-0.1-curves.svg3dx)
 - 构造体：[`extrude`](samples/draft-0.1-extrude.svg3dx) / [`revolve`](samples/draft-0.1-revolve.svg3dx) / [`loft`](samples/draft-0.1-loft.svg3dx) / [`sweep`](samples/draft-0.1-sweep.svg3dx) / [`pipe`](samples/draft-0.1-pipe.svg3dx)
