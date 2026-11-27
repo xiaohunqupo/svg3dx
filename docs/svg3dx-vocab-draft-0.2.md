@@ -40,7 +40,6 @@
 | `model` | 模型 | Model |
 | `material` | 材质 | Material |
 | `materials` | 材质集 | Materials |
-| `exp` | 表达式 | Expression |
 | `animate` | 动画 | Animate |
 | `animateTransform` | 变换动画 | Animate transform |
 | `group` | 组 | Group |

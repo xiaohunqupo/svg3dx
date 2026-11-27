@@ -25,7 +25,7 @@
 ### 1.2 命名空间
 
 - 三维元素使用命名空间 `urn:s3dx:draft:0.2`，推荐前缀 `s3dx`。
-- 三维**元素**进命名空间：核心图元见 3.2（`point`、`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`line`、`arc`、`path`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`gltf`）；子元 `<s3dx:section>`（以及作为轨迹容器时的 `<s3dx:path>`）；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:exp>`、`<s3dx:materials>`、`<s3dx:material>`、`<s3dx:animate>`、`<s3dx:animateTransform>`。可机读元素/属性目录见 [`namespaces/svg3dx/svg3dx.draft.0.2.xml`](../namespaces/svg3dx/svg3dx.draft.0.2.xml)，并在 [`namespaces/registry.xml`](../namespaces/registry.xml) 登记；**求值与语义仍以本文为准**。
+- 三维**元素**进命名空间：核心图元见 3.2（`point`、`box`、`cylinder`、`sphere`、`cone`、`torus`、`wedge`、`pyramid`、`prism`、`sector-cylinder`、`line`、`arc`、`path`、`extrude`、`revolve`、`loft`、`sweep`、`pipe`、`gltf`）；子元 `<s3dx:section>`（以及作为轨迹容器时的 `<s3dx:path>`）；以及 `<s3dx:if>`、`<s3dx:if-not>`、`<s3dx:loop-points>`、`<s3dx:loop-range>`、`<s3dx:bool-union>`、`<s3dx:bool-subtract>`、`<s3dx:bool-intersect>`、`<s3dx:use>`、`<s3dx:model>`、`<s3dx:materials>`、`<s3dx:material>`、`<s3dx:animate>`、`<s3dx:animateTransform>`。可机读元素/属性目录见 [`namespaces/svg3dx/svg3dx.draft.0.2.xml`](../namespaces/svg3dx/svg3dx.draft.0.2.xml)，并在 [`namespaces/registry.xml`](../namespaces/registry.xml) 登记；**求值与语义仍以本文为准**。
 - **无前缀属性**（null 命名空间）：图元几何属性（lowerCamelCase，见 3.2）、以及 `href`、`mode`、`test`、`points`、`start`、`end`、`step`、`active`、`svg3d`、三维着色相关的 `fill` / `material` / `opacity`（见第 8 节）、动画相关的 `attributeName` / `from` / `to` / `dur` / `repeat` / `begin` / `calcMode` / `type` 以及动画元素上的 `fill`（见第 10 节）等。
 - **带命名空间的属性**：三维变换使用 `s3dx:transform`（见 3.4），**不**占用 SVG 标准的 `transform` 表现属性，以免与二维 6 数 `matrix` 冲突。
 - 标准 SVG 解析器对未知命名空间元素的处理：包含在 DOM 中，不渲染，不进一步处理。本格式依赖此行为实现二维兼容。
@@ -71,11 +71,10 @@
 
 1. 外部传入参数（最高优先级）
 2. 动画采样覆盖（见第 10 节；仅实现动画时钟的宿主注入）
-3. 自身 `<s3dx:exp>` 的父图元属性
-4. 最近祖先 `<g>` 的类规则或内联 `style`
-5. 更远祖先的类规则或内联 `style`
-6. 文档根作用域：根元素内联 `style`，其次 `:root` 规则
-7. 默认值
+3. 最近祖先 `<g>` 的类规则或内联 `style`
+4. 更远祖先的类规则或内联 `style`
+5. 文档根作用域：根元素内联 `style`，其次 `:root` 规则
+6. 默认值
 
 嵌套 `s3dx:loop-*` 时，内层迭代变量遮蔽外层。
 
@@ -119,7 +118,7 @@
 | 定位点引用 | `ref(#id)` | 取文档中 `<s3dx:point id="…">` 的当前坐标（见 2.9） |
 | 比较 / 逻辑 | 本格式表达式 | `=` `<` `>` `<=` `>=` `<>`，以及 `and` `or` `not`（用于 `s3dx:if` / `s3dx:if-not` 的 `test` 等） |
 
-- 数值属性与 `<s3dx:exp>` 中：字面量、`var(--*)`、或 `calc(...)`。
+- 数值属性中：字面量、`var(--*)`、或 `calc(...)`。
 - **点**与**点列**属性中：字面量三数、`var(--*)`（向量）、`calc(...)`（标量分量嵌入）、或 `ref(#id)`（见 2.9）。
 - 条件 `test` 中：比较两侧可为字面量、`var(--*)` 或 `calc(...)`，例如 `test="var(--R) = 50"`、`test="calc(var(--R) / 2) &lt; 20"`。`test` 中不得使用 `ref(#id)`。
 - `=` 表示相等比较，不存在赋值。
@@ -130,7 +129,7 @@
 ### 2.7 与 CSS / SVG 的对齐说明
 
 - **`var()` / `calc()` 本身是 CSS 标准**，在支持 CSS 的 SVG 用户代理中，用于 **CSS 属性**（`<style>`、元素 `style="..."`）时按 CSS 级联与计算。
-- 本格式另外规定：在 **svg3dx 求值的属性值**中（如 `<s3dx:exp>`、`test`、`s3dx:transform` 等）也可书写 `var(--*)` / `calc(...)` /（点属性中的）`ref(#id)`，由 **svg3dx 求值器**解析。这不要求浏览器对**非 CSS 的 XML 属性**做变量替换。
+- 本格式另外规定：在 **svg3dx 求值的属性值**中（如数值属性、`test`、`s3dx:transform` 等）也可书写 `var(--*)` / `calc(...)` /（点属性中的）`ref(#id)`，由 **svg3dx 求值器**解析。这不要求浏览器对**非 CSS 的 XML 属性**做变量替换。
 - 因此：二维样式走 CSS；三维参数/表达式走 svg3dx 求值器——语法对齐，宿主分工不同。
 - 自定义属性名须为合法 CSS `<dashed-ident>`（如 `--D`、`--loop-value`）；**不得**使用 `--loop.value` 这类含 `.` 的名字。
 - 一个 `var(--*)` 的值可以是多个空格分隔的 token（CSS 允许多 token 替换）；本格式用此表达向量嵌入（见 2.8）。
@@ -170,7 +169,6 @@
 ### 3.1 通用规则
 
 - 三维图元是 `s3dx:` 命名空间下的元素。图元之间一般不互相嵌套（分组用 `<g>`）；允许的子元素仅限：
-  - `<s3dx:exp>`（参数覆盖）
   - `<s3dx:section>`（拉伸体 / 旋转体 / 放样体 / 扫掠体的截面，见 3.2.4）
   - `<s3dx:path>`（扫掠体 / 圆管的轨迹容器；亦可作独立复合曲线，见 3.2.3）
   - **例外**：`<s3dx:path>` 可直接包含 `<s3dx:line>` / `<s3dx:arc>` 作为曲线段（对齐 STEP `composite_curve` / OCC `Wire`）
@@ -1143,7 +1141,7 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
 4. 应用动画采样覆盖（若宿主实现第 10 节时钟；否则跳过）
 5. 展开 `loop-*`（求值 `loop-range` 参数）
 6. 求值 `s3dx:if` / `s3dx:if-not` 的 `test`（展开后每个副本独立判断）
-7. 求值 `<s3dx:exp>` 与表达式
+7. 求值表达式（图元属性、`s3dx:transform` 等）
 8. 生成几何操作图
 9. 内核求值，得到几何体集合
 10. 按 `<s3dx:model>` 的 `mode`、材质 / `fill` 与子 `<s3dx:use>` 过滤/渲染；再合成 `s3dx:animateTransform` 的场景矩阵（若宿主实现时钟）
@@ -1256,6 +1254,7 @@ outA   = fill.a   * material.color.a   [* opacity 若有]
    - 图元 `<s3dx:point>`（定位点，属性 `at`）
    - 点 / 点列属性中的活引用 `ref(#id)`（见 2.9）
    - 动画子集 `<s3dx:animate>` / `<s3dx:animateTransform>`（见第 10 节）
-3. **无上述写法的文件**：仅改 URI 即可成为合规 0.2 文档；几何求值结果与 0.1 一致。
-4. **实现义务**：求值器须兼读 `urn:s3dx:draft:0.1` 与 `urn:s3dx:draft:0.2`。若 0.1 URI 文档中出现 `point` / `ref(#id)`，实现须求值并警告宜改用 0.2 URI。
+3. **不含 `<s3dx:exp>`、且无上述 0.2 新能力的文件**：仅改 URI 即可成为合规 0.2 文档；几何求值结果与 0.1 一致。
+4. **实现义务**：求值器须兼读 `urn:s3dx:draft:0.1` 与 `urn:s3dx:draft:0.2`。若 0.1 URI 文档中出现 `point` / `ref(#id)`，实现须求值并警告宜改用 0.2 URI。读入 0.1 时仍按 0.1 对 `<s3dx:exp>` 做参数覆盖。
 5. **官方 optimize**：不得将 `ref(#id)` 内联为数字字面量；须原样保留动画元素。
+6. **`<s3dx:exp>`**：0.2 不使用该元素。表达式直接写在图元属性上（字面量、`var(--*)`、`calc(...)`）。从 0.1 升级时，将 `<s3dx:exp>` 上的属性移到父图元的同名属性，并删除该子元素。

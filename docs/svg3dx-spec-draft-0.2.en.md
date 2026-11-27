@@ -25,7 +25,7 @@
 ### 1.2 Namespace
 
 - 3D elements use namespace `urn:s3dx:draft:0.2`, recommended prefix `s3dx`.
-- 3D **elements** enter the namespace: core primitives are listed in §3.2 (`point`, `box`, `cylinder`, `sphere`, `cone`, `torus`, `wedge`, `pyramid`, `prism`, `sector-cylinder`, `line`, `arc`, `path`, `extrude`, `revolve`, `loft`, `sweep`, `pipe`, `gltf`); child `<s3dx:section>` (and `<s3dx:path>` when used as a trajectory container); plus `<s3dx:if>`, `<s3dx:if-not>`, `<s3dx:loop-points>`, `<s3dx:loop-range>`, `<s3dx:bool-union>`, `<s3dx:bool-subtract>`, `<s3dx:bool-intersect>`, `<s3dx:use>`, `<s3dx:model>`, `<s3dx:exp>`, `<s3dx:materials>`, `<s3dx:material>`, `<s3dx:animate>`, `<s3dx:animateTransform>`. A machine-readable element/attribute catalog is [`namespaces/svg3dx/svg3dx.draft.0.2.xml`](../namespaces/svg3dx/svg3dx.draft.0.2.xml), registered in [`namespaces/registry.xml`](../namespaces/registry.xml); **evaluation and semantics remain defined by this document**.
+- 3D **elements** enter the namespace: core primitives are listed in §3.2 (`point`, `box`, `cylinder`, `sphere`, `cone`, `torus`, `wedge`, `pyramid`, `prism`, `sector-cylinder`, `line`, `arc`, `path`, `extrude`, `revolve`, `loft`, `sweep`, `pipe`, `gltf`); child `<s3dx:section>` (and `<s3dx:path>` when used as a trajectory container); plus `<s3dx:if>`, `<s3dx:if-not>`, `<s3dx:loop-points>`, `<s3dx:loop-range>`, `<s3dx:bool-union>`, `<s3dx:bool-subtract>`, `<s3dx:bool-intersect>`, `<s3dx:use>`, `<s3dx:model>`, `<s3dx:materials>`, `<s3dx:material>`, `<s3dx:animate>`, `<s3dx:animateTransform>`. A machine-readable element/attribute catalog is [`namespaces/svg3dx/svg3dx.draft.0.2.xml`](../namespaces/svg3dx/svg3dx.draft.0.2.xml), registered in [`namespaces/registry.xml`](../namespaces/registry.xml); **evaluation and semantics remain defined by this document**.
 - **Unprefixed attributes** (null namespace): geometry attrs (lowerCamelCase, see §3.2), plus `href`, `mode`, `test`, `points`, `start`, `end`, `step`, `active`, `svg3d`, appearance `fill` / `material` / `opacity` (§8), and animation `attributeName` / `from` / `to` / `dur` / `repeat` / `begin` / `calcMode` / `type` plus `fill` on animation elements (§10).
 - **Namespaced attributes**: 3D transform uses `s3dx:transform` (see §3.4), **not** the SVG presentation attribute `transform`, to avoid clashing with the 2D 6-number `matrix`.
 - Standard SVG parsers keep unknown-namespace elements in the DOM without rendering or further processing. This format relies on that behavior for 2D compatibility.
@@ -71,11 +71,10 @@ Walk the DOM ancestor chain upward; nearest declaration wins; stop when found:
 
 1. External parameters (highest priority)
 2. Animation sample overrides (see §10; injected only by hosts that implement an animation clock)
-3. Parent primitive attributes of a local `<s3dx:exp>`
-4. Nearest ancestor `<g>` class rules or inline `style`
-5. Farther ancestors’ class rules or inline `style`
-6. Document-root scope: root-element inline `style`, then `:root` rules
-7. Defaults
+3. Nearest ancestor `<g>` class rules or inline `style`
+4. Farther ancestors’ class rules or inline `style`
+5. Document-root scope: root-element inline `style`, then `:root` rules
+6. Defaults
 
 When `s3dx:loop-*` elements nest, inner iteration variables shadow outer ones.
 
@@ -119,7 +118,7 @@ Layered convention (stay close to CSS; comparison / logic and positioning-point 
 | Positioning-point reference | `ref(#id)` | Current coordinates of `<s3dx:point id="…">` (see §2.9) |
 | Comparison / logic | This format’s expressions | `=` `<` `>` `<=` `>=` `<>`, plus `and` `or` `not` (for `test` on `s3dx:if` / `s3dx:if-not`, etc.) |
 
-- In numeric attributes and `<s3dx:exp>`: literals, `var(--*)`, or `calc(...)`.
+- In numeric attributes: literals, `var(--*)`, or `calc(...)`.
 - In **point** and **point-list** attributes: three-number literals, `var(--*)` (vector), embedded `calc(...)`, or `ref(#id)` (see §2.9).
 - In condition `test`: either side of a comparison may be a literal, `var(--*)`, or `calc(...)`, e.g. `test="var(--R) = 50"`, `test="calc(var(--R) / 2) &lt; 20"`. `ref(#id)` is not allowed in `test`.
 - `=` means equality comparison; there is no assignment.
@@ -130,7 +129,7 @@ Layered convention (stay close to CSS; comparison / logic and positioning-point 
 ### 2.7 Alignment with CSS / SVG
 
 - **`var()` / `calc()` themselves are CSS standards**. In SVG user agents that support CSS, when used on **CSS properties** (`<style>`, element `style="..."`) they follow CSS cascade and computation.
-- This format additionally specifies that in **svg3dx-evaluated attribute values** (e.g. `<s3dx:exp>`, `test`, `s3dx:transform`) authors may also write `var(--*)` / `calc(...)` / (in point attributes) `ref(#id)`, parsed by the **svg3dx evaluator**. This does **not** require browsers to substitute variables on **non-CSS XML attributes**.
+- This format additionally specifies that in **svg3dx-evaluated attribute values** (e.g. numeric attributes, `test`, `s3dx:transform`) authors may also write `var(--*)` / `calc(...)` / (in point attributes) `ref(#id)`, parsed by the **svg3dx evaluator**. This does **not** require browsers to substitute variables on **non-CSS XML attributes**.
 - Therefore: 2D styling goes through CSS; 3D parameters / expressions go through the svg3dx evaluator — aligned syntax, different host responsibilities.
 - Custom property names must be legal CSS `<dashed-ident>` (e.g. `--D`, `--loop-value`); names containing `.` such as `--loop.value` are **not** allowed.
 - A `var(--*)` value may be multiple space-separated tokens (CSS allows multi-token substitution); this format uses that for vector embedding (see §2.8).
@@ -170,7 +169,6 @@ Layered convention (stay close to CSS; comparison / logic and positioning-point 
 ### 3.1 Common rules
 
 - 3D primitives are elements in the `s3dx:` namespace. Primitives generally do not nest inside each other (group with `<g>`); allowed children are limited to:
-  - `<s3dx:exp>` (parameter override)
   - `<s3dx:section>` (profile for extrude / revolve / loft / sweep; see §3.2.4)
   - `<s3dx:path>` (trajectory container for sweep / pipe; may also be a standalone composite curve; see §3.2.3)
   - **Exception**: `<s3dx:path>` may directly contain `<s3dx:line>` / `<s3dx:arc>` as curve segments (aligned with STEP `composite_curve` / OCC `Wire`)
@@ -1143,7 +1141,7 @@ Interpolation: within the active interval, obtain normalized time \(t \in [0,1]\
 4. Apply animation sample overrides (if the host implements the §10 clock; otherwise skip)
 5. Expand `loop-*` (evaluate `loop-range` parameters)
 6. Evaluate `test` on `s3dx:if` / `s3dx:if-not` (each expanded copy judged independently)
-7. Evaluate `<s3dx:exp>` and expressions
+7. Evaluate expressions (primitive attributes, `s3dx:transform`, etc.)
 8. Build the geometry operation graph
 9. Kernel evaluation → geometry set
 10. Filter/render by `<s3dx:model>` `mode`, materials / `fill`, and child `<s3dx:use>`; then composite `s3dx:animateTransform` scene matrices (if the host implements a clock)
@@ -1255,6 +1253,7 @@ Survey scope: STEP ISO 10303-42, IFC 4.x, SolidWorks, AVEVA PDMS/E3D, Smart 3D (
    - Primitive `<s3dx:point>` (positioning point, attribute `at`)
    - Live reference `ref(#id)` in point / point-list attributes (see §2.9)
    - Animation subset `<s3dx:animate>` / `<s3dx:animateTransform>` (see §10)
-3. **Files without those constructs**: changing the URI alone yields a conforming 0.2 document; geometry evaluation matches 0.1.
-4. **Implementation duty**: evaluators must accept both `urn:s3dx:draft:0.1` and `urn:s3dx:draft:0.2`. If a 0.1-URI document uses `point` / `ref(#id)`, evaluate and warn that the 0.2 URI is preferred.
+3. **Files that do not use `<s3dx:exp>` and do not use the 0.2 capabilities above**: changing the URI alone yields a conforming 0.2 document; geometry evaluation matches 0.1.
+4. **Implementation duty**: evaluators must accept both `urn:s3dx:draft:0.1` and `urn:s3dx:draft:0.2`. If a 0.1-URI document uses `point` / `ref(#id)`, evaluate and warn that the 0.2 URI is preferred. When reading 0.1, still apply `<s3dx:exp>` parameter overrides as in 0.1.
 5. **Official optimize**: must not inline `ref(#id)` to numeric literals; must keep animation elements intact.
+6. **`<s3dx:exp>`**: 0.2 does not use this element. Write expressions on the primitive attributes (literals, `var(--*)`, `calc(...)`). When upgrading from 0.1, move attributes from `<s3dx:exp>` onto the same-named attributes of the parent primitive and remove the child.

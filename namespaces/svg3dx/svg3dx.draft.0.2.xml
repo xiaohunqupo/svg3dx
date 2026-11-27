@@ -193,7 +193,6 @@
     <attr name="step" type="number" use="optional" title-zh="步长"/>
   </element>
 
-  <element name="exp" title="Expression" title-zh="表达式"/>
   <element name="use" title="Use" title-zh="引用" extends="drawable">
     <attr name="href" type="string" use="required" title-zh="引用"/>
   </element>
