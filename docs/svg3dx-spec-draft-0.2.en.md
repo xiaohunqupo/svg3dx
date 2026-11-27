@@ -1253,7 +1253,7 @@ Survey scope: STEP ISO 10303-42, IFC 4.x, SolidWorks, AVEVA PDMS/E3D, Smart 3D (
    - Primitive `<s3dx:point>` (positioning point, attribute `at`)
    - Live reference `ref(#id)` in point / point-list attributes (see §2.9)
    - Animation subset `<s3dx:animate>` / `<s3dx:animateTransform>` (see §10)
-3. **Files that do not use `<s3dx:exp>` and do not use the 0.2 capabilities above**: changing the URI alone yields a conforming 0.2 document; geometry evaluation matches 0.1.
-4. **Implementation duty**: evaluators must accept both `urn:s3dx:draft:0.1` and `urn:s3dx:draft:0.2`. If a 0.1-URI document uses `point` / `ref(#id)`, evaluate and warn that the 0.2 URI is preferred. A 0.2 evaluator does not apply `<s3dx:exp>`: ignore it and warn.
+3. **Files without those constructs**: changing the URI alone yields a conforming 0.2 document; geometry evaluation matches 0.1.
+4. **Implementation duty**: evaluators must accept both `urn:s3dx:draft:0.1` and `urn:s3dx:draft:0.2`. If a 0.1-URI document uses `point` / `ref(#id)`, evaluate and warn that the 0.2 URI is preferred.
 5. **Official optimize**: must not inline `ref(#id)` to numeric literals; must keep animation elements intact.
-6. **`<s3dx:exp>`**: 0.2 does not use this element. Write expressions on the primitive attributes (literals, `var(--*)`, `calc(...)`). When upgrading from 0.1, move attributes from `<s3dx:exp>` onto the same-named attributes of the parent primitive and remove the child.
+6. **`<s3dx:exp>`**: 0.2 does not use this element. Write expressions on primitive attributes (literals, `var(--*)`, `calc(...)`). Because draft 0.1 was never formally released, implementations reading a 0.1 file must ignore `<s3dx:exp>` nodes.
