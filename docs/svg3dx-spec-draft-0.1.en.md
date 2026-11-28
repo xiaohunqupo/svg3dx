@@ -793,14 +793,15 @@ Authored transforms are interpreted in **svg3dx space after** \(C\) (asset stand
 
      - Each function may be omitted; defaults are `translate(0 0 0)`, `rotate(0 0 0)`, `scale(1 1 1)`. A subset is allowed (e.g. only `translate(...)`).
      - Functions are recognized **by name**, independent of written order; documents and samples should prefer `translate` → `rotate` → `scale`.
-     - **Rotation**: Euler **XYZ**, angles in **degrees**.
-     - **Composition (column vectors)**: `M = T · R · S` (scale first, then rotate, then translate), matching common local object matrices and transform-gizmo semantics.
+     - **Rotation**: `rotate(rx ry rz)` uses **degrees**. For column vectors, `R = Rz · Ry · Rx`: rotate by `rx` about the fixed X axis, then `ry` about the fixed Y axis, then `rz` about the fixed Z axis, so `p' = Rz Ry Rx p`. This matches Three.js Euler order `XYZ`.
+     - **Composition (column vectors)**: `M = T · R · S` (scale, then the rotation above, then translate), matching common local object matrices and transform-gizmo semantics.
      - Must **not** mix `matrix(...)` with TRS functions in the same attribute value; if mixed, implementations should warn and attempt to parse by the **first recognizable form**, falling back to identity on failure.
 
 - **Number separators**: the normative form is **space-separated** (newlines allowed), consistent with this format’s point lists / vectors (e.g. `lengthVec="1 0 0"`) and SVG number-list habit, and convenient for embedding vectors such as `var(--loop-value)` into components. Implementations may treat commas as optional separators equivalent to spaces (aligned with SVG `comma-wsp`), but documents and samples should use the space form.
 - Examples:
   - `s3dx:transform="matrix(1 0 0 0 1 0 0 0 1 100 200 300)"`
   - `s3dx:transform="translate(100 200 300) rotate(0 45 0) scale(1 1 1)"`
+  - `s3dx:transform="rotate(90 90 0)"` equals `matrix(0 0 -1 1 0 0 0 -1 0 0 0 0)`; local `+X (1 0 0)` lands on `(0 0 -1)`.
   - `s3dx:transform="translate(var(--x) 0 calc(var(--h) / 2))"`
 - Values may contain `var(--*)` / `calc(...)` (parsed by the svg3dx evaluator) on matrix components or TRS function components.
 - Both forms are valid persistence syntax and evaluate equivalently. Representing the same affine transform in the other form is not necessarily unique or lossless (shear, non-unique Euler angles, expression structure, floating-point precision, etc.).
