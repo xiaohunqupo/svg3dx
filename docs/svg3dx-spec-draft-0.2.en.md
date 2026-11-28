@@ -976,19 +976,26 @@ Shading is a **render-stage** concern (same layer as `<s3dx:model mode>`), not p
 
 ### 8.2 Element color `fill`
 
-- 3D shading uses SVG **`fill`** (presentation attribute or CSS); in 3D context prefer parsing as a **space-separated RGBA number list** (same shape as material `color`; 3 numbers → A=1).
+- 3D shading uses SVG **`fill`** (presentation attribute or CSS). The value may be a space-separated RGBA number list (same shape as material `color`; 3 numbers → A=1) or an SVG color (`#RGB`, `#RRGGBB`, `#RRGGBBAA`, `rgb()`, `rgba()`). An unparsed value falls back to the default color with a warning.
 - On the same element: CSS `fill` (class rule or inline `style`) outranks presentation attribute `fill`.
 - When `fill` is undeclared, the 3D default color is `0.53 0.67 0.80 1`.
 - If standard SVG `opacity` is also present, multiply it with `fill`’s A again.
 
 ### 8.3 Material reference
 
-- Presentation attribute: `material="steel"` or `material="url(#tank-paint)"`.
-- CSS custom property: `--material: steel;` / `--material: url(#tank-paint);`.
+A material reference uses the same forms as an SVG paint property (`fill` / `stroke`): a bare name is only a built-in keyword, and a document definition is referenced only with `url(#id)`.
+
+- The presentation attribute has two values:
+  - Built-in keyword: `material="steel"`, `material="glass"`.
+  - Document material: `material="url(#tank-paint)"`.
+- `#id` is not a material reference. `material="#glass"` is invalid; `#id` is a fragment reference for attributes such as `href`, not a paint value.
+- CSS custom properties use the same forms: `--material: steel;` / `--material: url(#tank-paint);`.
 - Scope: 3D-related hosts (e.g. `<g>`) and `s3dx:*` primitives/containers (including boolean, conditional, and loop containers).
 - On the same element: CSS `--material` outranks `material`; if neither is declared → built-in **`default`**.
-- Resolve: `url(#id)` → document material library; otherwise built-in keyword; unknown keyword or missing id → fall back to `default` with a warning.
-- When a document `id` collides with a built-in keyword: `url(#id)` uses the document definition; a bare keyword always means the built-in.
+- Resolution:
+  1. `url(#id)` → the document material library. A missing id falls back to `default` with a warning.
+  2. A bare name → the built-in keyword table only. A hit uses that preset; a miss falls back to `default` with a warning. A bare name does not look up a document material `id`, so `material="tank-paint"` does not select the document material `id="tank-paint"`.
+- When a document material `id` collides with a built-in keyword, the bare name still means the built-in; the document definition requires `url(#id)`. If the document contains `id="glass"`, `material="glass"` is built-in glass and `material="url(#glass)"` is that document material.
 
 ### 8.4 Composition
 

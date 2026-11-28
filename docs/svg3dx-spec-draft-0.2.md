@@ -976,19 +976,26 @@ M_{\mathrm{world}} = M_{\mathrm{parents}} \cdot M_{\mathrm{element}} \cdot C \cd
 
 ### 8.2 图元色 `fill`
 
-- 三维着色使用 SVG **`fill`**（表现属性或 CSS）；三维上下文优先解析为**空格分隔 RGBA 数列**（与材质 `color` 同形；3 个数时 A=1）。
+- 三维着色使用 SVG **`fill`**（表现属性或 CSS）。取值可以是空格分隔的 RGBA 数列（与材质 `color` 同形；3 个数时 A=1），也可以是 SVG 颜色（`#RGB`、`#RRGGBB`、`#RRGGBBAA`、`rgb()`、`rgba()`）。无法解析时回退缺省色并警告。
 - 同元素：CSS `fill`（类规则或内联 `style`）高于表现属性 `fill`。
 - 未声明 `fill` 时，三维缺省色为 `0.53 0.67 0.80 1`。
 - 若另有标准 SVG `opacity`，与 `fill` 的 A **再乘**。
 
 ### 8.3 材质引用
 
-- 表现属性：`material="steel"` 或 `material="url(#tank-paint)"`。
-- CSS 自定义属性：`--material: steel;` / `--material: url(#tank-paint);`。
+材质引用与 SVG 涂色属性（`fill` / `stroke`）使用同一套形式：裸名称只表示内置关键词，文档中的定义只通过 `url(#id)` 引用。
+
+- 表现属性只有两种取值：
+  - 内置关键词：`material="steel"`、`material="glass"`。
+  - 文档材质：`material="url(#tank-paint)"`。
+- `#id` 不是材质引用。`material="#glass"` 无效；`#id` 只用于 `href` 一类片段引用，不用于涂色值。
+- CSS 自定义属性同形：`--material: steel;` / `--material: url(#tank-paint);`。
 - 适用范围：三维相关宿主（如 `<g>`）与 `s3dx:*` 图元/容器（含布尔、条件、循环容器）。
 - 同元素：CSS `--material` 高于 `material` 属性；都未声明 → 内置 **`default`**。
-- 解析：`url(#id)` → 文档材质库；否则为内置关键词；未知关键词或找不到 id → 回退 `default` 并警告。
-- 文档 `id` 与内置关键词同名时：`url(#id)` 用文档定义；裸关键词始终指内置。
+- 解析：
+  1. `url(#id)` → 文档材质库。找不到该 id → 回退 `default` 并警告。
+  2. 裸名称 → 只查内置关键词。命中则用该预设；未命中 → 回退 `default` 并警告。裸名称不查找文档材质 `id`，因此 `material="tank-paint"` 不会选中 `id="tank-paint"` 的文档材质。
+- 文档材质 `id` 与内置关键词同名时：裸名称仍指内置；要文档定义必须写 `url(#id)`。例如文档中有 `id="glass"` 时，`material="glass"` 是内置玻璃，`material="url(#glass)"` 是该文档材质。
 
 ### 8.4 合成
 
