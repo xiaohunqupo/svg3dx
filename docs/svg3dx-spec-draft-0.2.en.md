@@ -6,7 +6,7 @@
 
 ## 0. Document status
 
-- This specification is draft **0.2** (evolution track). Namespace URI `urn:s3dx:draft:0.2` is provisional until a formal release.
+- This specification is draft **0.2** (trial track). Features are tried in this draft and may be rewritten or removed. The version plan is the [roadmap](./roadmap.en.md). Namespace URI `urn:s3dx:draft:0.2` is provisional until a formal release.
 - Draft **0.1** (`urn:s3dx:draft:0.1`) is the **stable** track: existing samples and hosts may keep using it; implementations must accept both 0.1 and 0.2. Migration from 0.1 is in the **Migration** chapter at the end of this document.
 - Format name: `svg3dx`. Recommended namespace prefix: `s3dx`. Logo mark: `s3dx`; full title: `svg 3dx`.
 - This draft file is not guaranteed to parse in a formal release. Implementations must recognize the 3D namespace by URI, not by the prefix literal (recommended prefix `s3dx`).

@@ -34,15 +34,18 @@
 
 ## 状态
 
-- **草案 0.1（稳定轨）**：`urn:s3dx:draft:0.1` — 现有样例与 viewer 可继续使用。
-- **草案 0.2（演进轨）**：`urn:s3dx:draft:0.2` — 定位点 `s3dx:point`、活引用 `ref(#id)`、动画子集等。实现须兼读两版。
+草案号是规范版本，与 svg3dx-core、svg3dx-viewer、svg3dx-studio 的软件版本分开。各软件使用自己的语义化版本，并注明所跟随的草案。版本计划见[路线图](docs/roadmap.md)。
+
+- **草案 0.1（稳定轨）**：`urn:s3dx:draft:0.1` — 现有样例与 viewer 可继续使用。本轨不再增加新图元。
+- **草案 0.2（试水轨）**：`urn:s3dx:draft:0.2` — 特性在本版试做，可能改写或撤掉。定位点、活引用与动画子集已写入。实现须兼读 0.1 与 0.2。
 
 ## 仓库结构
 
 ```
 svg3dx/
 ├── assets/                 # Logo 与标题图
-├── docs/                   # 格式规范（0.1 稳定 / 0.2 演进）
+├── docs/                   # 格式规范与路线图（0.1 稳定 / 0.2 试水）
+│   ├── roadmap.md
 │   ├── svg3dx-spec-draft-0.2.md
 │   └── svg3dx-spec-draft-0.1.md
 ├── namespaces/             # 命名空间定义与注册表索引
@@ -50,7 +53,7 @@ svg3dx/
 │   ├── svg3dx/svg3dx.draft.0.2.xml
 │   ├── svg3dx/svg3dx.draft.0.1.xml
 │   └── acme/acme.equipment.1.0.xml
-├── samples/                # draft-0.1-*（稳定）与 draft-0.2-*（新能力）
+├── samples/                # draft-0.1-*（稳定）与 draft-0.2-*（试水）
 ├── LICENSE-MIT             # MIT（任选其一）
 ├── LICENSE-MulanPSL-2.0    # 木兰宽松许可证第2版
 ├── README.md
@@ -59,6 +62,7 @@ svg3dx/
 
 ## 文档
 
+- 路线图：[`docs/roadmap.md`](docs/roadmap.md)
 - 格式规范（草案 0.2）：[`docs/svg3dx-spec-draft-0.2.md`](docs/svg3dx-spec-draft-0.2.md)
 - 格式规范（草案 0.1 稳定）：[`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
 - 元数据命名空间注册表：[`namespaces/registry.xml`](namespaces/registry.xml)

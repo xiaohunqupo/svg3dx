@@ -34,15 +34,18 @@ Existing parametric CAD formats (Revit families, Glodon component editors, vendo
 
 ## Status
 
-- **Draft 0.1 (stable)**: `urn:s3dx:draft:0.1` — existing samples and viewers keep working.
-- **Draft 0.2 (evolution)**: `urn:s3dx:draft:0.2` — positioning point `s3dx:point`, live `ref(#id)`, animation subset. Implementations must accept both.
+Draft numbers are specification versions. svg3dx-core, svg3dx-viewer, and svg3dx-studio version separately and record which draft they follow. The version plan is the [roadmap](docs/roadmap.en.md).
+
+- **Draft 0.1 (stable track)**: `urn:s3dx:draft:0.1` — existing samples and viewers keep working. This track adds no further primitives.
+- **Draft 0.2 (trial track)**: `urn:s3dx:draft:0.2` — features are tried in this draft and may be rewritten or removed. Positioning points, live references, and the animation subset are already in the draft. Implementations must accept both 0.1 and 0.2.
 
 ## Repository layout
 
 ```
 svg3dx/
 ├── assets/                 # Logo and title artwork
-├── docs/                   # Specs (0.1 stable / 0.2 evolution)
+├── docs/                   # Specs and roadmap (0.1 stable / 0.2 trials)
+│   ├── roadmap.md
 │   ├── svg3dx-spec-draft-0.2.md
 │   └── svg3dx-spec-draft-0.1.md
 ├── namespaces/             # Namespace defs + registry index
@@ -50,7 +53,7 @@ svg3dx/
 │   ├── svg3dx/svg3dx.draft.0.2.xml
 │   ├── svg3dx/svg3dx.draft.0.1.xml
 │   └── acme/acme.equipment.1.0.xml
-├── samples/                # draft-0.1-* (stable) and draft-0.2-* (new)
+├── samples/                # draft-0.1-* (stable) and draft-0.2-* (trials)
 ├── LICENSE-MIT             # MIT (choose either)
 ├── LICENSE-MulanPSL-2.0    # 木兰宽松许可证第2版
 ├── README.md
@@ -59,6 +62,7 @@ svg3dx/
 
 ## Documentation
 
+- Roadmap: [`docs/roadmap.en.md`](docs/roadmap.en.md)
 - Format specification (draft 0.2): [`docs/svg3dx-spec-draft-0.2.md`](docs/svg3dx-spec-draft-0.2.md)
 - Format specification (draft 0.1 stable): [`docs/svg3dx-spec-draft-0.1.md`](docs/svg3dx-spec-draft-0.1.md)
 - Metadata namespace registry: [`namespaces/registry.xml`](namespaces/registry.xml)
